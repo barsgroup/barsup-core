@@ -1,0 +1,17 @@
+syntax: glob
+.project
+.pydevproject
+.settings/*
+*.pyc
+*.pyo
+dist/*
+src/*.egg-info/*
+_build/*
+src/build/*
+src/dist/*
+reports/*
+tests/env/*
+*.orig
+.DS_Store
+.idea/*
+.sass-cache/*
