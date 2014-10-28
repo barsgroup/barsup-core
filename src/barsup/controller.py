@@ -48,7 +48,7 @@ class DictController(object):
     def update(self, params, **kwargs):
         records = []
         for record in params:
-            self.service.query('id')
+            self.service.query('*')
             self.service.filter(id=record['id'])
             obj = self.service.read()
             self.service.update(obj, **record)
@@ -59,7 +59,7 @@ class DictController(object):
     @commit
     def destroy(self, params, **kwargs):
         for record in params:
-            self.service.query('id')
+            self.service.query('*')
             self.service.filter(id=record['id'])
             obj = self.service.read()
             self.service.delete(obj)
