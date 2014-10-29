@@ -4,33 +4,16 @@ import routes
 
 
 class Router(object):
-    def __init__(self, cont, controller_group, config):
+    def __init__(self, cont, controller_group):
         self._mapper = routes.Mapper()
         self._cont = cont
         self._group = controller_group
 
-        def build(mapper, data, controller, path):
-            for act in data.get('__actions__', []):
-                mapper.link(act)
-            for k, v in data.iteritems():
-                if k in ('__actions__', '__controller__'):
-                    continue
-                sub_controller = v.get('__controller__')
-                if not sub_controller and not controller:
-                    raise ValueError(
-                        'No controller specified for the "%s%s" route!'
-                        % (path, k)
-                    )
-                kwargs = {'path': path + k, 'data': v}
-                if sub_controller:
-                    build(mapper=mapper.submapper(
-                        path_prefix=k, controller=sub_controller),
-                        controller=sub_controller, **kwargs)
-                else:
-                    build(mapper=mapper.submapper(path_prefix=k),
-                          controller=controller, **kwargs)
-
-        build(self._mapper, config, None, '')
+        for controller, conf, realization in cont.itergroup(controller_group):
+            mapper = self._mapper.submapper(
+                path_prefix='/' + controller.lower())
+            for route, action in getattr(realization, 'actions'):
+                mapper.connect(route, controller=controller, action=action)
 
     def populate(self, uid, key, params):
         """
@@ -61,6 +44,13 @@ __all__ = (Router,)
 if __name__ == '__main__':
 
     class CalcController(object):
+
+        actions = (
+            ('/{x:\d+}/{y:\d+}/sum', 'sum'),
+            ('/{x:\d+}/{y:\d+}/mul', 'mul'),
+            ('/{x:\d+}/double', 'double'),
+        )
+
         @staticmethod
         def sum(x, y, **params):
             return int(x) + int(y)
@@ -74,6 +64,12 @@ if __name__ == '__main__':
             return int(x) * 2
 
     class StrController(object):
+
+        actions = (
+            ('/{s:.+}/upper', 'upper'),
+            ('/{s:.+}/lower', 'lower'),
+        )
+
         @staticmethod
         def upper(s, **params):
             return s.upper()
@@ -92,25 +88,13 @@ if __name__ == '__main__':
                 }
             }[grp][name]
 
-    router = Router(FakeContainer(), 'rpc', {
-        '/calc': {
-            '__controller__': 'Calc',
-            r'/{x:\d+}': {
-                '__actions__': ['double'],
-                r'/{y:\d+}': {
-                    '__actions__': ['sum', 'mul']
-                }
-            }
-        },
-        '/str': {
-            '__controller__': 'Str',
-            r'/{s:.+}': {
-                '__actions__': ['upper', 'lower']
-            }
-        }
-    })
+        @staticmethod
+        def itergroup(group):
+            yield ('Calc', {}, CalcController)
+            yield ('Str', {}, StrController)
 
-    #print router._mapper
+    router = Router(FakeContainer(), 'rpc')
+    print router._mapper
     assert router.populate(0, '/calc/10/2/sum', {}) == 12
     assert router.populate(0, '/calc/10/2/mul', {}) == 20
     assert router.populate(0, '/calc/7/double', {}) == 14

@@ -13,12 +13,12 @@ def _dmp(x):
     return None
 
 
-def run(container, routes, apps, sock_pull, sock_push):
+def run(container, apps, sock_pull, sock_push):
     """
     Запускает worker с указанными параметрами\
     """
     cont = _Container(container)
-    router = _Router(cont, 'controller', routes)
+    router = _Router(cont, 'controller')
 
     context = zmq.Context()
 
@@ -46,7 +46,6 @@ def run(container, routes, apps, sock_pull, sock_push):
 
 DEFAULT_PARAMS = {
     'container': {},
-    'routes': {},
     'apps': [],
     'sock_pull': 'tcp://*:3002',
     'sock_push': 'tcp://*:3001',
