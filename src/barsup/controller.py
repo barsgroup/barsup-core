@@ -21,6 +21,14 @@ class DictController(object):
     __metaclass__ = Injectable
     depends_on = ('service',)
 
+    actions = (
+        ("/read", "read"),
+        ("/create", "create"),
+        ("/update", "update"),
+        ("/destroy", "destroy"),
+        (r"/{_id:\d+}/get", "get"),
+    )
+
     def load(self, start, limit, **params):
         self.service.query('*')
         if params.get('filter'):
@@ -69,7 +77,8 @@ class DictController(object):
     def create(self, params, **kwargs):
         new_records = []
         for record in params:
-            # FIXME: Пока "это" необходимо для идентфикации записи на клиенте при отправке результата
+            # FIXME: Пока "это" необходимо для идентфикации записи
+            # на клиенте при отправке результата
             client_id = record.pop('id')
             new_record = self.service.create(**record)
             DefaultSession.get().flush()
