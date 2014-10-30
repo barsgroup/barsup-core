@@ -61,6 +61,7 @@ class DictController(object):
             obj = self.service.read()
             self.service.update(obj, **record)
 
+            DefaultSession.get().commit()  # TODO: плохо, но иначе объект имеет старые связи
             records.append(obj)
         return map(to_dict, records)
 

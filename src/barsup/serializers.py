@@ -1,9 +1,11 @@
 # coding: utf-8
+from datetime import date
 
 
 def to_dict(obj, excludes=frozenset(['metadata',
                                      'classes',
-                                     'individual_collection'])):
+                                     'individual_collection',
+                                     'userbook_collection'])):
     fields = {}
     for field in dir(obj):
         if field.startswith('_') or field in excludes:
@@ -12,8 +14,11 @@ def to_dict(obj, excludes=frozenset(['metadata',
         if callable(value):
             continue
 
-        if hasattr(value, '_sa_class_manager'):
+        elif hasattr(value, '_sa_class_manager'):
             value = to_dict(value)
+
+        elif isinstance(value, date):
+            value = date.strftime(value, '%d.%m.%Y')
 
         assert value is None or isinstance(value, (
             str, unicode, list, tuple, dict, int, float

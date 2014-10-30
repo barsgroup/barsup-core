@@ -23,6 +23,7 @@ class Router(object):
         :params: action params
         """
         dest = self._mapper.match(key)
+        print self._mapper
         if not dest:
             raise ValueError('Wrong key: "%s"!' % key)
         controller_name, action_name = map(dest.pop, ('controller', 'action'))
