@@ -64,16 +64,15 @@ class DBMapper(object):
     Коллекция mappings для моделей из приложений,
     указанных при вызове конструктора
     """
-    def __init__(self, apps):
+    def __init__(self):
         self._metadata = MetaData()
         abspath = os.path.abspath('.')
-        for module in apps:
-            fullpath = os.path.join(
-                abspath,
-                os.sep.join(module.split('.')),
-                'mapping.json'
-            )
-            if os.path.isfile(fullpath):
+
+        fullpath = os.path.join(
+            abspath,
+            'mapping.json'
+        )
+        if os.path.isfile(fullpath):
                 BuildMapping.load(self._metadata, fullpath)
 
         self._base = automap_base(metadata=self._metadata)

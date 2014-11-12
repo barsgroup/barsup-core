@@ -8,7 +8,7 @@ class Service(object):
     __metaclass__ = Injectable
 
     serialize = staticmethod(to_dict)
-    depends_on = ('model', 'session', 'db_mapper' ,'joins')
+    depends_on = ('model', 'session', 'db_mapper', 'joins')
 
     def query(self, *args):
         if '*' in args:

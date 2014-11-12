@@ -4,16 +4,20 @@ from datetime import date
 
 def to_dict(obj, excludes=frozenset(['metadata',
                                      'classes',
-                                     'individual_collection',
-                                     'userbook_collection'])):
+                                     'prepare'])):
     fields = {}
     for field in dir(obj):
-        if field.startswith('_') or field in excludes:
+        if (field.startswith('_') or
+                    field in excludes or
+                    # алхимия генерирует вложенные коллекции с таким постфиксом
+                    u'_collection' in field):
             continue
+
         value = obj.__getattribute__(field)
         if callable(value):
             continue
 
+        # Если value - соединеннная json-ом модель
         elif hasattr(value, '_sa_class_manager'):
             value = to_dict(value)
 
