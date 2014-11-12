@@ -8,7 +8,7 @@ class Service(object):
     __metaclass__ = Injectable
 
     serialize = staticmethod(to_dict)
-    depends_on = ('model', 'session', 'db_mapper')
+    depends_on = ('model', 'session', 'db_mapper' ,'joins')
 
     def query(self, *args):
         if '*' in args:
@@ -16,6 +16,17 @@ class Service(object):
         else:
             self._queryset = self.session.get().query(
                 *map(lambda x: getattr(self.model, x), args)
+            )
+
+        for join in self.joins:
+            if ':' in join:
+                method, model = join.split(':')
+            else:
+                method, model = 'join', join
+
+            qs_method = getattr(self._queryset, method)
+            self._queryset = qs_method(
+                getattr(self.db_mapper, model)
             )
 
     def filter(self, **kwargs):
