@@ -1,4 +1,5 @@
 # coding: utf-8
+from datetime import date
 from barsup.serializers import to_dict
 from barsup.container import Injectable
 
@@ -50,6 +51,7 @@ class Service(object):
     def update(self, obj, **kwargs):
         for item, value in kwargs.items():
             assert hasattr(obj, item)
+            value = self._prepare(item, value)
             setattr(obj, item, value)
 
         self.session.get().add(obj)
@@ -60,5 +62,19 @@ class Service(object):
     def _init(self, obj, **kwargs):
         for item, value in kwargs.items():
             assert hasattr(obj, item)
+            value = self._prepare(item, value)
             setattr(obj, item, value)
         return obj
+
+    def _prepare(self, item, value):
+        """
+        Преобразование входящих значений согласно типам колонок
+
+        :param item: Наименование поля
+        :param value: Значение поля
+        :return: Преобразованное значение
+        """
+        type_ = getattr(self.model, item).type
+        if issubclass(type_.python_type, date):
+            return date.fromtimestamp(float(value))
+        return value

@@ -14,7 +14,7 @@ def _dmp(x):
 
 
 def run(container, apps, sock_pull, sock_push):
-    """
+    """ч>
     Запускает worker с указанными параметрами\
     """
     cont = _Container(container)
