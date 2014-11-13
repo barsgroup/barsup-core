@@ -22,32 +22,35 @@ class DictController(object):
     depends_on = ('service',)
 
     actions = (
-        ("/read", "read"),
+        ("/read", "read", {'start': 'int',
+                           'limit': 'int',
+                           'page': 'int',
+                           'params': 'json'}),
         ("/create", "create"),
         ("/update", "update"),
         ("/destroy", "destroy"),
-        (r"/{_id:\d+}/get", "get"),
+        (r"/{_id:\d+}/get", "get", {'_id': 'int'}),
     )
 
-    def load(self, start, limit, **params):
+    def _load(self, start, limit, page, filter=None, group=None, sort=None):
         self.service.query('*')
-        if params.get('filter'):
-            self.service.filter(**params['filter'])
+        if filter:
+            self.service.filter(**filter)
 
-        if params.get('group'):
-            self.service.filter(**params['group'])
+        if group:
+            self.service.filter(**group)
 
-        if params.get('sort'):
-            self.service.filter(**params['sort'])
+        if sort:
+            self.service.filter(**sort)
 
         self.service.limiter(start, limit)
 
         return self.service.load()
 
-    def read(self, params, **kwargs):
-        return self.load(**params)
+    def read(self, **params):
+        return self._load(**params)
 
-    def get(self, _id, **kwargs):
+    def get(self, _id):
         self.service.query('*')
         self.service.filter(id=_id)
         return to_dict(self.service.read())
@@ -61,12 +64,14 @@ class DictController(object):
             obj = self.service.read()
             self.service.update(obj, **record)
 
-            DefaultSession.get().commit()  # TODO: плохо, но иначе объект имеет старые связи
+            DefaultSession.get().commit()  # TODO
+            # TODO: плохо, но иначе объект имеет старые связи
+
             records.append(obj)
         return map(to_dict, records)
 
     @commit
-    def destroy(self, params, **kwargs):
+    def destroy(self, params):
         for record in params:
             self.service.query('*')
             self.service.filter(id=record['id'])

@@ -4,13 +4,10 @@ import json
 
 import zmq
 
+from sys import stderr
+
 from container import Container as _Container
 from routing import Router as _Router
-
-
-def _dmp(x):
-    print x, type(x)
-    return None
 
 
 def run(container, apps, sock_pull, sock_push):
@@ -28,20 +25,26 @@ def run(container, apps, sock_pull, sock_push):
     push_socket.bind(sock_push)
 
     print ("ZMQ served on (%s->%s)" % (sock_pull, sock_push))
+
     while True:
         msg = pull_socket.recv_json()
         uid = msg['uid']
         data = json.loads(msg['data'])
         key = data['event']
         params = data.get('data', {})
-        msg = {
-            'uid': uid,
-            'data': json.dumps({
-                'event': key,
-                'data': router.populate(uid, key, params)
-            }, default=_dmp)
-        }
-        push_socket.send_json(msg)
+
+        try:
+            if not isinstance(params, dict):
+                raise TypeError('Event data must be a dict!')
+            result = router.populate(uid, key, params)
+            answer = json.dumps({'event': key, 'data': result})
+        except (ValueError, TypeError) as e:
+            stderr.write(
+                'Error: "%s" (%s, %r)\n' % (e, key, params)
+            )
+            answer = json.dumps({'error': unicode(e)})
+
+        push_socket.send_json({'uid': uid, 'data': answer})
 
 
 DEFAULT_PARAMS = {
