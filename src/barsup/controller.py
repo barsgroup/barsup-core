@@ -12,7 +12,7 @@ def commit(f):
     @wraps(f)
     def inner(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
-        DefaultSession.get().commit()
+        self.service.session.commit()
         return result
     return inner
 
@@ -67,8 +67,8 @@ class DictController(object):
             obj = self.service.read()
             self.service.update(obj, **record)
 
-            DefaultSession.get().commit()  # TODO
             # TODO: плохо, но иначе объект имеет старые связи
+            self.service.session.commit()  # FIXME: коммит вывести на уровень сервисов
 
             records.append(obj)
         return map(to_dict, records)
@@ -90,7 +90,7 @@ class DictController(object):
             # на клиенте при отправке результата
             client_id = record.pop('id')
             new_record = self.service.create(**record)
-            DefaultSession.get().flush()
+            self.service.session.flush()  # FIXME: коммит вывести на уровень сервисов
             dict_rec = to_dict(new_record)
             dict_rec['client_id'] = client_id
             new_records.append(dict_rec)

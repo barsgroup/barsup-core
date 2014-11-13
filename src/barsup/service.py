@@ -12,9 +12,9 @@ class Service(object):
 
     def query(self, *args):
         if '*' in args:
-            self._queryset = self.session.get().query(self.model)
+            self._queryset = self.session.query(self.model)
         else:
-            self._queryset = self.session.get().query(
+            self._queryset = self.session.query(
                 *map(lambda x: getattr(self.model, x), args)
             )
 
@@ -53,7 +53,7 @@ class Service(object):
     # Record methods
     def create(self, **kwargs):
         instance = self._init(self.model(), **kwargs)
-        self.session.get().add(instance)
+        self.session.add(instance)
         return instance
 
     def read(self):
@@ -65,10 +65,10 @@ class Service(object):
             value = self._prepare(item, value)
             setattr(obj, item, value)
 
-        self.session.get().add(obj)
+        self.session.add(obj)
 
     def delete(self, obj):
-        self.session.get().delete(obj)
+        self.session.delete(obj)
 
     def _init(self, obj, **kwargs):
         for item, value in kwargs.items():

@@ -10,7 +10,7 @@ from container import Container as _Container
 from routing import Router as _Router
 
 
-def run(container, apps, sock_pull, sock_push):
+def run(container, apps, sock_pull, sock_push, **kwargs):
     """ч>
     Запускает worker с указанными параметрами\
     """

@@ -4,10 +4,9 @@ from sqlalchemy.orm.session import Session
 
 
 class DefaultSession(object):
-    _session = Session(create_engine(
-        'postgresql://barsup:barsup@localhost:5432/barsup',
-        echo=True))
+    def __init__(self, connection):
+        self._session = Session(
+            create_engine(connection, echo=True))
 
-    @classmethod
-    def get(cls):
-        return cls._session
+    def __getattr__(self, item):
+        return getattr(self._session, item)
