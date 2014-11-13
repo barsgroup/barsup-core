@@ -42,7 +42,7 @@ def run(container, apps, sock_pull, sock_push):
             stderr.write(
                 'Error: "%s" (%s, %r)\n' % (e, key, params)
             )
-            answer = json.dumps({'error': unicode(e)})
+            answer = json.dumps({'event': key, 'error': unicode(e)})
 
         push_socket.send_json({'uid': uid, 'data': answer})
 

@@ -25,14 +25,17 @@ class DictController(object):
         ("/read", "read", {'start': 'int',
                            'limit': 'int',
                            'page': 'int',
-                           'params': 'json'}),
-        ("/create", "create"),
-        ("/update", "update"),
-        ("/destroy", "destroy"),
+                           'filter': 'dict',
+                           'query': 'unicode'
+                           }),
+        ("/create", "create", {'params': 'list'}),
+        ("/update", "update", {'params': 'list'}),
+        ("/destroy", "destroy", {'params': 'list'}),
         (r"/{_id:\d+}/get", "get", {'_id': 'int'}),
     )
 
-    def _load(self, start, limit, page, filter=None, group=None, sort=None):
+    def _load(self, start, limit, page,
+              query=None, filter=None, group=None, sort=None):
         self.service.query('*')
         if filter:
             self.service.filter(**filter)
