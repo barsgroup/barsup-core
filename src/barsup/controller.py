@@ -12,7 +12,7 @@ def commit(f):
     @wraps(f)
     def inner(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
-        DefaultSession.get().commit()
+        self.service.session.commit()
         return result
     return inner
 
@@ -25,14 +25,17 @@ class DictController(object):
         ("/read", "read", {'start': 'int',
                            'limit': 'int',
                            'page': 'int',
-                           'params': 'json'}),
-        ("/create", "create"),
-        ("/update", "update"),
-        ("/destroy", "destroy"),
+                           'filter': 'dict',
+                           'query': 'unicode'
+                           }),
+        ("/create", "create", {'params': 'list'}),
+        ("/update", "update", {'params': 'list'}),
+        ("/destroy", "destroy", {'params': 'list'}),
         (r"/{_id:\d+}/get", "get", {'_id': 'int'}),
     )
 
-    def _load(self, start, limit, page, filter=None, group=None, sort=None):
+    def _load(self, start, limit, page,
+              query=None, filter=None, group=None, sort=None):
         self.service.query('*')
         if filter:
             self.service.filter(**filter)
@@ -64,8 +67,8 @@ class DictController(object):
             obj = self.service.read()
             self.service.update(obj, **record)
 
-            DefaultSession.get().commit()  # TODO
             # TODO: плохо, но иначе объект имеет старые связи
+            self.service.session.commit()  # FIXME: коммит вывести на уровень сервисов
 
             records.append(obj)
         return map(to_dict, records)
@@ -87,7 +90,7 @@ class DictController(object):
             # на клиенте при отправке результата
             client_id = record.pop('id')
             new_record = self.service.create(**record)
-            DefaultSession.get().flush()
+            self.service.session.flush()  # FIXME: коммит вывести на уровень сервисов
             dict_rec = to_dict(new_record)
             dict_rec['client_id'] = client_id
             new_records.append(dict_rec)

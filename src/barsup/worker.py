@@ -10,7 +10,7 @@ from container import Container as _Container
 from routing import Router as _Router
 
 
-def run(container, apps, sock_pull, sock_push):
+def run(container, apps, sock_pull, sock_push, **kwargs):
     """ч>
     Запускает worker с указанными параметрами\
     """
@@ -42,7 +42,7 @@ def run(container, apps, sock_pull, sock_push):
             stderr.write(
                 'Error: "%s" (%s, %r)\n' % (e, key, params)
             )
-            answer = json.dumps({'error': unicode(e)})
+            answer = json.dumps({'event': key, 'error': unicode(e)})
 
         push_socket.send_json({'uid': uid, 'data': answer})
 

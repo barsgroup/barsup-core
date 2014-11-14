@@ -8,6 +8,8 @@ PARAM_PARSERS = {
     'json': json.loads,
     'unicode': unicode,
     'int': int,
+    'list': list,
+    'dict': dict
 }
 
 
