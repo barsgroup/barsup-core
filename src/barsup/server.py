@@ -90,7 +90,8 @@ def run(port, sock_pull, sock_push, static_root):
     push_sock = zmq_context.socket(zmq.PUSH)
     push_sock.connect(sock_push)
 
-    static_path = os.path.abspath(os.path.join('.', static_root))
+    os.environ.setdefault('BUP_PATH', '.')
+    static_path = os.path.abspath(os.path.expandvars(static_root))
     application = Application([
         (r"/$", MainHandler, {'index_path': static_path}),
         (r"/ws$", WSHandler, {'mq': push_sock}),
@@ -106,5 +107,5 @@ DEFAULT_PARAMS = {
     'port': 8000,
     'sock_pull': 'tcp://localhost:3001',
     'sock_push': 'tcp://localhost:3002',
-    'static_root': 'static/barsup/'
+    'static_root': '$BUP_PATH/static/barsup/'
 }
