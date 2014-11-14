@@ -31,5 +31,6 @@ setup(
     packages=find_packages('src'),
     include_package_data=True,
     long_description=read('README.md'),
+    scripts=['scripts/bup_start'],
 )
 
