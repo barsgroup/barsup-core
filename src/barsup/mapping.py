@@ -73,7 +73,7 @@ class DBMapper(object):
             'mapping.json'
         )
         if os.path.isfile(fullpath):
-                BuildMapping.load(self._metadata, fullpath)
+            BuildMapping.load(self._metadata, fullpath)
 
         self._base = automap_base(metadata=self._metadata)
         self._base.prepare()
