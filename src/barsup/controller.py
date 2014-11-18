@@ -18,7 +18,7 @@ def commit(f):
 
 class DictController(object):
     __metaclass__ = Injectable
-    __slots__ = ['service', 'uid']
+    __slots__ = ('service', 'uid')
     depends_on = ('service',)
 
     actions = (
@@ -41,7 +41,9 @@ class DictController(object):
     )
 
     def _init(self):
-        # Метода для описания service для правильной подсветки синтаксиса
+        # Данный метод не вызывается
+        # он необходим для правильной подсветки синтаксиса
+        # т. к. синтаксические анализаторы не понимают внедренные зависимости
         self.service = None
 
     def read(self, start, limit, page,
@@ -72,8 +74,7 @@ class DictController(object):
         obj = self.service.read()
         self.service.update(obj, **record)
 
-        # TODO: плохо, но иначе объект имеет старые связи
-        # FIXME: коммит вывести на уровень сервисов
+        # Обновление зависимостей FK у объекта
         self.service.session.commit()
         return obj
 
@@ -102,16 +103,12 @@ class DictController(object):
         self._destroy(id_)
         return id_
 
+    def _create(self, record):
+        obj = self.service.create(**record)
+        # Для получения id объекта
+        self.service.session.flush()
+        return obj
+
     @commit
     def create(self, records):
-        new_records = []
-        for record in records:
-            # FIXME: Пока "это" необходимо для идентфикации записи
-            # на клиенте при отправке результата
-            client_id = record.pop('id')
-            new_record = self.service.create(**record)
-            self.service.session.flush()  # FIXME: flush вывести на уровень сервисов
-            dict_rec = to_dict(new_record)
-            dict_rec['client_id'] = client_id
-            new_records.append(dict_rec)
-        return new_records
+        return map(to_dict, [self._create(record) for record in records])
