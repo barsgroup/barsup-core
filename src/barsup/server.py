@@ -58,20 +58,20 @@ def on_mq_recv(msgs):
         uid, data = msg['uid'], msg['data']
         assert uid, "No UID in message!"
 
-        # FIXME: Временно отправка сообщений всем клиентам до тех пор,
-        # пока не будет правил привязки на основе api key
-        for _, hdls in UID_POOL.items():
-            for hdl in hdls:
-                hdl.write_message(data)
+        # Временно отправка сообщений всем клиентам до тех пор,
+        # # пока не будет правил привязки на основе api key
+        # for _, hdls in UID_POOL.items():
+        #     for hdl in hdls:
+        #         hdl.write_message(data)
 
         # Отправка сообщения в классическом режиме:
         # Кто прислал сообщение, тот и получает ответ
-        # hdls = UID_POOL.get(uid)
-        # if hdls:
-        #     for hdl in hdls:
-        #         hdl.write_message(data)
-        # else:
-        #     print "Unknown UID:", uid
+        hdls = UID_POOL.get(uid)
+        if hdls:
+            for hdl in hdls:
+                hdl.write_message(data)
+        else:
+            print "Unknown UID:", uid
 
 
 def run(port, sock_pull, sock_push, static_root):

@@ -30,19 +30,19 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
         msg = pull_socket.recv_json()
         uid = msg['uid']
         data = json.loads(msg['data'])
-        key, uuid = data['event'], data['uuid']
+        key = data['event']
         params = data.get('data', {})
 
         try:
             if not isinstance(params, dict):
                 raise TypeError('Event data must be a dict!')
             result = router.populate(uid, key, params)
-            answer = json.dumps({'event': key, 'uuid': uuid, 'data': result})
+            answer = json.dumps({'event': key, 'data': result})
         except (ValueError, TypeError) as e:
             stderr.write(
                 'Error: "%s" (%s, %r)\n' % (e, key, params)
             )
-            answer = json.dumps({'event': key, 'uuid': uuid, 'error': unicode(e)})
+            answer = json.dumps({'event': key, 'error': unicode(e)})
 
         push_socket.send_json({'uid': uid, 'data': answer})
 
