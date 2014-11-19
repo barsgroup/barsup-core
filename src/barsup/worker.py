@@ -43,6 +43,15 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
                 'Error: "%s" (%s, %r)\n' % (e, key, params)
             )
             answer = json.dumps({'event': key, 'error': unicode(e)})
+        except:
+            answer = json.dumps({
+                'event': key,
+                'error': u'Невозможно выполнить текущую операцию'})
+            push_socket.send_json({
+                'uid': uid,
+                'data': answer
+            })
+            raise
 
         push_socket.send_json({'uid': uid, 'data': answer})
 
