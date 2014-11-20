@@ -29,7 +29,8 @@ class DictController(object):
             'limit': 'int',
             'page': 'int',
             'filter': 'dict',
-            'query': 'unicode'
+            'query': 'unicode',
+            'sort': 'json'
         }),
         (r"/read/{id_:\d+}", "get"),
 
@@ -58,7 +59,7 @@ class DictController(object):
             self.service.filter(**group)
 
         if sort:
-            self.service.filter(**sort)
+            self.service.sorters(sort)
 
         self.service.limiter(start, limit)
         return self.service.load()

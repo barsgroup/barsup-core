@@ -1,7 +1,17 @@
 # coding: utf-8
 from datetime import date
+from sqlalchemy.sql.expression import asc, desc
 from barsup.serializers import to_dict
 from barsup.container import Injectable
+
+
+def _sorter(direction):
+    values = {
+        'ASC': asc,
+        'DESC': desc
+    }
+    assert direction in (values.keys())
+    return values[direction]
 
 
 class Service(object):
@@ -9,6 +19,9 @@ class Service(object):
 
     serialize = staticmethod(to_dict)
     depends_on = ('model', 'session', 'db_mapper', 'joins')
+
+    def __init(self):
+        self.session = self.model = self.joins = self.db_mapper = None
 
     def query(self, *args):
         if '*' in args:
@@ -38,8 +51,21 @@ class Service(object):
     def grouper(self, *args):
         self._queryset = self._queryset.group_by(*args)
 
-    def sorter(self, **kwargs):
-        self._queryset = self._queryset.order_by(**kwargs)
+    def sorters(self, sorters):
+        for sorter in sorters:
+            self.sorter(**sorter)
+
+    def sorter(self, property, direction):
+        # Сложный объект
+        names = property.split('.')
+        if len(names) == 2:
+            outer_model, column = names
+            model = getattr(self.db_mapper, outer_model)
+        else:
+            model, column = self.model, property
+
+        sort = _sorter(direction)(getattr(model, column))
+        self._queryset = self._queryset.order_by(sort)
 
     def _load(self):
         return self._queryset.all()
