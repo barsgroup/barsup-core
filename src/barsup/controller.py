@@ -28,11 +28,13 @@ class DictController(object):
             'start': 'int',
             'limit': 'int',
             'page': 'int',
-            'filter': 'dict',
+            'filter': 'json',
             'query': 'unicode',
             'sort': 'json'
         }),
-        (r"/read/{id_:\d+}", "get"),
+        (r"/read/{id_:\d+}", "get", {
+            'filter': 'json'
+        }),
 
         (r"/update", "bulk_update", {'records': 'list'}),
         (r"/update/{id_:\d+}", "update", {'data': 'dict'}),
@@ -53,7 +55,7 @@ class DictController(object):
 
         self.service.query('*')
         if filter:
-            self.service.filter(**filter)
+            self.service.filters(filter)
 
         if group:
             self.service.filter(**group)
@@ -64,14 +66,16 @@ class DictController(object):
         self.service.limiter(start, limit)
         return self.service.load()
 
-    def get(self, id_=None):
+    def get(self, id_, filter=None):
         self.service.query('*')
-        self.service.filter(id=id_)
+        self.service.filter_by_id(id_)
+        if filter:
+            self.service.filters(filter)
         return to_dict(self.service.read())
 
     def _update(self, id_, record):
         self.service.query('*')
-        self.service.filter(id=id_)
+        self.service.filter_by_id(id_)
         obj = self.service.read()
         self.service.update(obj, **record)
 
@@ -89,7 +93,7 @@ class DictController(object):
 
     def _destroy(self, id_):
         self.service.query('*')
-        self.service.filter(id=id_)
+        self.service.filter_by_id(id_)
         obj = self.service.read()
         self.service.delete(obj)
 

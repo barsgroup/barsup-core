@@ -1,8 +1,27 @@
 # coding: utf-8
 from datetime import date
+import operator
 from sqlalchemy.sql.expression import asc, desc
+from sqlalchemy.sql.operators import ilike_op
 from barsup.serializers import to_dict
 from barsup.container import Injectable
+
+
+def _filter(column, oper, value):
+    values = {
+        'like': ilike_op,
+        'eq': operator.eq,
+        '=': operator.eq,
+
+        'lt': operator.lt,
+        'gt': operator.gt
+    }
+
+    assert oper in values.keys()
+    operfunc = values[oper]
+    if operfunc == ilike_op:
+        value = u'%{0}%'.format(value)
+    return operfunc(column, value)
 
 
 def _sorter(direction):
@@ -10,7 +29,7 @@ def _sorter(direction):
         'ASC': asc,
         'DESC': desc
     }
-    assert direction in (values.keys())
+    assert direction in values.keys()
     return values[direction]
 
 
@@ -42,10 +61,25 @@ class Service(object):
                 getattr(self.db_mapper, model)
             )
 
-    def filter(self, **kwargs):
+    def filters(self, filters):
+        for filter_data in filters:
+            self.filter(**filter_data)
+
+    def _mapping_column(self, item):
+        names = item.split('.')
+        if len(names) == 2:  # Составной объект, например, user.name
+            outer_model, column = names
+            model = getattr(self.db_mapper, outer_model)
+        else:
+            model, column = self.model, item
+        return getattr(model, column)
+
+    def filter(self, property, operator, value):
         self._queryset = self._queryset.filter(
-            *(getattr(self.model, param) == value
-              for param, value in kwargs.items())
+            _filter(self._mapping_column(property),
+                    operator,
+                    self._prepare(property, value)
+            )
         )
 
     def grouper(self, *args):
@@ -56,15 +90,7 @@ class Service(object):
             self.sorter(**sorter)
 
     def sorter(self, property, direction):
-        # Сложный объект
-        names = property.split('.')
-        if len(names) == 2:
-            outer_model, column = names
-            model = getattr(self.db_mapper, outer_model)
-        else:
-            model, column = self.model, property
-
-        sort = _sorter(direction)(getattr(model, column))
+        sort = _sorter(direction)(self._mapping_column(property))
         self._queryset = self._queryset.order_by(sort)
 
     def _load(self):
@@ -103,6 +129,12 @@ class Service(object):
             setattr(obj, item, value)
         return obj
 
+    def filter_by_id(self, value):
+        self.filter(
+            property='id',
+            operator='eq',
+            value=value)
+
     def _prepare(self, item, value):
         """
         Преобразование входящих значений согласно типам колонок
@@ -111,7 +143,9 @@ class Service(object):
         :param value: Значение поля
         :return: Преобразованное значение
         """
-        type_ = getattr(self.model, item).type
+        type_ = self._mapping_column(item).type
         if issubclass(type_.python_type, date):
+            if len(str(value)) == 13:  # timestamp c милисекундами
+                value /= 1000.0
             return date.fromtimestamp(float(value))
         return value
