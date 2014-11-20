@@ -22,7 +22,8 @@ def to_dict(obj, excludes=frozenset(['metadata',
             value = to_dict(value)
 
         elif isinstance(value, date):
-            value = date.strftime(value, '%d.%m.%Y')
+            # value = time.mktime(value.timetuple()) * 1000
+            value = date.strftime(value, '%m/%d/%Y')
 
         assert value is None or isinstance(value, (
             str, unicode, list, tuple, dict, int, float
