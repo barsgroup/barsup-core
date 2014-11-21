@@ -1,25 +1,50 @@
 # coding: utf-8
-from datetime import date
 import operator
 from sqlalchemy.sql import expression, operators
-from barsup.serializers import to_dict
+
+from barsup.serializers import to_dict, convert
 from barsup.container import Injectable
 
 
-def _filter(column, oper, value):
+def mapping_property(f):
+    """
+    Декоратор, возвращающий объект sqlalchemy по составному имени поля
+    """
+    def wrapper(self, property, *args, **kwargs):
+        names = property.split('.')
+        if len(names) == 2:  # Составной объект, например, user.name
+            outer_model, column = names
+            model = getattr(self.db_mapper, outer_model)
+        else:
+            model, column = self.model, property
+
+        return f(self, property=getattr(model, column), *args, **kwargs)
+    return wrapper
+
+
+def _filter(column, operator_text, value):
     values = {
-        'like': operators.ilike_op,
+        'like': {
+            'type': operators.ilike_op,
+            'format': u'%{0}%'
+        },
         'eq': operator.eq,
         'lt': operator.lt,
+        'le': operator.le,
         'gt': operator.gt,
+        'ge': operator.ge,
         'in': operators.in_op
     }
 
-    assert oper in values.keys()
-    operfunc = values[oper]
-    if operfunc == operators.ilike_op:
-        value = u'%{0}%'.format(value)
-    return operfunc(column, value)
+    assert operator_text in values.keys()
+    oper = values[operator_text]
+    if isinstance(oper, dict):
+        func = oper['type']
+        value = oper['format'].format(value)
+    else:
+        func = oper
+
+    return func(column, value)
 
 
 def _sorter(direction):
@@ -33,9 +58,14 @@ def _sorter(direction):
 
 class Service(object):
     __metaclass__ = Injectable
+    depends_on = ('model', 'session', 'db_mapper', 'joins')
+    __slots__ = depends_on + ('_queryset',)
 
     serialize = staticmethod(to_dict)
-    depends_on = ('model', 'session', 'db_mapper', 'joins')
+    deserialize = staticmethod(convert)
+
+    apply_filter = staticmethod(_filter)
+    apply_sorter = staticmethod(lambda x, y: _sorter(y)(x))
 
     def __init(self):
         self.session = self.model = self.joins = self.db_mapper = None
@@ -63,20 +93,13 @@ class Service(object):
         for filter_data in filters:
             self.filter(**filter_data)
 
-    def _mapping_column(self, item):
-        names = item.split('.')
-        if len(names) == 2:  # Составной объект, например, user.name
-            outer_model, column = names
-            model = getattr(self.db_mapper, outer_model)
-        else:
-            model, column = self.model, item
-        return getattr(model, column)
-
+    @mapping_property
     def filter(self, property, operator, value):
         self._queryset = self._queryset.filter(
-            _filter(self._mapping_column(property),
-                    operator,
-                    self._prepare(property, value)
+            self.apply_filter(
+                property,
+                operator,
+                self.deserialize(property, value)
             )
         )
 
@@ -87,8 +110,11 @@ class Service(object):
         for sorter in sorters:
             self.sorter(**sorter)
 
+    @mapping_property
     def sorter(self, property, direction):
-        sort = _sorter(direction)(self._mapping_column(property))
+        sort = self.apply_sorter(
+            property,
+            direction)
         self._queryset = self._queryset.order_by(sort)
 
     def _load(self):
@@ -112,7 +138,8 @@ class Service(object):
     def update(self, obj, **kwargs):
         for item, value in kwargs.items():
             assert hasattr(obj, item)
-            value = self._prepare(item, value)
+            value = self.deserialize(
+                getattr(self.model, item), value)
             setattr(obj, item, value)
 
         self.session.add(obj)
@@ -123,7 +150,8 @@ class Service(object):
     def _init(self, obj, **kwargs):
         for item, value in kwargs.items():
             assert hasattr(obj, item)
-            value = self._prepare(item, value)
+            value = self.deserialize(
+                getattr(self.model, item), value)
             setattr(obj, item, value)
         return obj
 
@@ -132,18 +160,3 @@ class Service(object):
             property='id',
             operator='eq',
             value=value)
-
-    def _prepare(self, item, value):
-        """
-        Преобразование входящих значений согласно типам колонок
-
-        :param item: Наименование поля
-        :param value: Значение поля
-        :return: Преобразованное значение
-        """
-        type_ = self._mapping_column(item).type
-        if issubclass(type_.python_type, date):
-            if len(str(value)) == 13:  # timestamp c милисекундами
-                value /= 1000.0
-            return date.fromtimestamp(float(value))
-        return value

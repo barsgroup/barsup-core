@@ -17,9 +17,22 @@ def commit(f):
 
 
 class DictController(object):
+    """
+    Представляет уровень контроллера
+
+    Инжектирует в себя:
+        - service - компонент, отвечающий за уровень сервиса
+        - uid - идентификатор соединения
+
+    Выполняет задачи:
+        - Декларация и проверка на тип входящих параметров
+        - ...
+
+    """
+
     __metaclass__ = Injectable
-    __slots__ = ('service', 'uid')
     depends_on = ('service',)
+    __slots__ = depends_on + ('uid',)
 
     actions = (
         (r"/create", "create", {'records': 'list'}),
