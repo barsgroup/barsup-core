@@ -1,33 +1,31 @@
 # coding: utf-8
 from datetime import date
 import operator
-from sqlalchemy.sql.expression import asc, desc
-from sqlalchemy.sql.operators import ilike_op
+from sqlalchemy.sql import expression, operators
 from barsup.serializers import to_dict
 from barsup.container import Injectable
 
 
 def _filter(column, oper, value):
     values = {
-        'like': ilike_op,
+        'like': operators.ilike_op,
         'eq': operator.eq,
-        '=': operator.eq,
-
         'lt': operator.lt,
-        'gt': operator.gt
+        'gt': operator.gt,
+        'in': operators.in_op
     }
 
     assert oper in values.keys()
     operfunc = values[oper]
-    if operfunc == ilike_op:
+    if operfunc == operators.ilike_op:
         value = u'%{0}%'.format(value)
     return operfunc(column, value)
 
 
 def _sorter(direction):
     values = {
-        'ASC': asc,
-        'DESC': desc
+        'ASC': expression.asc,
+        'DESC': expression.desc
     }
     assert direction in values.keys()
     return values[direction]
