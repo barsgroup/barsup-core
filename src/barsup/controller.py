@@ -6,14 +6,16 @@ from barsup.container import Injectable
 from barsup.serializers import to_dict
 
 
-def commit(f):
-    @wraps(f)
-    def inner(self, *args, **kwargs):
-        result = f(self, *args, **kwargs)
-        self.service.session.commit()
-        return result
-
-    return inner
+# С появлением _Query, эту конструкцию нельзя использовать
+# session необходимо доставать по-другому
+# def commit(f):
+#     @wraps(f)
+#     def inner(self, *args, **kwargs):
+#         result = f(self, *args, **kwargs)
+#         self.service.session.commit()
+#         return result
+#
+#     return inner
 
 
 class DictController(object):
@@ -66,67 +68,65 @@ class DictController(object):
              query=None, filter=None,
              group=None, sort=None):
 
-        self.service.query('*')
-        if filter:
-            self.service.filters(filter)
+        with self.service as service:
 
-        if group:
-            self.service.filter(**group)
+            if filter:
+                service.filters(filter)
 
-        if sort:
-            self.service.sorters(sort)
+            if group:
+                service.filter(**group)
 
-        self.service.limiter(start, limit)
-        return self.service.load()
+            if sort:
+                service.sorters(sort)
+
+            service.limiter(start, limit)
+            return service.load()
 
     def get(self, id_, filter=None):
-        self.service.query('*')
-        self.service.filter_by_id(id_)
-        if filter:
-            self.service.filters(filter)
-        return to_dict(self.service.read())
+        with self.service as service:
+            service.filter_by_id(id_)
+            if filter:
+                service.filters(filter)
+            return to_dict(service.read())
 
     def _update(self, id_, record):
-        self.service.query('*')
-        self.service.filter_by_id(id_)
-        obj = self.service.read()
-        self.service.update(obj, **record)
+        with self.service as service:
+            service.filter_by_id(id_)
+            service.update(**record)
 
-        # Обновление зависимостей FK у объекта
-        self.service.session.commit()
+            obj = service.read()
         return obj
 
-    @commit
+    # @commit
     def bulk_update(self, records):
         return map(to_dict, [self._update(record['id'], record) for record in records])
 
-    @commit
+    # @commit
     def update(self, id_, data):
         return map(to_dict, [self._update(id_, data)])
 
     def _destroy(self, id_):
-        self.service.query('*')
-        self.service.filter_by_id(id_)
-        obj = self.service.read()
-        self.service.delete(obj)
+        self.service.get(id_).delete()
 
-    @commit
+    # @commit
     def bulk_destroy(self, identifiers):
         for id_ in identifiers:
             self._destroy(id_)
         return identifiers
 
-    @commit
+    # @commit
     def destroy(self, id_):
         self._destroy(id_)
         return id_
 
     def _create(self, record):
-        obj = self.service.create(**record)
-        # Для получения id объекта
-        self.service.session.flush()
+        with self.service as service:
+
+            obj = service.create(**record)
+            # Для получения id объекта
+            service.session.flush()
         return obj
 
-    @commit
+    # @commit
     def create(self, records):
         return map(to_dict, [self._create(record) for record in records])

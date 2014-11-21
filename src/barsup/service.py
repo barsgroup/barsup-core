@@ -10,6 +10,7 @@ def mapping_property(f):
     """
     Декоратор, возвращающий объект sqlalchemy по составному имени поля
     """
+
     def wrapper(self, property, *args, **kwargs):
         names = property.split('.')
         if len(names) == 2:  # Составной объект, например, user.name
@@ -19,6 +20,7 @@ def mapping_property(f):
             model, column = self.model, property
 
         return f(self, property=getattr(model, column), *args, **kwargs)
+
     return wrapper
 
 
@@ -56,21 +58,20 @@ def _sorter(direction):
     return values[direction]
 
 
-class Service(object):
-    __metaclass__ = Injectable
-    depends_on = ('model', 'session', 'db_mapper', 'joins')
-    __slots__ = depends_on + ('_queryset',)
-
+class _Query(object):
     serialize = staticmethod(to_dict)
     deserialize = staticmethod(convert)
 
     apply_filter = staticmethod(_filter)
     apply_sorter = staticmethod(lambda x, y: _sorter(y)(x))
 
-    def __init(self):
-        self.session = self.model = self.joins = self.db_mapper = None
+    def _init(self):
+        # Данный метод не вызывается
+        # он необходим для правильной подсветки синтаксиса
+        # т. к. синтаксические анализаторы не понимают внедренные зависимости
+        self._queryset = self.session = self.model = self.joins = self.db_mapper = None
 
-    def query(self, *args):
+    def __init__(self, *args):
         if '*' in args:
             self._queryset = self.session.query(self.model)
         else:
@@ -86,8 +87,7 @@ class Service(object):
 
             qs_method = getattr(self._queryset, method)
             self._queryset = qs_method(
-                getattr(self.db_mapper, model)
-            )
+                getattr(self.db_mapper, model))
 
     def filters(self, filters):
         for filter_data in filters:
@@ -96,12 +96,8 @@ class Service(object):
     @mapping_property
     def filter(self, property, operator, value):
         self._queryset = self._queryset.filter(
-            self.apply_filter(
-                property,
-                operator,
-                self.deserialize(property, value)
-            )
-        )
+            self.apply_filter(property, operator,
+                              self.deserialize(property, value)))
 
     def grouper(self, *args):
         self._queryset = self._queryset.group_by(*args)
@@ -112,9 +108,7 @@ class Service(object):
 
     @mapping_property
     def sorter(self, property, direction):
-        sort = self.apply_sorter(
-            property,
-            direction)
+        sort = self.apply_sorter(property, direction)
         self._queryset = self._queryset.order_by(sort)
 
     def _load(self):
@@ -128,26 +122,26 @@ class Service(object):
 
     # Record methods
     def create(self, **kwargs):
-        instance = self._init(self.model(), **kwargs)
+        instance = self._initialize(self.model(), **kwargs)
         self.session.add(instance)
         return instance
 
     def read(self):
         return self._queryset[0]
 
-    def update(self, obj, **kwargs):
+    def update(self, **kwargs):
+        params = {}
         for item, value in kwargs.items():
-            assert hasattr(obj, item)
             value = self.deserialize(
                 getattr(self.model, item), value)
-            setattr(obj, item, value)
 
-        self.session.add(obj)
+            params[item] = value
+        self._queryset.update(params)
 
-    def delete(self, obj):
-        self.session.delete(obj)
+    def delete(self):
+        self._queryset.delete()
 
-    def _init(self, obj, **kwargs):
+    def _initialize(self, obj, **kwargs):
         for item, value in kwargs.items():
             assert hasattr(obj, item)
             value = self.deserialize(
@@ -160,3 +154,23 @@ class Service(object):
             property='id',
             operator='eq',
             value=value)
+
+
+class Service(object):
+    __metaclass__ = Injectable
+    depends_on = ('model', 'session', 'db_mapper', 'joins')
+    __slots__ = depends_on + ('query_cls', )
+
+    def __init__(self, **kwargs):
+        self.query_cls = type('NewQuery', (_Query,), kwargs)
+
+    def __enter__(self):
+        return self.query_cls('*')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return
+
+    def get(self, id_):
+        q = self.query_cls('*')
+        q.filter_by_id(id_)
+        return q
