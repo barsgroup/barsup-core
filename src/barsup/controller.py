@@ -121,10 +121,11 @@ class DictController(object):
 
     def _create(self, record):
         with self.service as service:
-
             obj = service.create(**record)
-            # Для получения id объекта
-            service.session.flush()
+
+            # Для получения id объекта - flush
+            # FIXME: commit -> flush, после того, как добавится  mw:transaction
+            service.session.commit()
         return obj
 
     # @commit
