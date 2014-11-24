@@ -6,7 +6,7 @@ import json
 
 PARAM_PARSERS = {
     'json': json.loads,
-    'unicode': unicode,
+    'unicode': str,
     'int': int,
     'list': list,
     'dict': dict
@@ -52,7 +52,7 @@ class Router(object):
 
         parsed_params = {}
         parsers = self._param_decls.get((controller_name, action_name), {})
-        print params
+        print(params)
         for name, value in params.iteritems():
             if name == 'format':
                 continue
@@ -155,7 +155,7 @@ if __name__ == '__main__':
             yield ('Parametrized', {}, Parametrized)
 
     router = Router(FakeContainer(), 'rpc')
-    print router._mapper
+    print(router._mapper)
 
     assert router.populate(0, '/calc/10/2/sum', {}) == 12
     assert router.populate(0, '/calc/10/2/mul', {}) == 20
@@ -177,7 +177,7 @@ if __name__ == '__main__':
         try:
             fn(*args)
         except excs as e:
-            print e
+            print(e)
         except Exception as e:
             raise AssertionError('Thrown unexpected %r!' % e)
 

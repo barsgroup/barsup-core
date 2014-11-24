@@ -134,17 +134,17 @@ if __name__ == '__main__':
 
         @staticmethod
         def log(nxt, controller, action, **kwargs):
-            print "Calling %s:%s(%s)..." % (controller, action,
+            print("Calling %s:%s(%s)..." % (controller, action,
                                             ','.join('%s=%r' % p
-                                                     for p in kwargs.items())),
+                                                     for p in kwargs.items()))),
             res = nxt(controller, action, **kwargs)
-            print "returns %r" % res
+            print("returns %r" % res)
             return res
 
         @staticmethod
         def args_to_strs(nxt, *args, **kwargs):
             args = map(str, args)
-            kwargs = {k: str(v) for (k, v) in kwargs.iteritems()}
+            kwargs = {k: str(v) for (k, v) in kwargs.items()}
             return nxt(*args, **kwargs)
 
         @staticmethod

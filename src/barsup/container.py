@@ -266,8 +266,8 @@ if __name__ == '__main__':
     )(config)
 
     for name, _, realization in cont.itergroup('vehicle'):
-        print '%s :: %s' % (name, realization.__name__)
-        print '  ', cont.get('vehicle', name)
+        print('%s :: %s' % (name, realization.__name__))
+        print('  ', cont.get('vehicle', name))
 
     # ===========================================
     # тест на использование статичкских элементов

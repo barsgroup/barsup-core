@@ -4,10 +4,8 @@ import json
 
 import zmq
 
-from sys import stderr
-
-from container import Container as _Container
-from routing import Router as _Router
+from barsup.container import Container as _Container
+from barsup.routing import Router as _Router
 
 
 def run(container, apps, sock_pull, sock_push, **kwargs):
@@ -24,7 +22,7 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
     push_socket = context.socket(zmq.PUSH)
     push_socket.bind(sock_push)
 
-    print ("ZMQ served on (%s->%s)" % (sock_pull, sock_push))
+    print("ZMQ served on (%s->%s)" % (sock_pull, sock_push))
 
     while True:
         msg = pull_socket.recv_json()
@@ -46,7 +44,7 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
         except:
             answer = json.dumps({
                 'event': key,
-                'error': u'Невозможно выполнить текущую операцию'})
+                'error': 'Невозможно выполнить текущую операцию'})
             push_socket.send_json({
                 'uid': uid,
                 'data': answer
