@@ -156,8 +156,8 @@ class _Query:
             value=value)
 
 
-class Service:
-    __metaclass__ = Injectable
+class Service(metaclass=Injectable):
+
     depends_on = ('model', 'session', 'db_mapper', 'joins')
     __slots__ = depends_on + ('query_cls', )
 

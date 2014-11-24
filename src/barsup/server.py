@@ -53,7 +53,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
 def on_mq_recv(msgs):
     for msg in msgs:
-        msg = json.loads(msg)
+        msg = json.loads(msg.decode())
         uid, data = msg['uid'], msg['data']
         assert uid, "No UID in message!"
 

@@ -211,8 +211,8 @@ if __name__ == '__main__':
         def __str__(self):
             return "%s on %s" % (self.name, self.fuel)
 
-    class Vehicle:
-        __metaclass__ = Injectable
+    class Vehicle(metaclass=Injectable):
+
         depends_on = ('actuator', 'engine')
 
         def __str__(self):

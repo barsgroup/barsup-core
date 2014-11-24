@@ -18,7 +18,7 @@ from barsup.serializers import to_dict
 #     return inner
 
 
-class DictController:
+class DictController(metaclass=Injectable):
     """
     Представляет уровень контроллера
 
@@ -32,7 +32,6 @@ class DictController:
 
     """
 
-    __metaclass__ = Injectable
     depends_on = ('service',)
     __slots__ = depends_on + ('uid',)
 
@@ -80,7 +79,7 @@ class DictController:
                 service.sorters(sort)
 
             service.limiter(start, limit)
-            return service.load()
+            return list(service.load())
 
     def get(self, id_, filter=None):
         with self.service as service:
@@ -99,11 +98,14 @@ class DictController:
 
     # @commit
     def bulk_update(self, records):
-        return map(to_dict, [self._update(record['id'], record) for record in records])
+        return list(
+            map(to_dict,
+                [self._update(record['id'], record) for record in records]))
 
     # @commit
     def update(self, id_, data):
-        return map(to_dict, [self._update(id_, data)])
+        return list(
+            map(to_dict, [self._update(id_, data)]))
 
     def _destroy(self, id_):
         self.service.get(id_).delete()
@@ -130,4 +132,4 @@ class DictController:
 
     # @commit
     def create(self, records):
-        return map(to_dict, [self._create(record) for record in records])
+        return [to_dict(o) for o in (self._create(record) for record in records)]
