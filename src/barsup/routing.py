@@ -6,7 +6,7 @@ import json
 
 PARAM_PARSERS = {
     'json': json.loads,
-    'str': str,
+    'str': unicode,
     'int': int,
     'list': list,
     'dict': dict

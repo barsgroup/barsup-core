@@ -31,7 +31,7 @@ def to_dict(obj, excludes=frozenset(['metadata',
             value = date.strftime(value, '%m/%d/%Y')
 
         assert value is None or isinstance(value, (
-            str, list, tuple, dict, int, float
+            str, unicode, list, tuple, dict, int, float
         )), "Unserializable value: %r :: %s!" % (value, type(value))
         fields[field] = value
     return fields
