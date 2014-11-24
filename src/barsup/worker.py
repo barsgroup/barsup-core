@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json
+import simplejson as json
 
 import zmq
 
@@ -35,7 +35,7 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
             if not isinstance(params, dict):
                 raise TypeError('Event data must be a dict!')
             result = router.populate(uid, key, params)
-            answer = json.dumps({'event': key, 'data': result})
+            answer = json.dumps({'event': key, 'data': result}, default=_default_dump)
         except:
             answer = json.dumps({
                 'event': key,
@@ -48,6 +48,12 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
 
         push_socket.send_json({'uid': uid, 'data': answer})
 
+
+def _default_dump(obj):
+    if isinstance(obj, map):
+        return [o for o in obj]
+    else:
+        raise TypeError('Type "{0}" not supported'.format(obj))
 
 DEFAULT_PARAMS = {
     'container': {},

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import routes
-import json
+import simplejson as json
 
 
 PARAM_PARSERS = {

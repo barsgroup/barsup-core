@@ -1,5 +1,5 @@
 # coding: utf-8
-import json
+import simplejson as json
 import os
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
