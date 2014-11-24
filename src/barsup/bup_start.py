@@ -21,9 +21,9 @@ def run(command, params):
         return d1.update(d2) or d1
 
     if command == CMD_SERVER:
-        import server as module
+        import barsup.server as module
     elif command == CMD_WORKER:
-        import worker as module
+        import barsup.worker as module
 
     module.run(**merge(module.DEFAULT_PARAMS, params))
 
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     import json
     args = argv[1:]
     if len(args) not in (1, 2) or args[0] not in COMMANDS:
-        print (
+        print(
             "Usage: bup_start <command> <config-file>\nCommands: %s"
             % ','.join(COMMANDS))
     else:
@@ -49,12 +49,12 @@ if __name__ == '__main__':
         try:
             cfg = open(fname).read()
         except IOError:
-            print 'Can''t open file "%s"' % fname
+            print('Can''t open file "%s"' % fname)
             exit(1)
 
         try:
             params = json.loads(cfg)
         except ValueError:
-            print "Bad JSON format!"
+            print("Bad JSON format!")
         else:
             run(cmd, params)

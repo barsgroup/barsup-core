@@ -28,7 +28,7 @@ def _filter(column, operator_text, value):
     values = {
         'like': {
             'type': operators.ilike_op,
-            'format': u'%{0}%'
+            'format': '%{0}%'
         },
         'eq': operator.eq,
         'lt': operator.lt,

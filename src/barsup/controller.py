@@ -44,7 +44,7 @@ class DictController(object):
             'limit': 'int',
             'page': 'int',
             'filter': 'json',
-            'query': 'unicode',
+            'query': 'str',
             'sort': 'json'
         }),
         (r"/read/{id_:\d+}", "get", {

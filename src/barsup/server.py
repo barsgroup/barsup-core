@@ -19,7 +19,6 @@ UID_POOL = {}
 
 
 class MainHandler(RequestHandler):
-
     def initialize(self, index_path):
         self._index_path = index_path
 
@@ -39,14 +38,14 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         self._uid = self.get_cookie(UID_COOKIE)
         UID_POOL.setdefault(self._uid, set()).add(self)
-        print 'Connect. Cookie: %s' % self._uid
+        print('Connect. Cookie: %s' % self._uid)
 
     def on_close(self):
         conns = UID_POOL[self._uid]
         conns.remove(self)
         if conns:
             UID_POOL.pop(self._uid)
-        print 'Disconnect. Cookie: %s' % self._uid
+        print('Disconnect. Cookie: %s' % self._uid)
 
     def on_message(self, msg):
         self._mq_sock.send_json({'uid': self._uid, 'data': msg})
@@ -61,7 +60,7 @@ def on_mq_recv(msgs):
         # Временно отправка сообщений всем клиентам до тех пор,
         # # пока не будет правил привязки на основе api key
         # for _, hdls in UID_POOL.items():
-        #     for hdl in hdls:
+        # for hdl in hdls:
         #         hdl.write_message(data)
 
         # Отправка сообщения в классическом режиме:
@@ -71,7 +70,7 @@ def on_mq_recv(msgs):
             for hdl in hdls:
                 hdl.write_message(data)
         else:
-            print "Unknown UID:", uid
+            print("Unknown UID:", uid)
 
 
 def run(port, sock_pull, sock_push, static_root):
@@ -99,7 +98,7 @@ def run(port, sock_pull, sock_push, static_root):
     ])
 
     application.listen(port)
-    print 'Tornado starting at "%s" port' % port
+    print('Tornado starting at "%s" port' % port)
     IOLoop.instance().start()
 
 
