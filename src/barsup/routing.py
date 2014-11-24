@@ -13,7 +13,7 @@ PARAM_PARSERS = {
 }
 
 
-class Router(object):
+class Router:
     def __init__(self, cont, controller_group):
         self._mapper = routes.Mapper()
         self._cont = cont
@@ -89,7 +89,7 @@ __all__ = (Router,)
 
 if __name__ == '__main__':
 
-    class CalcController(object):
+    class CalcController:
 
         actions = (
             ('/{x:\d+}/{y:\d+}/sum', 'sum'),
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         def double(x):
             return int(x) * 2
 
-    class StrController(object):
+    class StrController:
 
         actions = (
             ('/{s:.+}/upper', 'upper'),
@@ -124,7 +124,7 @@ if __name__ == '__main__':
         def lower(s):
             return s.lower()
 
-    class Parametrized(object):
+    class Parametrized:
 
         actions = (
             ('/{x:\d+}/add', 'add',
@@ -137,7 +137,7 @@ if __name__ == '__main__':
             d.update(raw or {})
             return "%s:%s:%d" % (d['msg'], d['x'], d['y'])
 
-    class FakeContainer(object):
+    class FakeContainer:
         @staticmethod
         def get(grp, name):
             return {

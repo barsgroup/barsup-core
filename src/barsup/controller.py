@@ -18,7 +18,7 @@ from barsup.serializers import to_dict
 #     return inner
 
 
-class DictController(object):
+class DictController:
     """
     Представляет уровень контроллера
 
@@ -58,11 +58,11 @@ class DictController(object):
         (r"/destroy/{id_:\d+}", "destroy",),
     )
 
-    def _init(self):
-        # Данный метод не вызывается
-        # он необходим для правильной подсветки синтаксиса
-        # т. к. синтаксические анализаторы не понимают внедренные зависимости
-        self.service = None
+    # def _init(self):
+    #     # Данный метод не вызывается
+    #     # он необходим для правильной подсветки синтаксиса
+    #     # т. к. синтаксические анализаторы не понимают внедренные зависимости
+    #     self.service = None
 
     def read(self, start, limit, page,
              query=None, filter=None,

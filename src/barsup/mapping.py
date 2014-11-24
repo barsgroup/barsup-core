@@ -6,7 +6,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.sql.schema import Table, MetaData, Column
 
 
-class BuildMapping(object):
+class BuildMapping:
 
     @classmethod
     def create_fk(cls, __name__, **kwargs):
@@ -59,7 +59,7 @@ def get_model(db_mapper, name):
     return getattr(db_mapper, name)
 
 
-class DBMapper(object):
+class DBMapper:
     """
     Коллекция mappings для моделей из приложений,
     указанных при вызове конструктора

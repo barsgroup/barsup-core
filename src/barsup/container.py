@@ -28,7 +28,7 @@ class Injectable(type):
         return super(Injectable, cls).__new__(cls, name, bases, dic)
 
 
-class Container(object):
+class Container:
     """
     IoC Container для конфигурирования сервисов
     """
@@ -200,18 +200,18 @@ if __name__ == '__main__':
 
     # ============================================
     # конфигурирование экземпляров с зависимостями
-    class Named(object):
+    class Named:
         def __str__(self):
             return self.name
 
-    class Engine(object):
+    class Engine:
         def __init__(self, fuel):
             self.fuel = fuel
 
         def __str__(self):
             return "%s on %s" % (self.name, self.fuel)
 
-    class Vehicle(object):
+    class Vehicle:
         __metaclass__ = Injectable
         depends_on = ('actuator', 'engine')
 
