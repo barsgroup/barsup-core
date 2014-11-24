@@ -30,7 +30,7 @@ class Router(object):
                     try:
                         parsers = dict(
                             (k, PARAM_PARSERS[v])
-                            for k, v in params.iteritems()
+                            for k, v in params.items()
                         )
                     except KeyError:
                         raise ValueError(
@@ -53,7 +53,7 @@ class Router(object):
         parsed_params = {}
         parsers = self._param_decls.get((controller_name, action_name), {})
         print(params)
-        for name, value in params.iteritems():
+        for name, value in params.items():
             if name == 'format':
                 continue
             try:
