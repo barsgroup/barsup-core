@@ -94,7 +94,12 @@ class API(object):
         Функция ищется по паре "контроллер" + "экшн"
         """
         ctl = self._container.get(self._controller_group, controller)
-        action = getattr(ctl, action)
+        try:
+            action = getattr(ctl, action)
+        except AttributeError:
+            raise ValueError(
+                "The \"%s\" controller don't have an action \"%s\"!"
+                % (controller, action))
         return action(**kwargs)
 
 

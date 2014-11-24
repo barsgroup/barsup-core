@@ -10,7 +10,7 @@ from barsup.routing import Router as _Router
 
 def run(container, apps, sock_pull, sock_push, **kwargs):
     """
-    Запускает worker с указанными параметрами\
+    Запускает worker с указанными параметрами
     """
     cont = _Container(container)
     router = _Router(cont, 'controller')
@@ -36,17 +36,16 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
                 raise TypeError('Event data must be a dict!')
             result = router.populate(uid, key, params)
             answer = json.dumps({'event': key, 'data': result})
-        except:
+        except Exception:
             answer = json.dumps({
                 'event': key,
-                'error': 'Невозможно выполнить текущую операцию'})
+                'error': u'Невозможно выполнить текущую операцию'})
+            raise
+        finally:
             push_socket.send_json({
                 'uid': uid,
                 'data': answer
             })
-            raise
-
-        push_socket.send_json({'uid': uid, 'data': answer})
 
 
 DEFAULT_PARAMS = {

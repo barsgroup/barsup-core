@@ -14,8 +14,9 @@ PARAM_PARSERS = {
 
 
 class Router(object):
-    def __init__(self, cont, controller_group):
+    def __init__(self, call_api, cont, controller_group):
         self._mapper = routes.Mapper()
+        self._call_api = call_api
         self._cont = cont
         self._group = controller_group
         self._param_decls = {}
@@ -52,7 +53,6 @@ class Router(object):
 
         parsed_params = {}
         parsers = self._param_decls.get((controller_name, action_name), {})
-        print(params)
         for name, value in params.iteritems():
             if name == 'format':
                 continue
@@ -71,17 +71,9 @@ class Router(object):
                     % (name, controller_name, action_name)
                 )
 
-        controller = self._cont.get(self._group, controller_name)
-        controller.uid = uid
-        try:
-            action = getattr(controller, action_name)
-        except AttributeError:
-            raise ValueError(
-                "The \"%s\" controller don't have an action \"%s\"!"
-                % (controller_name, action_name))
-
         dest.update(parsed_params)
-        return action(**dest)
+        dest['uid'] = uid
+        return self._call_api(controller_name, action_name, **dest)
 
 
 __all__ = (Router,)
@@ -98,15 +90,15 @@ if __name__ == '__main__':
         )
 
         @staticmethod
-        def sum(x, y):
+        def sum(x, y, uid):
             return int(x) + int(y)
 
         @staticmethod
-        def mul(x, y):
+        def mul(x, y, uid):
             return int(x) * int(y)
 
         @staticmethod
-        def double(x):
+        def double(x, uid):
             return int(x) * 2
 
     class StrController(object):
@@ -117,11 +109,11 @@ if __name__ == '__main__':
         )
 
         @staticmethod
-        def upper(s):
+        def upper(s, uid):
             return s.upper()
 
         @staticmethod
-        def lower(s):
+        def lower(s, uid):
             return s.lower()
 
     class Parametrized(object):
@@ -132,7 +124,7 @@ if __name__ == '__main__':
         )
 
         @staticmethod
-        def add(x, y=42, msg='Unknown', raw=None):
+        def add(uid, x, y=42, msg='Unknown', raw=None):
             d = {'x': x, 'y': y, 'msg': msg}
             d.update(raw or {})
             return "%s:%s:%d" % (d['msg'], d['x'], d['y'])
@@ -154,7 +146,14 @@ if __name__ == '__main__':
             yield ('Str', {}, StrController)
             yield ('Parametrized', {}, Parametrized)
 
-    router = Router(FakeContainer(), 'rpc')
+    def fake_api(ctl, act, **kwargs):
+        return getattr({
+            'Calc': CalcController,
+            'Str': StrController,
+            'Parametrized': Parametrized,
+        }[ctl], act)(**kwargs)
+
+    router = Router(fake_api, FakeContainer(), 'rpc')
     print(router._mapper)
 
     assert router.populate(0, '/calc/10/2/sum', {}) == 12
