@@ -44,7 +44,7 @@ class BuildMapping(object):
     def cast_type(cls, obj):
         items = []
         for k, v in obj.items():
-            if isinstance(v, unicode) and v.startswith('$'):
+            if isinstance(v, str) and v.startswith('$'):
                 v = getattr(sqlalchemy, v[1:])
             elif isinstance(v, dict):
                 v = cls.cast_type(v)

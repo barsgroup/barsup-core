@@ -6,7 +6,7 @@ import json
 
 PARAM_PARSERS = {
     'json': json.loads,
-    'unicode': str,
+    'str': str,
     'int': int,
     'list': list,
     'dict': dict
@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
         actions = (
             ('/{x:\d+}/add', 'add',
-             {'x': 'int', 'y': 'int', 'msg': 'unicode', 'raw': 'json'}),
+             {'x': 'int', 'y': 'int', 'msg': 'str', 'raw': 'json'}),
         )
 
         @staticmethod

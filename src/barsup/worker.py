@@ -36,11 +36,6 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
                 raise TypeError('Event data must be a dict!')
             result = router.populate(uid, key, params)
             answer = json.dumps({'event': key, 'data': result})
-        # except (ValueError, TypeError) as e:
-        #     stderr.write(
-        #         'Error: "%s" (%s, %r)\n' % (e, key, params)
-        #     )
-        #     answer = json.dumps({'event': key, 'error': unicode(e)})
         except:
             answer = json.dumps({
                 'event': key,
