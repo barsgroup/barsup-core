@@ -15,7 +15,8 @@ def to_dict(obj, excludes=frozenset(['metadata',
     fields = {}
     for field in dir(obj):
         # алхимия генерирует вложенные коллекции с таким постфиксом
-        if field.startswith('_') or field in excludes or u'_collection' in field:
+        if field.startswith('_') or (
+                field in excludes or '_collection' in field):
             continue
 
         value = obj.__getattribute__(field)

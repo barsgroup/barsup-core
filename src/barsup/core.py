@@ -48,11 +48,15 @@ class API:
         # options
         options = self.default_options.copy()
         try:
-            opt_list = container.itergroup(option_group)
-        except (ValueError, KeyError):
+            patch = container.get(option_group, 'default')
+        except KeyError:
             pass
         else:
-            for option_name, _, option_value in opt_list:
+            try:
+                opt_list = patch.items()
+            except AttributeError:
+                raise TypeError('API options must be a dict instance!')
+            for option_name, option_value in opt_list:
                 if option_name not in self.default_options:
                     err('Wrong option name "%s"!' % option_name)
                 else:
@@ -139,9 +143,10 @@ if __name__ == '__main__':
 
         @staticmethod
         def log(nxt, controller, action, **kwargs):
-            print("Calling %s:%s(%s)..." % (controller, action,
-                                            ','.join('%s=%r' % p
-                                                     for p in kwargs.items()))),
+            print("Calling %s:%s(%s)..." % (
+                controller, action,
+                ','.join('%s=%r' % p for p in kwargs.items())
+            ), end='')
             res = nxt(controller, action, **kwargs)
             print("returns %r" % res)
             return res
@@ -164,15 +169,16 @@ if __name__ == '__main__':
                 ('middleware', 'res_to_str'): cls.res_to_str,
                 ('middleware', 'args_to_strs'): cls.args_to_strs,
                 ('middleware', 'log'): cls.log,
+                ('api_options', 'default'): {
+                    'middleware': ['log',
+                                   'res_to_str',
+                                   'args_to_strs']
+                }
             }[(grp, name)]
 
         @staticmethod
         def itergroup(grp):
             return {
-                'api_options': [
-                    ('middleware', None, ['log',
-                                          'res_to_str',
-                                          'args_to_strs'])],
                 'controller': [None]
             }[grp]
 

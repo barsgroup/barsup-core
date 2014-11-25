@@ -6,6 +6,7 @@ import zmq
 
 from barsup.container import Container as _Container
 from barsup.routing import Router as _Router
+from barsup.core import API as _API
 
 
 def run(container, apps, sock_pull, sock_push, **kwargs):
@@ -13,7 +14,7 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
     Запускает worker с указанными параметрами
     """
     cont = _Container(container)
-    router = _Router(cont, 'controller')
+    router = _Router(_API(cont).call, cont, 'controller')
 
     context = zmq.Context()
 
@@ -35,7 +36,10 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
             if not isinstance(params, dict):
                 raise TypeError('Event data must be a dict!')
             result = router.populate(uid, key, params)
-            answer = json.dumps({'event': key, 'data': result}, default=_default_dump)
+            answer = json.dumps(
+                {'event': key, 'data': result},
+                default=_default_dump
+            )
         except Exception:
             answer = json.dumps({
                 'event': key,
