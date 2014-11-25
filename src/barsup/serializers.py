@@ -16,7 +16,7 @@ def to_dict(obj, excludes=frozenset(['metadata',
     for field in dir(obj):
         # алхимия генерирует вложенные коллекции с таким постфиксом
         if field.startswith('_') or (
-                field in excludes or '_collection' in field):
+                        field in excludes or '_collection' in field):
             continue
 
         value = obj.__getattribute__(field)
@@ -28,13 +28,22 @@ def to_dict(obj, excludes=frozenset(['metadata',
             value = to_dict(value)
 
         elif isinstance(value, date):
-            # value = time.mktime(value.timetuple()) * 1000
             value = date.strftime(value, '%m/%d/%Y')
 
         assert value is None or isinstance(value, (
             str, list, tuple, dict, int, float
         )), "Unserializable value: %r :: %s!" % (value, type(value))
-        fields[field] = value
+
+        # Преобразование в плоские списки значений
+        # {'user': {'id': 1, 'name': 'Иванов'} ->
+        # {'user.id': 1, 'user.name': 'Иванов'}
+        if isinstance(value, dict):
+            for child_field, child_value in value.items():
+                complex_field = '{0}.{1}'.format(field, child_field)
+                fields[complex_field] = child_value
+        else:
+            fields[field] = value
+
     return fields
 
 
