@@ -4,9 +4,11 @@ from sqlalchemy.orm.session import Session
 
 
 class DefaultSession(object):
+    __slots__ = ('session', )
+
     def __init__(self, connection):
-        self._session = Session(
-            create_engine(connection, echo=True))
+        engine = create_engine(connection, echo=True)
+        self.session = Session(engine)
 
     def __getattr__(self, item):
-        return getattr(self._session, item)
+        return getattr(self.session, item)

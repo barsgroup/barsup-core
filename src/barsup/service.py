@@ -124,6 +124,9 @@ class _Query:
     def create(self, **kwargs):
         instance = self._initialize(self.model(), **kwargs)
         self.session.add(instance)
+
+        # Для получения id объекта - flush
+        self.session.flush()
         return instance
 
     def read(self):
