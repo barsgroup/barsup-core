@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import routes
-import json
+import simplejson as json
 
 
 PARAM_PARSERS = {
     'json': json.loads,
-    'str': unicode,
+    'str': str,
     'int': int,
     'list': list,
     'dict': dict
 }
 
 
-class Router(object):
+class Router:
     def __init__(self, call_api, cont, controller_group):
         self._mapper = routes.Mapper()
         self._call_api = call_api
@@ -31,7 +31,7 @@ class Router(object):
                     try:
                         parsers = dict(
                             (k, PARAM_PARSERS[v])
-                            for k, v in params.iteritems()
+                            for k, v in params.items()
                         )
                     except KeyError:
                         raise ValueError(
@@ -53,7 +53,7 @@ class Router(object):
 
         parsed_params = {}
         parsers = self._param_decls.get((controller_name, action_name), {})
-        for name, value in params.iteritems():
+        for name, value in params.items():
             if name == 'format':
                 continue
             try:
@@ -81,7 +81,7 @@ __all__ = (Router,)
 
 if __name__ == '__main__':
 
-    class CalcController(object):
+    class CalcController:
 
         actions = (
             ('/{x:\d+}/{y:\d+}/sum', 'sum'),
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         def double(x, uid):
             return int(x) * 2
 
-    class StrController(object):
+    class StrController:
 
         actions = (
             ('/{s:.+}/upper', 'upper'),
@@ -116,7 +116,7 @@ if __name__ == '__main__':
         def lower(s, uid):
             return s.lower()
 
-    class Parametrized(object):
+    class Parametrized:
 
         actions = (
             ('/{x:\d+}/add', 'add',
@@ -129,7 +129,7 @@ if __name__ == '__main__':
             d.update(raw or {})
             return "%s:%s:%d" % (d['msg'], d['x'], d['y'])
 
-    class FakeContainer(object):
+    class FakeContainer:
         @staticmethod
         def get(grp, name):
             return {

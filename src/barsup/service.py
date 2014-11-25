@@ -58,18 +58,18 @@ def _sorter(direction):
     return values[direction]
 
 
-class _Query(object):
+class _Query:
     serialize = staticmethod(to_dict)
     deserialize = staticmethod(convert)
 
     apply_filter = staticmethod(_filter)
     apply_sorter = staticmethod(lambda x, y: _sorter(y)(x))
 
-    def _init(self):
-        # Данный метод не вызывается
-        # он необходим для правильной подсветки синтаксиса
-        # т. к. синтаксические анализаторы не понимают внедренные зависимости
-        self._queryset = self.session = self.model = self.joins = self.db_mapper = None
+    # def _init(self):
+    #     # Данный метод не вызывается
+    #     # он необходим для правильной подсветки синтаксиса
+    #     # т. к. синтаксические анализаторы не понимают внедренные зависимости
+    #     self._queryset = self.session = self.model = self.joins = self.db_mapper = None
 
     def __init__(self, *args):
         if '*' in args:
@@ -156,8 +156,8 @@ class _Query(object):
             value=value)
 
 
-class Service(object):
-    __metaclass__ = Injectable
+class Service(metaclass=Injectable):
+
     depends_on = ('model', 'session', 'db_mapper', 'joins')
     __slots__ = depends_on + ('query_cls', )
 

@@ -6,3 +6,4 @@ routes
 pyzmq
 python-dateutil
 alembic
+simplejson

@@ -28,7 +28,7 @@ class Injectable(type):
         return super(Injectable, cls).__new__(cls, name, bases, dic)
 
 
-class Container(object):
+class Container:
     """
     IoC Container для конфигурирования сервисов
     """
@@ -54,7 +54,7 @@ class Container(object):
         :type param: dict
         """
         def apply_if(a, b):
-            for bk, bv in b.iteritems():
+            for bk, bv in b.items():
                 av = a.get(bk)
                 if av is None:
                     a[bk] = bv
@@ -71,10 +71,10 @@ class Container(object):
             return a
 
         result = {}
-        for sect, elems in config.iteritems():
+        for sect, elems in config.items():
             plan = elems.get('__default__', {})
             section = result[sect] = {}
-            for el_name, customization in elems.iteritems():
+            for el_name, customization in elems.items():
                 if el_name != '__default__':
                     section[el_name] = apply_if(plan.copy(), customization)
         return result
@@ -140,7 +140,7 @@ class Container(object):
                 result = self._singletones.get((group, name))
             if not is_singleton or not result:
                 deps = {}
-                for dep_group, dep_name in blueprint.iteritems():
+                for dep_group, dep_name in blueprint.items():
                     if dep_group.startswith('_'):
                         continue
                     elif dep_group.startswith('$'):
@@ -164,13 +164,13 @@ class Container(object):
 
         is_ident = re.compile(r'(?i)^[a-z]\w*$').match
 
-        for group, elems in cfg.iteritems():
+        for group, elems in cfg.items():
             if not is_ident(group):
                 wrong('group', (group,))
-            for el, cfg in elems.iteritems():
+            for el, cfg in elems.items():
                 if not is_ident(el) and el != '__default__':
                     wrong('element', (group, el))
-                for k, v in cfg.iteritems():
+                for k, v in cfg.items():
                     if not (
                         is_ident(k) or
                         (is_ident(k[1:]) and k[0] == '$') or
@@ -200,19 +200,19 @@ if __name__ == '__main__':
 
     # ============================================
     # конфигурирование экземпляров с зависимостями
-    class Named(object):
+    class Named:
         def __str__(self):
             return self.name
 
-    class Engine(object):
+    class Engine:
         def __init__(self, fuel):
             self.fuel = fuel
 
         def __str__(self):
             return "%s on %s" % (self.name, self.fuel)
 
-    class Vehicle(object):
-        __metaclass__ = Injectable
+    class Vehicle(metaclass=Injectable):
+
         depends_on = ('actuator', 'engine')
 
         def __str__(self):

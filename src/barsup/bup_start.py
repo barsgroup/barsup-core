@@ -30,7 +30,7 @@ def run(command, params):
 
 if __name__ == '__main__':
     from sys import argv
-    import json
+    import simplejson as json
     args = argv[1:]
     if len(args) not in (1, 2) or args[0] not in COMMANDS:
         print(

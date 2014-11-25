@@ -3,7 +3,7 @@
 from functools import partial
 
 
-class _Wrappable(object):
+class _Wrappable:
     """
     Оборачиватель метода/функции в слои middleware
     """
@@ -17,7 +17,7 @@ class _Wrappable(object):
         return self.fn(*args, **kwargs)
 
 
-class API(object):
+class API:
     """
     Обёртка над слоем контроллеров, добавляющая уровень middleware
     и отвечающая за непосредственное общение с контроллерами.
@@ -108,7 +108,7 @@ __all__ = (API,)
 
 if __name__ == '__main__':
 
-    class WrappableTest(object):
+    class WrappableTest:
         def __init__(self):
             self.m = _Wrappable(self.m)
 
@@ -123,15 +123,15 @@ if __name__ == '__main__':
     assert wt.m(1, 2) == 22
 
     # API test
-    class FakeContainer(object):
+    class FakeContainer:
 
-        class Math(object):
+        class Math:
 
             @staticmethod
             def add(a, b):
                 return a + b
 
-        class Str(object):
+        class Str:
 
             @staticmethod
             def upper(s):

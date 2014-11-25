@@ -18,7 +18,7 @@ from barsup.serializers import to_dict
 #     return inner
 
 
-class DictController(object):
+class DictController(metaclass=Injectable):
     """
     Представляет уровень контроллера
 
@@ -32,7 +32,6 @@ class DictController(object):
 
     """
 
-    __metaclass__ = Injectable
     depends_on = ('service',)
     __slots__ = depends_on + ('uid',)
 
@@ -58,11 +57,11 @@ class DictController(object):
         (r"/destroy/{id_:\d+}", "destroy",),
     )
 
-    def _init(self):
-        # Данный метод не вызывается
-        # он необходим для правильной подсветки синтаксиса
-        # т. к. синтаксические анализаторы не понимают внедренные зависимости
-        self.service = None
+    # def _init(self):
+    #     # Данный метод не вызывается
+    #     # он необходим для правильной подсветки синтаксиса
+    #     # т. к. синтаксические анализаторы не понимают внедренные зависимости
+    #     self.service = None
 
     def read(self, start, limit, page,
              query=None, filter=None,
@@ -99,7 +98,8 @@ class DictController(object):
 
     # @commit
     def bulk_update(self, records):
-        return map(to_dict, [self._update(record['id'], record) for record in records])
+        return map(to_dict,
+                [self._update(record['id'], record) for record in records])
 
     # @commit
     def update(self, id_, data):
@@ -130,4 +130,4 @@ class DictController(object):
 
     # @commit
     def create(self, records):
-        return map(to_dict, [self._create(record) for record in records])
+        return map(to_dict, (self._create(record) for record in records))
