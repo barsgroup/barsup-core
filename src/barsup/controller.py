@@ -107,3 +107,6 @@ class DictController(metaclass=Injectable):
 
     def create(self, records):
         return map(to_dict, (self._create(record) for record in records))
+
+
+__all__ = (DictController,)

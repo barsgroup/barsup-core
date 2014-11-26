@@ -32,7 +32,7 @@ def log_errors_to_stderr(nxt, controller, action, **params):
         raise
 
 
-def check_uid_presence(nxt, controller, action, uid, **params):
+def check_uid_presence(nxt, controller, action, web_session_id, **params):
     """
     Middleware, проверяющая наличие UserID среди параметров.
     При этом uid дальше не передается

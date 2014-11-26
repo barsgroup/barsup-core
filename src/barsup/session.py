@@ -12,3 +12,5 @@ class DefaultSession(object):
 
     def __getattr__(self, item):
         return getattr(self.session, item)
+
+__all__ = (DefaultSession, )

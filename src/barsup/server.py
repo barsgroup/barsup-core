@@ -15,7 +15,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 
 UID_COOKIE = 'barsup_session'
-UID_POOL = {}
+SESSION_POOL = {}
 
 
 class MainHandler(RequestHandler):
@@ -26,51 +26,54 @@ class MainHandler(RequestHandler):
         if not self.get_cookie(UID_COOKIE):
             hash_ = hashlib.sha1(str(time.time()))
             self.set_cookie(UID_COOKIE, hash_.hexdigest())
-        return self.render(os.path.join(self._index_path, "index.html"))
+        return self.render(
+            os.path.join(self._index_path, "index.html"))
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
-    _uid = None
+    _session_id = None
 
     def initialize(self, mq):
         self._mq_sock = mq
 
     def open(self):
-        self._uid = self.get_cookie(UID_COOKIE)
-        UID_POOL.setdefault(self._uid, set()).add(self)
-        print('Connect. Cookie: %s' % self._uid)
+        self._session_id = self.get_cookie(UID_COOKIE)
+        SESSION_POOL.setdefault(self._session_id, set()).add(self)
+        print('Connect. Cookie: %s' % self._session_id)
 
     def on_close(self):
-        conns = UID_POOL[self._uid]
+        conns = SESSION_POOL[self._session_id]
         conns.remove(self)
         if conns:
-            UID_POOL.pop(self._uid)
-        print('Disconnect. Cookie: %s' % self._uid)
+            SESSION_POOL.pop(self._session_id)
+        print('Disconnect. Cookie: %s' % self._session_id)
 
     def on_message(self, msg):
-        self._mq_sock.send_json({'uid': self._uid, 'data': msg})
+        self._mq_sock.send_json({
+            'web_session_id': self._session_id,
+            'data': msg})
 
 
 def on_mq_recv(msgs):
     for msg in msgs:
         msg = json.loads(msg.decode())
-        uid, data = msg['uid'], msg['data']
-        assert uid, "No UID in message!"
+        session_id, data = msg['web_session_id'], msg['data']
+        assert session_id, 'No "session_id" in message!'
 
         # Временно отправка сообщений всем клиентам до тех пор,
         # # пока не будет правил привязки на основе api key
-        # for _, hdls in UID_POOL.items():
+        # for _, hdls in SESSION_POOL.items():
         # for hdl in hdls:
-        #         hdl.write_message(data)
+        # hdl.write_message(data)
 
         # Отправка сообщения в классическом режиме:
         # Кто прислал сообщение, тот и получает ответ
-        hdls = UID_POOL.get(uid)
+        hdls = SESSION_POOL.get(session_id)
         if hdls:
             for hdl in hdls:
                 hdl.write_message(data)
         else:
-            print("Unknown UID:", uid)
+            print('Unknown session_id:', session_id)
 
 
 def run(port, sock_pull, sock_push, static_root):

@@ -1,13 +1,14 @@
 # coding: utf-8
-import simplejson as json
 import os
+
+import simplejson as json
+
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.sql.schema import Table, MetaData, Column
+from sqlalchemy.sql.schema import Table, MetaData, Column, Index
 
 
 class BuildMapping:
-
     @classmethod
     def create_fk(cls, __name__, **kwargs):
         return __name__(**kwargs)
@@ -27,18 +28,25 @@ class BuildMapping:
     @classmethod
     def load(cls, meta, fname):
         with open(fname, 'r') as f:
-            cls.create(
+            cls.create_table(
                 meta,
                 json.loads(f.read(), object_hook=cls.cast_type))
 
     @classmethod
-    def create(cls, meta, tables):
+    def create_table(cls, meta, tables):
         for table in tables:
+            indices = []
+            if table.get('__indices__'):
+                indices = [cls.create_indeces(**index) for index in table['__indices__']]
+
             Table(
                 table['__name__'],
                 meta,
-                *[cls.create_column(**column)
-                  for column in table['__columns__']])
+                *([cls.create_column(**column) for column in table['__columns__']] + indices))
+
+    @classmethod
+    def create_indeces(cls, __name__, __columns__, **kwargs):
+        return Index(__name__, *__columns__, **kwargs)
 
     @classmethod
     def cast_type(cls, obj):
@@ -64,6 +72,7 @@ class DBMapper:
     Коллекция mappings для моделей из приложений,
     указанных при вызове конструктора
     """
+
     def __init__(self, path=None):
         if not path:
             path = os.path.abspath('.')
@@ -78,3 +87,6 @@ class DBMapper:
 
     def __getattr__(self, attr):
         return getattr(self._base.classes, attr)
+
+
+__all__ = (DBMapper, get_model)

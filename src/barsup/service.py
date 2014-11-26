@@ -6,7 +6,7 @@ from barsup.serializers import to_dict, convert
 from barsup.container import Injectable
 
 
-def mapping_property(f):
+def _mapping_property(f):
     """
     Декоратор, возвращающий объект sqlalchemy по составному имени поля
     """
@@ -65,11 +65,11 @@ class _Query:
     apply_filter = staticmethod(_filter)
     apply_sorter = staticmethod(lambda x, y: _sorter(y)(x))
 
-    # def _init(self):
-    #     # Данный метод не вызывается
-    #     # он необходим для правильной подсветки синтаксиса
-    #     # т. к. синтаксические анализаторы не понимают внедренные зависимости
-    #     self._queryset = self.session = self.model = self.joins = self.db_mapper = None
+    def _init(self):
+        # Данный метод не вызывается
+        # он необходим для правильной подсветки синтаксиса
+        # т. к. синтаксические анализаторы не понимают внедренные зависимости
+        self._queryset = self.session = self.model = self.joins = self.db_mapper = None
 
     def __init__(self, *args):
         if '*' in args:
@@ -93,7 +93,7 @@ class _Query:
         for filter_data in filters:
             self.filter(**filter_data)
 
-    @mapping_property
+    @_mapping_property
     def filter(self, property, operator, value):
         self._queryset = self._queryset.filter(
             self.apply_filter(property, operator,
@@ -106,7 +106,7 @@ class _Query:
         for sorter in sorters:
             self.sorter(**sorter)
 
-    @mapping_property
+    @_mapping_property
     def sorter(self, property, direction):
         sort = self.apply_sorter(property, direction)
         self._queryset = self._queryset.order_by(sort)
@@ -160,7 +160,6 @@ class _Query:
 
 
 class Service(metaclass=Injectable):
-
     depends_on = ('model', 'session', 'db_mapper', 'joins')
     __slots__ = depends_on + ('query_cls', )
 
@@ -177,3 +176,6 @@ class Service(metaclass=Injectable):
         q = self.query_cls('*')
         q.filter_by_id(id_)
         return q
+
+
+__all__ = (Service, )

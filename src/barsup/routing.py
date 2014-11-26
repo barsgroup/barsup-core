@@ -38,10 +38,10 @@ class Router:
                             'Unknown action param type in %s!' % controller)
                     self._param_decls[(controller, action)] = parsers
 
-    def populate(self, uid, key, params):
+    def populate(self, web_session_id, key, params):
         """
         Populates the url-like API-key as action of some controller
-        :uid: UserID
+        :web_session_id: web session id
         :key: API-key
         :params: action params
         """
@@ -72,7 +72,7 @@ class Router:
                 )
 
         dest.update(parsed_params)
-        dest['uid'] = uid
+        dest['web_session_id'] = web_session_id
         return self._call_api(controller_name, action_name, **dest)
 
 

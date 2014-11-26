@@ -27,7 +27,7 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
 
     while True:
         msg = pull_socket.recv_json()
-        uid = msg['uid']
+        web_session_id = msg['web_session_id']
         data = json.loads(msg['data'])
         key = data['event']
         params = data.get('data', {})
@@ -35,7 +35,7 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
         try:
             if not isinstance(params, dict):
                 raise TypeError('Event data must be a dict!')
-            result = router.populate(uid, key, params)
+            result = router.populate(web_session_id, key, params)
             answer = json.dumps(
                 {'event': key, 'data': result},
                 default=_default_dump
@@ -47,7 +47,7 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
             raise
         finally:
             push_socket.send_json({
-                'uid': uid,
+                'web_session_id': web_session_id,
                 'data': answer
             })
 
