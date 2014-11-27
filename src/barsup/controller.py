@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from barsup.container import Injectable
+from yadic.container import Injectable
 from barsup.serializers import to_dict
 
 
