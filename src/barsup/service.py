@@ -130,7 +130,7 @@ class _Query:
         return instance
 
     def read(self):
-        return self._queryset[0]
+        return self._queryset[0]  # FIXME: заменять на .scalar()
 
     def update(self, **kwargs):
         params = {}
@@ -161,7 +161,7 @@ class _Query:
 
 class Service(metaclass=Injectable):
     depends_on = ('model', 'session', 'db_mapper', 'joins')
-    __slots__ = depends_on + ('query_cls', )
+    # __slots__ = depends_on + ('query_cls', )
 
     def __init__(self, **kwargs):
         self.query_cls = type('NewQuery', (_Query,), kwargs)

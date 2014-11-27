@@ -4,7 +4,7 @@ import simplejson as json
 
 import zmq
 
-from yadic.container import Container as _Container
+from yadic import Container as _Container
 from barsup.routing import Router as _Router
 from barsup.core import API as _API
 
