@@ -4,13 +4,21 @@ from barsup.service import Service
 
 
 class AuthenticationService(Service):
+
+    depends_on = Service.depends_on + (
+        'user_model',
+    )
+
+    def __init__(self, **kwargs):
+        super(AuthenticationService, self).__init__(**kwargs)
+
     def login(self, login, password, web_session_id):
         with self as service:
             user_id = service.session.query(
-                service.db_mapper.user.id
+                service.user_model.id
             ).filter(
-                service.db_mapper.user.login == login,
-                service.db_mapper.user.password == password
+                service.user_model.login == login,
+                service.user_model.password == password
             ).scalar()
 
         if user_id:
