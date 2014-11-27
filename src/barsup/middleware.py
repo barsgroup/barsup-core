@@ -5,7 +5,6 @@ API-middleware
 
 from datetime import datetime
 from sys import stderr
-from barsup.exceptions import NeedLogin
 
 NEED_LOGIN = 'need_login'
 

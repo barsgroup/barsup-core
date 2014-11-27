@@ -1,5 +1,5 @@
 # coding: utf-8
-from barsup.container import Injectable
+from yadic.container import Injectable
 
 
 class Authentication(metaclass=Injectable):

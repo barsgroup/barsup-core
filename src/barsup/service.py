@@ -1,10 +1,9 @@
 # coding: utf-8
 import operator
 from sqlalchemy.sql import expression, operators
+from yadic import Injectable
 
 from barsup.serializers import to_dict, convert
-from barsup.container import Injectable
-
 
 def _mapping_property(f):
     """

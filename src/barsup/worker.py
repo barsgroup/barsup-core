@@ -3,8 +3,8 @@
 import simplejson as json
 
 import zmq
-
 from yadic import Container as _Container
+
 from barsup.routing import Router as _Router
 from barsup.core import API as _API
 
@@ -35,28 +35,26 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
         try:
             if not isinstance(params, dict):
                 raise TypeError('Event data must be a dict!')
-            result = router.populate(web_session_id, key, params)
-            answer = json.dumps(
-                {'event': key, 'data': result},
-                default=_default_dump
-            )
+            status, result = router.populate(web_session_id, key, params)
+
         except Exception:
-            answer = json.dumps({
-                'event': key,
-                'error': 'Невозможно выполнить текущую операцию'})
+            status, result = False, 'Невозможно выполнить текущую операцию'
             raise
         finally:
             push_socket.send_json({
                 'web_session_id': web_session_id,
-                'data': answer
-            })
+                'data': json.dumps({'data': result,
+                                    'success': status,
+                                    'event': key},
+                                   default=_serialize_to_json)})
 
 
-def _default_dump(obj):
+def _serialize_to_json(obj):
     if isinstance(obj, map):
         return [o for o in obj]
     else:
         raise TypeError('Type "{0}" not supported'.format(obj))
+
 
 DEFAULT_PARAMS = {
     'container': {},
