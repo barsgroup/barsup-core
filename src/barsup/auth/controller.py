@@ -27,5 +27,5 @@ class Authentication(metaclass=Injectable):
     def logout(self, web_session_id):
         pass
 
-    def is_login(self, web_session_id):
-        return self.service.is_login(web_session_id)
+    def is_logged_in(self, web_session_id):
+        return self.service.is_logged_in(web_session_id)

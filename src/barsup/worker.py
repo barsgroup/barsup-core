@@ -33,30 +33,21 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
         key = data['event']
         params = data.get('data', {})
 
-        answer = {}
         try:
             if not isinstance(params, dict):
                 raise TypeError('Event data must be a dict!')
-            result = router.populate(web_session_id, key, params)
-            answer = {'success': True, 'data': result}
+            status, result = router.populate(web_session_id, key, params)
 
-        except NeedLogin:
-            answer = {
-                'need_login': True,
-                'success': False
-            }
-
-        except Exception as e:
-            answer = {
-                'success': False,
-                'error': 'Невозможно выполнить текущую операцию'}
+        except Exception:
+            status, result = False, 'Невозможно выполнить текущую операцию'
             raise
         finally:
-            answer['event'] = key
             push_socket.send_json({
                 'web_session_id': web_session_id,
-                'data': json.dumps(answer, default=_serialize_to_json)
-            })
+                'data': json.dumps({'data': result,
+                                    'success': status,
+                                    'event': key},
+                                   default=_serialize_to_json)})
 
 
 def _serialize_to_json(obj):
@@ -64,6 +55,7 @@ def _serialize_to_json(obj):
         return [o for o in obj]
     else:
         raise TypeError('Type "{0}" not supported'.format(obj))
+
 
 DEFAULT_PARAMS = {
     'container': {},

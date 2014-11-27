@@ -27,7 +27,7 @@ class AuthenticationService(Service):
     def logout(self, web_session_id):
         pass
 
-    def is_login(self, web_session_id):
+    def is_logged_in(self, web_session_id):
         with self as service:
             service.filter(
                 property='web_session_id',

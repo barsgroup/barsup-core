@@ -7,6 +7,8 @@ from datetime import datetime
 from sys import stderr
 from barsup.exceptions import NeedLogin
 
+NEED_LOGIN = 'need_login'
+
 
 def _timestamped(s):
     """
@@ -41,10 +43,13 @@ def authentificate(controller):
     auth_controller = controller
 
     def wrapper(nxt, controller, *args, **params):
-        if auth_controller.__class__.__name__ == controller or auth_controller.is_login(params.pop('web_session_id')):
+        if auth_controller.__class__.__name__ == controller:
             return nxt(controller, *args, **params)
         else:
-            raise NeedLogin()
+            if not auth_controller.is_logged_in(params.pop('web_session_id')):
+                return False, NEED_LOGIN
+
+            return nxt(controller, *args, **params)
 
     return wrapper
 
@@ -65,3 +70,11 @@ def transact(session):
             return result
 
     return wrapper
+
+
+def wrap_result(nxt, *args, **kwargs):
+    result = nxt(*args, **kwargs)
+    if not (isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], bool)):
+        return True, result
+    else:
+        return result
