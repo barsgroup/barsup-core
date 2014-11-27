@@ -24,7 +24,7 @@ class MainHandler(RequestHandler):
 
     def get(self):
         if not self.get_cookie(UID_COOKIE):
-            hash_ = hashlib.sha1(str(time.time()))
+            hash_ = hashlib.sha1(str(time.time()).encode())
             self.set_cookie(UID_COOKIE, hash_.hexdigest())
         return self.render(
             os.path.join(self._index_path, "index.html"))

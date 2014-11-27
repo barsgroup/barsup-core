@@ -49,7 +49,7 @@ class DictController(metaclass=Injectable):
         # т. к. синтаксические анализаторы не понимают внедренные зависимости
         self.service = None
 
-    def read(self, start, limit, page,
+    def read(self, start=None, limit=None, page=None,
              query=None, filter=None,
              group=None, sort=None):
 
@@ -64,7 +64,9 @@ class DictController(metaclass=Injectable):
             if sort:
                 service.sorters(sort)
 
-            service.limiter(start, limit)
+            if start and limit:
+                service.limiter(start, limit)
+
             return service.load()
 
     def get(self, id_, filter=None):

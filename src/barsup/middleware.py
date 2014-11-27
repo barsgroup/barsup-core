@@ -5,6 +5,7 @@ API-middleware
 
 from datetime import datetime
 from sys import stderr
+from barsup.exceptions import NeedLogin
 
 
 def _timestamped(s):
@@ -32,12 +33,20 @@ def log_errors_to_stderr(nxt, controller, action, **params):
         raise
 
 
-def check_uid_presence(nxt, controller, action, web_session_id, **params):
+def authentificate(controller):
     """
-    Middleware, проверяющая наличие UserID среди параметров.
-    При этом uid дальше не передается
+    Middleware, проверяющая наличие session id среди параметров.
+    При этом web_session_id дальше не передается
     """
-    return nxt(controller, action, **params)
+    auth_controller = controller
+
+    def wrapper(nxt, controller, *args, **params):
+        if auth_controller.__class__.__name__ == controller or auth_controller.is_login(params.pop('web_session_id')):
+            return nxt(controller, *args, **params)
+        else:
+            raise NeedLogin()
+
+    return wrapper
 
 
 def transact(session):
