@@ -5,6 +5,7 @@ from yadic import Injectable
 
 from barsup.serializers import to_dict, convert
 
+
 def _mapping_property(f):
     """
     Декоратор, возвращающий объект sqlalchemy по составному имени поля
@@ -18,7 +19,7 @@ def _mapping_property(f):
         else:
             model, column = self.model, property
 
-        return f(self, property=getattr(model, column), *args, **kwargs)
+        return f(self, getattr(model, column), *args, **kwargs)
 
     return wrapper
 
@@ -129,7 +130,7 @@ class _Query:
         return instance
 
     def read(self):
-        return self._queryset[0]  # FIXME: заменять на .scalar()
+        return self._queryset.scalar()
 
     def update(self, **kwargs):
         params = {}
