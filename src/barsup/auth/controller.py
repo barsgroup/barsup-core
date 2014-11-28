@@ -29,3 +29,8 @@ class Authentication(metaclass=Injectable):
 
     def is_logged_in(self, web_session_id):
         return self.service.is_logged_in(web_session_id)
+
+
+class Authorization(Authentication):
+    def has_perm(self, uid, controller, action):
+        return self.service.has_perm(uid, controller, action)

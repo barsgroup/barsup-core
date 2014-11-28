@@ -6,7 +6,8 @@ API-middleware
 from datetime import datetime
 from sys import stderr
 
-NEED_LOGIN = 'need_login'
+NEED_LOGIN = 'need-login'
+NOT_PERMIT = 'not-permit'
 
 
 def _timestamped(s):
@@ -34,21 +35,26 @@ def log_errors_to_stderr(nxt, controller, action, **params):
         raise
 
 
-def authentificate(controller):
+def access_check(controller):
     """
     Middleware, проверяющая наличие session id среди параметров.
     При этом web_session_id дальше не передается
     """
     auth_controller = controller
+    has_perm = getattr(controller, 'has_perm', lambda *a, **k: True)
 
-    def wrapper(nxt, controller, *args, **params):
+    def wrapper(nxt, controller, action, **params):
         if auth_controller.__class__.__name__ == controller:
-            return nxt(controller, *args, **params)
+            return nxt(controller, action, **params)
         else:
-            if not auth_controller.is_logged_in(params.pop('web_session_id')):
+            uid = auth_controller.is_logged_in(params.pop('web_session_id'))
+            if not uid:
                 return False, NEED_LOGIN
 
-            return nxt(controller, *args, **params)
+            if not has_perm(uid, controller, action):
+                return False, NOT_PERMIT
+
+            return nxt(controller, action, **params)
 
     return wrapper
 

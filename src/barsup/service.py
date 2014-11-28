@@ -15,9 +15,9 @@ def _mapping_property(f):
         names = property.split('.')
         if len(names) == 2:  # Составной объект, например, user.name
             outer_model, column = names
-            model = getattr(self.db_mapper, outer_model)
+            model = getattr(self._db_mapper, outer_model)
         else:
-            model, column = self.model, property
+            model, column = self._model, property
 
         return f(self, getattr(model, column), *args, **kwargs)
 
@@ -65,29 +65,12 @@ class _Query:
     apply_filter = staticmethod(_filter)
     apply_sorter = staticmethod(lambda x, y: _sorter(y)(x))
 
-    def _init(self):
-        # Данный метод не вызывается
-        # он необходим для правильной подсветки синтаксиса
-        # т. к. синтаксические анализаторы не понимают внедренные зависимости
-        self._queryset = self.session = self.model = self.joins = self.db_mapper = None
 
-    def __init__(self, *args):
-        if '*' in args:
-            self._queryset = self.session.query(self.model)
-        else:
-            self._queryset = self.session.query(
-                *map(lambda x: getattr(self.model, x), args)
-            )
-
-        for join in self.joins:
-            if ':' in join:
-                method, model = join.split(':')
-            else:
-                method, model = 'join', join
-
-            qs_method = getattr(self._queryset, method)
-            self._queryset = qs_method(
-                getattr(self.db_mapper, model))
+    def __init__(self, qs, model, session, db_mapper):
+        self._qs = qs
+        self._model = model
+        self._session = session
+        self._db_mapper = db_mapper
 
     def filters(self, filters):
         for filter_data in filters:
@@ -95,12 +78,12 @@ class _Query:
 
     @_mapping_property
     def filter(self, property, operator, value):
-        self._queryset = self._queryset.filter(
+        self._qs = self._qs.filter(
             self.apply_filter(property, operator,
                               self.deserialize(property, value)))
 
     def grouper(self, *args):
-        self._queryset = self._queryset.group_by(*args)
+        self._qs = self._qs.group_by(*args)
 
     def sorters(self, sorters):
         for sorter in sorters:
@@ -109,46 +92,46 @@ class _Query:
     @_mapping_property
     def sorter(self, property, direction):
         sort = self.apply_sorter(property, direction)
-        self._queryset = self._queryset.order_by(sort)
+        self._qs = self._qs.order_by(sort)
 
     def _load(self):
-        return self._queryset.all()
+        return self._qs.all()
 
     def load(self):
         return map(self.serialize, self._load())
 
     def limiter(self, offset, limit):
-        self._queryset = self._queryset.limit(limit).offset(offset)
+        self._qs = self._qs.limit(limit).offset(offset)
 
     # Record methods
     def create(self, **kwargs):
-        instance = self._initialize(self.model(), **kwargs)
-        self.session.add(instance)
+        instance = self._initialize(**kwargs)
+        self._session.add(instance)
 
         # Для получения id объекта - flush
-        self.session.flush()
+        self._session.flush()
         return instance
 
     def read(self):
-        return self._queryset.scalar()
+        return self._qs.scalar()
 
     def update(self, **kwargs):
         params = {}
         for item, value in kwargs.items():
             value = self.deserialize(
-                getattr(self.model, item), value)
+                getattr(self._model, item), value)
 
             params[item] = value
-        self._queryset.update(params)
+        self._qs.update(params)
 
     def delete(self):
-        self._queryset.delete()
+        self._qs.delete()
 
-    def _initialize(self, obj, **kwargs):
+    def _initialize(self, **kwargs):
+        obj = self._model()
         for item, value in kwargs.items():
             assert hasattr(obj, item)
-            value = self.deserialize(
-                getattr(self.model, item), value)
+            value = self.deserialize(getattr(self._model, item), value)
             setattr(obj, item, value)
         return obj
 
@@ -158,24 +141,50 @@ class _Query:
             operator='eq',
             value=value)
 
+    @classmethod
+    def create_query(cls, model, db_mapper, joins, session, entire='*', *args):
+
+        if entire == '*':
+            qs = session.query(model)
+        else:
+            qs = session.query(
+                *map(lambda x: getattr(model, x), args)
+            )
+
+        model_joins = joins.get(model.__name__, [])
+        assert isinstance(model_joins, (list, tuple))
+        for join in model_joins:
+            if ':' in join:
+                method, model_name = join.split(':')
+            else:
+                method, model_name = 'join', join
+
+            qs_method = getattr(qs, method)
+            qs = qs_method(getattr(db_mapper, model_name))
+
+        return cls(qs, model, session, db_mapper)
+
 
 class Service(metaclass=Injectable):
     depends_on = ('model', 'session', 'db_mapper', 'joins')
-    __slots__ = ('query_cls',)
-
-    def __init__(self, **kwargs):
-        self.query_cls = type('NewQuery', (_Query,), kwargs)
 
     def __enter__(self):
-        return self.query_cls('*')
+        return self.create_service()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         return
 
     def get(self, id_):
-        q = self.query_cls('*')
-        q.filter_by_id(id_)
-        return q
+        _query = self.create_service()
+        _query.filter_by_id(id_)
+        return _query
 
+    def create_service(self, model=None, db_mapper=None, session=None, joins=None):
+        return _Query.create_query(
+            model=model or self.model,
+            db_mapper=db_mapper or self.db_mapper,
+            joins=joins or self.joins,
+            session=session or self.session,
+        )
 
 __all__ = (Service, )

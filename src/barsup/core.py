@@ -69,6 +69,7 @@ class API:
                 middleware.append(container.get(middleware_group, mw))
             except (ValueError, TypeError) as e:
                 err(e)
+                raise
 
         call = self.call = _Wrappable(self.call)
         for mw in middleware[::-1]:
