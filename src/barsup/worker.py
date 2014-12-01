@@ -7,6 +7,7 @@ from yadic import Container as _Container
 
 from barsup.routing import Router as _Router
 from barsup.core import API as _API
+from barsup import runtime as _runtime
 
 
 def run(container, apps, sock_pull, sock_push, **kwargs):
@@ -14,7 +15,11 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
     Запускает worker с указанными параметрами
     """
     cont = _Container(container)
-    router = _Router(_API(cont).call, cont, 'controller')
+    api = _API(cont)
+    # заполнение актуальной runtime-информации в соответствующем модуле
+    _runtime.ACTIONS = list(api)
+    _runtime.LOADED = True
+    router = _Router(api.call, cont, 'controller')
 
     context = zmq.Context()
 

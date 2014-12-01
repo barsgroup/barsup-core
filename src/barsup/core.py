@@ -107,6 +107,14 @@ class API:
                 % (controller, action))
         return action(**kwargs)
 
+    def __iter__(self):
+        """Возвращает итератор пар вида (controller, action)"""
+        for (controller, _, realization) in self._container.itergroup(
+            self._controller_group
+        ):
+            for action_decl in getattr(realization, 'actions', ()):
+                yield (controller, action_decl[1])
+
 
 __all__ = (API,)
 
@@ -132,11 +140,15 @@ if __name__ == '__main__':
 
         class Math:
 
+            actions = (('/add', 'add', {}),)
+
             @staticmethod
             def add(a, b):
                 return a + b
 
         class Str:
+
+            actions = (('/upper', 'upper', {}),)
 
             @staticmethod
             def upper(s):
@@ -177,13 +189,18 @@ if __name__ == '__main__':
                 }
             }[(grp, name)]
 
-        @staticmethod
-        def itergroup(grp):
+        @classmethod
+        def itergroup(cls, grp):
             return {
-                'controller': [None]
+                'controller': [
+                    ('math', {}, cls.Math),
+                    ('str', {}, cls.Str)
+                ]
             }[grp]
 
     api = API(FakeContainer)
 
     assert api.call('math', 'add', a=1, b=2) == '12'
     assert api.call('str', 'upper', s='hello') == 'HELLO'
+
+    assert list(sorted(api)) == [('math', 'add'), ('str', 'upper')]
