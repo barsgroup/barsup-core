@@ -28,30 +28,23 @@ class API:
     Обёртка над слоем контроллеров, добавляющая уровень middleware
     и отвечающая за непосредственное общение с контроллерами.
     """
-    default_options = {
-        'middleware': [],
-    }
 
-    def __init__(self,
+    def __init__(self, *,
                  container, middleware, router,
-                 middleware_group='middleware',
                  controller_group='controller'):
         """
         :param container: DI-контейнер
         :type container: object
-        :param middleware: iterable, задающее посл-то middleware
-        :type middleware: object
+        :param middleware: iterable, задающее посл-ть middleware
+        :type middleware: list
         :param router: class роутера
         :type container: type
-        :param middleware_group: ключ-наименование группы middleware
-        :type middleware_group: str
         :param controller_group: ключ-наименование группы контроллеров
         :type controller_group: str
         """
         # завертывание в middleware
-        mws = [container.get(middleware_group, mw) for mw in middleware[::-1]]
         call = self.call = _Wrappable(self.call)
-        for mw in mws:
+        for mw in middleware[::-1]:
             call.wrap_with(mw)
 
         # Контроллер должен быть хотя бы один!
@@ -96,13 +89,13 @@ class API:
         return self.call(ctl, action, **params)
 
 
-def init(config,
+def init(config, *,
          container_clz=_Container,
          defaults={
              'api_options': {
                  'default': {
                      '__realization__': 'builtins.dict',
-                     '$middleware': [],
+                     'middleware:middleware': [],
                      'router:api_options': 'router',
                  },
                  'api_class': {
@@ -121,9 +114,10 @@ def init(config,
     :type config: dict
     :return type: API"""
     cont = container_clz(
-        _deep_merge(defaults.copy(), config, fn=lambda x, y, m, p: y))
+        _deep_merge(defaults.copy(), config,
+                    fn=lambda x, y, m, p: y))
     api = cont.get('api_options', 'api_class')(
-        cont,
+        container=cont,
         **cont.get('api_options', 'default'))
     _runtime.ACTIONS = tuple(api)
     _runtime.LOADED = True
@@ -208,9 +202,9 @@ if __name__ == '__main__':
                 ('middleware', 'log'): cls.log,
                 ('api_options', 'api_class'): API,
                 ('api_options', 'default'): {
-                    'middleware': ['log',
-                                   'res_to_str',
-                                   'args_to_strs'],
+                    'middleware': [cls.log,
+                                   cls.res_to_str,
+                                   cls.args_to_strs],
                     'router': cls.Router
                 }
             }[(grp, name)]
