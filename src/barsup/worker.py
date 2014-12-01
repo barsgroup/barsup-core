@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from types import GeneratorType
 
 import simplejson as json
 
@@ -49,8 +50,8 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
 
 
 def _serialize_to_json(obj):
-    if isinstance(obj, map):
-        return [o for o in obj]
+    if isinstance(obj, (map, set, GeneratorType)):
+        return tuple(obj)
     else:
         raise TypeError('Type "{0}" not supported'.format(obj))
 

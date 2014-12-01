@@ -1,5 +1,6 @@
 # coding: utf-8
 from yadic.container import Injectable
+from barsup.controller import DictController
 
 
 class Authentication(metaclass=Injectable):
@@ -34,3 +35,49 @@ class Authentication(metaclass=Injectable):
 class Authorization(Authentication):
     def has_perm(self, uid, controller, action):
         return self.service.has_perm(uid, controller, action)
+
+
+class PermissionController(metaclass=Injectable):
+    depends_on = ('methods',)
+
+    actions = (
+        (r"/read", "read", {
+            'start': 'int',
+            'limit': 'int',
+            'page': 'int',
+            'filter': 'json',
+            'query': 'str',
+            'sort': 'json'
+        }),
+    )
+
+    def read(self, *args, **kwargs):
+        ctrl_set = set()
+        for ctrl, action in self.methods:
+            ctrl_set.add(ctrl)
+        return map(lambda x: dict(controller=x), sorted(ctrl_set))
+
+
+class PermissionAction(metaclass=Injectable):
+    depends_on = ('methods',)
+
+    func_filter = filter
+
+    actions = (
+        (r"/read", "read", {
+            'start': 'int',
+            'limit': 'int',
+            'page': 'int',
+            'filter': 'json',
+            'query': 'str',
+            'sort': 'json'
+        }),
+    )
+
+    def read(self, filter, *args, **kwargs):
+        ctrl_param = filter[0]['value']
+        action_set = set()
+        for ctrl, action in self.methods:
+            if ctrl == ctrl_param:
+                action_set.add(action)
+        return map(lambda x: dict(action=x), sorted(action_set))

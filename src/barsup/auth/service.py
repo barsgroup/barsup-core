@@ -1,4 +1,5 @@
 # coding: utf-8
+from yadic.container import Injectable
 from barsup.service import Service
 
 
@@ -40,7 +41,6 @@ class AuthenticationService(Service):
 
 
 class AuthorizationService(AuthenticationService):
-
     def __init__(self, user_role_model, *args, **kwargs):
         self.user_role_model = user_role_model
         super(AuthorizationService, self).__init__(*args, **kwargs)
