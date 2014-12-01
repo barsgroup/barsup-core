@@ -1,4 +1,5 @@
 # coding: utf-8
+from sqlalchemy.sql.elements import literal
 from yadic.container import Injectable
 from barsup.service import Service
 
@@ -41,8 +42,13 @@ class AuthenticationService(Service):
 
 
 class AuthorizationService(AuthenticationService):
-    def __init__(self, user_role_model, *args, **kwargs):
+    depends_on = AuthenticationService.depends_on + (
+        'role_model',
+    )
+
+    def __init__(self, user_role_model, role_model, *args, **kwargs):
         self.user_role_model = user_role_model
+        self.role_model = role_model
         super(AuthorizationService, self).__init__(*args, **kwargs)
 
     def has_perm(self, uid, controller, action):
@@ -51,4 +57,16 @@ class AuthorizationService(AuthenticationService):
         service.filter('permission.controller', 'eq', controller)
         service.filter('permission.action', 'eq', action)
 
-        return service.read() is not None
+        role_service = self.create_service(
+            self.user_role_model,
+            joins=dict(user_role=['role']))
+        role_service.filter('user_id', 'eq', uid)
+        role_service.filter('role.is_super', 'eq', True)
+
+        # TODO: придумать нормальный способ доставать данные в один маленький запрос
+        # Объединение результатов
+        # subquery = service._qs.union(role_service._qs).exists()
+        # res = self.session.query(literal(True)).filter(subquery)
+        # return res.scalar()
+
+        return service.read() or role_service.read() or False

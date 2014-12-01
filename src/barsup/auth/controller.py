@@ -1,6 +1,5 @@
 # coding: utf-8
 from yadic.container import Injectable
-from barsup.controller import DictController
 
 
 class Authentication(metaclass=Injectable):

@@ -15,7 +15,7 @@ PARAM_PARSERS = {
 
 
 class Router:
-    def __init__(self, controllers, bypass_params=set()):
+    def __init__(self, controllers, bypass_params=set(('web_session_id',))):
         """
         :param controllers: итератор контроллеров в виде контежей (name, class)
         :type controllers: object"""
