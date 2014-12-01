@@ -3,23 +3,16 @@
 import simplejson as json
 
 import zmq
-from yadic import Container as _Container
 
-from barsup.routing import Router as _Router
-from barsup.core import API as _API
-from barsup import runtime as _runtime
+from barsup import core
 
 
 def run(container, apps, sock_pull, sock_push, **kwargs):
     """
     Запускает worker с указанными параметрами
     """
-    cont = _Container(container)
-    api = _API(cont)
+    app = core.init(container)
     # заполнение актуальной runtime-информации в соответствующем модуле
-    _runtime.ACTIONS = list(api)
-    _runtime.LOADED = True
-    router = _Router(api.call, cont, 'controller')
 
     context = zmq.Context()
 
@@ -40,7 +33,8 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
         try:
             if not isinstance(params, dict):
                 raise TypeError('Event data must be a dict!')
-            status, result = router.populate(web_session_id, key, params)
+            status, result = app.populate(
+                key, web_session_id=web_session_id, **params)
 
         except Exception:
             status, result = False, 'Невозможно выполнить текущую операцию'

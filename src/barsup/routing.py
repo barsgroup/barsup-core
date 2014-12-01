@@ -2,6 +2,7 @@
 
 import routes
 import simplejson as json
+from itertools import chain
 
 
 PARAM_PARSERS = {
@@ -14,14 +15,15 @@ PARAM_PARSERS = {
 
 
 class Router:
-    def __init__(self, call_api, cont, controller_group):
+    def __init__(self, controllers, bypass_params=set()):
+        """
+        :param controllers: итератор контроллеров в виде контежей (name, class)
+        :type controllers: object"""
         self._mapper = routes.Mapper()
-        self._call_api = call_api
-        self._cont = cont
-        self._group = controller_group
         self._param_decls = {}
+        self._bypass = set(bypass_params)
 
-        for controller, conf, realization in cont.itergroup(controller_group):
+        for controller, realization in controllers:
             mapper = self._mapper.submapper(
                 path_prefix='/' + controller.lower())
             for action_decl in getattr(realization, 'actions'):
@@ -38,12 +40,13 @@ class Router:
                             'Unknown action param type in %s!' % controller)
                     self._param_decls[(controller, action)] = parsers
 
-    def populate(self, web_session_id, key, params):
+    def route(self, key, params):
         """
         Populates the url-like API-key as action of some controller
-        :web_session_id: web session id
-        :key: API-key
-        :params: action params
+        :param key: API-key
+        :type key: str
+        :param params: action params
+        :type params: dict
         """
         dest = self._mapper.match(key)
         if not dest:
@@ -53,16 +56,25 @@ class Router:
 
         parsed_params = {}
         parsers = self._param_decls.get((controller_name, action_name), {})
-        for name, value in params.items():
+        for name, value in chain(dest.items(), params.items()):
             if name == 'format':
+                continue
+            elif name in self._bypass:
+                parsed_params[name] = value
                 continue
             try:
                 parser = parsers[name]
             except KeyError:
-                raise ValueError(
-                    'Undeclared parameter "%s" (%s.%s)'
-                    % (name, controller_name, action_name)
-                )
+                if name in dest:
+                    # параметры из url могут быть и не задекларированы,
+                    # тогда они передаются "как есть"
+                    parser = lambda x: x
+                else:
+                    # тогда как прочие должны декларироваться
+                    raise ValueError(
+                        'Undeclared parameter "%s" (%s.%s)'
+                        % (name, controller_name, action_name)
+                    )
             try:
                 parsed_params[name] = parser(value)
             except (TypeError, ValueError):
@@ -71,9 +83,7 @@ class Router:
                     % (name, controller_name, action_name)
                 )
 
-        dest.update(parsed_params)
-        dest['web_session_id'] = web_session_id
-        return self._call_api(controller_name, action_name, **dest)
+        return controller_name, action_name, parsed_params
 
 
 __all__ = (Router,)
@@ -89,33 +99,6 @@ if __name__ == '__main__':
             ('/{x:\d+}/double', 'double'),
         )
 
-        @staticmethod
-        def sum(x, y, uid):
-            return int(x) + int(y)
-
-        @staticmethod
-        def mul(x, y, uid):
-            return int(x) * int(y)
-
-        @staticmethod
-        def double(x, uid):
-            return int(x) * 2
-
-    class StrController:
-
-        actions = (
-            ('/{s:.+}/upper', 'upper'),
-            ('/{s:.+}/lower', 'lower'),
-        )
-
-        @staticmethod
-        def upper(s, uid):
-            return s.upper()
-
-        @staticmethod
-        def lower(s, uid):
-            return s.lower()
-
     class Parametrized:
 
         actions = (
@@ -123,65 +106,30 @@ if __name__ == '__main__':
              {'x': 'int', 'y': 'int', 'msg': 'str', 'raw': 'json'}),
         )
 
-        @staticmethod
-        def add(uid, x, y=42, msg='Unknown', raw=None):
-            d = {'x': x, 'y': y, 'msg': msg}
-            d.update(raw or {})
-            return "%s:%s:%d" % (d['msg'], d['x'], d['y'])
+    router = Router(
+        controllers=(
+            ('calc', CalcController),
+            ('par', Parametrized),
+        ),
+        bypass_params=set(('bypass',))
+    )
+    r = router.route
 
-    class FakeContainer:
-        @staticmethod
-        def get(grp, name):
-            return {
-                'rpc': {
-                    'Calc': CalcController,
-                    'Str': StrController,
-                    'Parametrized': Parametrized,
-                }
-            }[grp][name]
+    assert r('/calc/10/20/sum', {}) == ('calc', 'sum', {'x': '10', 'y': '20'})
+    assert r('/calc/42/double', {'bypass': 101}) == (
+        'calc', 'double', {'x': '42', 'bypass': 101})
 
-        @staticmethod
-        def itergroup(group):
-            yield ('Calc', {}, CalcController)
-            yield ('Str', {}, StrController)
-            yield ('Parametrized', {}, Parametrized)
-
-    def fake_api(ctl, act, **kwargs):
-        return getattr({
-            'Calc': CalcController,
-            'Str': StrController,
-            'Parametrized': Parametrized,
-        }[ctl], act)(**kwargs)
-
-    router = Router(fake_api, FakeContainer(), 'rpc')
-    print(router._mapper)
-
-    assert router.populate(0, '/calc/10/2/sum', {}) == 12
-    assert router.populate(0, '/calc/10/2/mul', {}) == 20
-    assert router.populate(0, '/calc/7/double', {}) == 14
-    assert router.populate(0, '/str/Hello!/upper', {}) == 'HELLO!'
-    assert router.populate(0, '/str/Hello!/lower', {}) == 'hello!'
-
-    assert router.populate(0, '/parametrized/10/add', {}) == 'Unknown:10:42'
-
-    assert router.populate(
-        0, '/parametrized/202/add', {'y': '404', 'msg': '>>>'}
-    ) == '>>>:202:404'
-
-    assert router.populate(
-        0, '/parametrized/1000/add', {'raw': '{"x": "0", "y": 0, "msg": "0"}'}
-    ) == '0:0:0'
+    assert r('/par/10/add', {'y': '20', 'msg': 'Hi!'}) == (
+        'par', 'add', {'x': 10, 'y': 20, 'msg': 'Hi!'})
 
     def throws(excs, fn, *args):
         try:
             fn(*args)
         except excs as e:
-            print(e)
+            print('As expected: %r' % e)
         except Exception as e:
             raise AssertionError('Thrown unexpected %r!' % e)
 
-    throws(ValueError, router.populate, 0, '/parametrized/1000/add', {'z': 1})
-    throws(ValueError,
-           router.populate, 0, '/parametrized/1000/add', {'y': 'asd'})
-    throws(ValueError,
-           router.populate, 0, '/parametrized/1000/add', {'raw': '!'})
+    throws(ValueError, r, '/parametrized/1000/add', {'z': 1})
+    throws(ValueError, r, '/parametrized/1000/add', {'y': 'asd'})
+    throws(ValueError, r, '/parametrized/1000/add', {'raw': '!'})
