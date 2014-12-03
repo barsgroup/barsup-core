@@ -3,14 +3,25 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import Session
 
 
-class DefaultSession(object):
+class PostgreSQLSession:
     __slots__ = ('session', )
 
-    def __init__(self, connection):
-        engine = create_engine(connection, echo=True)
+    def __init__(self, login, password, database,
+                 engine='postgresql', host='localhost', port=5432,
+                 echo=True):
+        connection_string = '{engine}://{login}:{password}@{host}:{port}/{database}'.format(
+            login=login,
+            password=password,
+            database=database,
+            engine=engine,
+            host=host,
+            port=port
+        )
+        engine = create_engine(connection_string, echo=echo)
         self.session = Session(engine)
 
     def __getattr__(self, item):
         return getattr(self.session, item)
 
-__all__ = (DefaultSession, )
+
+__all__ = (PostgreSQLSession, )

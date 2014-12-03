@@ -169,7 +169,6 @@ class _Query:
 
 
 class Query:
-
     ENTIRE = '*'
 
     CONDITION_VALUES = {
@@ -190,7 +189,6 @@ class Query:
             query = self.create_query(obj.session, fmodel)
             for from_field, condition, to_field, *to_model_list in from_model_params:
                 for to_model, *to_model_params in to_model_list:
-
                     assert condition in self.CONDITION_VALUES.keys()
                     oper = getattr(query, self.CONDITION_VALUES[condition])
 
