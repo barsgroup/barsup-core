@@ -43,7 +43,7 @@ class API:
         :type controller_group: str
         """
         # завертывание в middleware
-        call = self.call = _Wrappable(self.call)
+        call = self.call = _Wrappable(self._call)
         for mw in middleware[::-1]:
             call.wrap_with(mw)
 
@@ -61,7 +61,7 @@ class API:
             container.itergroup(controller_group)
         ))
 
-    def call(self, controller, action, **kwargs):
+    def _call(self, controller, action, **kwargs):
         """Вызывает API-функцию с указанными параметрами.
         Функция ищется по паре "контроллер" + "экшн"
         """
@@ -91,11 +91,11 @@ class API:
 
 def init(config, *,
          container_clz=_Container,
-         defaults={
+         defaults=lambda: {
              'api_options': {
                  'default': {
                      '__realization__': 'builtins.dict',
-                     'middleware:middleware': [],
+                     'middleware': [],
                      'router:api_options': 'router',
                  },
                  'api_class': {
@@ -114,8 +114,7 @@ def init(config, *,
     :type config: dict
     :return type: API"""
     cont = container_clz(
-        _deep_merge(defaults.copy(), config,
-                    fn=lambda x, y, m, p: y))
+        _deep_merge(defaults(), config, fn=lambda x, y, m, p: y))
     api = cont.get('api_options', 'api_class')(
         container=cont,
         **cont.get('api_options', 'default'))

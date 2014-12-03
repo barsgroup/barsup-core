@@ -1,6 +1,8 @@
 # coding: utf-8
 import operator
+
 from sqlalchemy.sql import expression, operators
+
 from yadic import Injectable
 
 from barsup.serializers import to_dict, convert
@@ -122,7 +124,8 @@ class _Query:
                 getattr(self._model, item), value)
 
             params[item] = value
-        self._qs.update(params)
+        if params:
+            self._qs.update(params)
 
     def delete(self):
         self._qs.delete()
@@ -165,26 +168,84 @@ class _Query:
         return cls(qs, model, session, db_mapper)
 
 
+class Query:
+
+    ENTIRE = '*'
+
+    CONDITION_VALUES = {
+        '==': 'join',
+        '=': 'outerjoin'
+    }
+
+    def __init__(self, key=None, entire=ENTIRE):
+        self.key = key
+        self.entire = entire
+
+    def __get__(self, obj, objtype):
+        joins = obj.joins and obj.joins.get(self.key)
+
+        if joins:
+            from_model, *from_model_params = joins
+            fmodel = getattr(obj, from_model)
+            query = self.create_query(obj.session, fmodel)
+            for from_field, condition, to_field, *to_model_list in from_model_params:
+                for to_model, *to_model_params in to_model_list:
+
+                    assert condition in self.CONDITION_VALUES.keys()
+                    oper = getattr(query, self.CONDITION_VALUES[condition])
+
+                    tmodel = getattr(obj, to_model)
+                    query = oper(tmodel, getattr(fmodel, from_field) == getattr(tmodel, to_field))
+
+        else:
+            query = self.create_query(obj.session, obj.model)
+        return query
+
+    def create_query(self, session, model, *args):
+        if self.entire == self.ENTIRE:
+            qs = session.query(model)
+        else:
+            qs = session.query(
+                *map(lambda x: getattr(model, x), args)
+            )
+        return qs
+
+
 class Service(metaclass=Injectable):
     depends_on = ('model', 'session', 'db_mapper', 'joins')
 
+    query = Query('default')
+
+    def __init__(self, model, session, db_mapper, joins=None):
+        self.model = model
+        self.session = session
+        self.db_mapper = db_mapper
+        self.joins = joins
+
     def __enter__(self):
-        return self.create_service()
+        return self.create_service(self.model)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         return
 
     def get(self, id_):
-        _query = self.create_service()
+        _query = self.create_service(self.model)
         _query.filter_by_id(id_)
         return _query
 
-    def create_service(self, model=None, db_mapper=None, session=None, joins=None):
-        return _Query.create_query(
-            model=model or self.model,
-            db_mapper=db_mapper or self.db_mapper,
-            joins=joins or self.joins,
-            session=session or self.session,
+    def create_service(self, model, query=None):
+        self.model = model
+        query = query or self.query
+
+        return _Query(
+            model=model,
+            db_mapper=self.db_mapper,
+            qs=query,
+            session=self.session,
         )
 
+
 __all__ = (Service, )
+
+
+

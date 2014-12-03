@@ -1,13 +1,14 @@
 # coding: utf-8
-from sqlalchemy.sql.elements import literal
-from yadic.container import Injectable
-from barsup.service import Service
+
+from barsup.service import Service, Query
 
 
 class AuthenticationService(Service):
     depends_on = Service.depends_on + (
         'user_model', "web_session_model"
     )
+
+    query = Query('web_session_model')
 
     def __init__(self, user_model, web_session_model, model=None, **kwargs):
         self.user_model = user_model
@@ -43,23 +44,25 @@ class AuthenticationService(Service):
 
 class AuthorizationService(AuthenticationService):
     depends_on = AuthenticationService.depends_on + (
-        'role_model',
+        'role_model', 'user_role_model', "permission_model"
     )
 
-    def __init__(self, user_role_model, role_model, *args, **kwargs):
+    query_perm = Query("default")
+    query_role = Query("role")
+
+    def __init__(self, user_role_model, role_model, permission_model, *args, **kwargs):
         self.user_role_model = user_role_model
         self.role_model = role_model
+        self.permission_model = permission_model
         super(AuthorizationService, self).__init__(*args, **kwargs)
 
     def has_perm(self, uid, controller, action):
-        service = self.create_service(self.user_role_model)
+        service = self.create_service(self.user_role_model, self.query_perm)
         service.filter('user_id', 'eq', uid)
         service.filter('permission.controller', 'eq', controller)
         service.filter('permission.action', 'eq', action)
 
-        role_service = self.create_service(
-            self.user_role_model,
-            joins=dict(user_role=['role']))
+        role_service = self.create_service(self.user_role_model, self.query_role)
         role_service.filter('user_id', 'eq', uid)
         role_service.filter('role.is_super', 'eq', True)
 
