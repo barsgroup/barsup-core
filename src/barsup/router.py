@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import routes
 import simplejson as json
 from itertools import chain
+
+import routes
 
 
 PARAM_PARSERS = {
@@ -87,49 +88,3 @@ class Router:
 
 
 __all__ = (Router,)
-
-
-if __name__ == '__main__':
-
-    class CalcController:
-
-        actions = (
-            ('/{x:\d+}/{y:\d+}/sum', 'sum'),
-            ('/{x:\d+}/{y:\d+}/mul', 'mul'),
-            ('/{x:\d+}/double', 'double'),
-        )
-
-    class Parametrized:
-
-        actions = (
-            ('/{x:\d+}/add', 'add',
-             {'x': 'int', 'y': 'int', 'msg': 'str', 'raw': 'json'}),
-        )
-
-    router = Router(
-        controllers=(
-            ('calc', CalcController),
-            ('par', Parametrized),
-        ),
-        bypass_params=set(('bypass',))
-    )
-    r = router.route
-
-    assert r('/calc/10/20/sum', {}) == ('calc', 'sum', {'x': '10', 'y': '20'})
-    assert r('/calc/42/double', {'bypass': 101}) == (
-        'calc', 'double', {'x': '42', 'bypass': 101})
-
-    assert r('/par/10/add', {'y': '20', 'msg': 'Hi!'}) == (
-        'par', 'add', {'x': 10, 'y': 20, 'msg': 'Hi!'})
-
-    def throws(excs, fn, *args):
-        try:
-            fn(*args)
-        except excs as e:
-            print('As expected: %r' % e)
-        except Exception as e:
-            raise AssertionError('Thrown unexpected %r!' % e)
-
-    throws(ValueError, r, '/parametrized/1000/add', {'z': 1})
-    throws(ValueError, r, '/parametrized/1000/add', {'y': 'asd'})
-    throws(ValueError, r, '/parametrized/1000/add', {'raw': '!'})
