@@ -31,12 +31,25 @@ class Authentication(metaclass=Injectable):
         return self.service.is_logged_in(web_session_id)
 
 
-class Authorization(Authentication):
+class Authorization(metaclass=Injectable):
+    depends_on = ('service', 'authentication')
+
+    actions = Authentication.actions
+
     def has_perm(self, uid, controller, action):
         return self.service.has_perm(uid, controller, action)
 
+    def login(self, *args, **kwargs):
+        return self.authentication.login(*args, **kwargs)
+
+    def logout(self, *args, **kwargs):
+        return self.authentication.logout(*args, **kwargs)
+
+    def is_logged_in(self, *args, **kwargs):
+        return self.authentication.is_logged_in(*args, **kwargs)
 
 class PermissionController(metaclass=Injectable):
+
     depends_on = ('methods',)
 
     actions = (
