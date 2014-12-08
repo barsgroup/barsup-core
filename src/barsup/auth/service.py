@@ -1,32 +1,25 @@
 # coding: utf-8
 
-from barsup.service import Service, Query
+from barsup.service import Service
 
 
 class AuthenticationService(Service):
-    depends_on = Service.depends_on + (
-        'user_model', "web_session_model"
-    )
-
-    query = Query('web_session_model')
-
-    def __init__(self, user_model, web_session_model, model=None, **kwargs):
+    def __init__(self, user_model, **kwargs):
+        super().__init__(**kwargs)
         self.user_model = user_model
-        self.web_session_model = web_session_model
-        super(AuthenticationService, self).__init__(model=model, **kwargs)
 
     def login(self, login, password, web_session_id):
-        service = self.create_service(self.user_model)
+        service = self.service(self.user_model)
         service.filter('login', 'eq', login)
         service.filter('password', 'eq', password)
 
         user_id = getattr(service.read(), 'id', None)
         if user_id:
-            service = self.create_service(self.web_session_model)
+            service = self.service(self.web_session_model)
             service.filter('user_id', 'eq', user_id)
             service.delete()
 
-            service = self.create_service(self.web_session_model)
+            service = self.service(self.web_session_model)
             service.create(
                 user_id=user_id,
                 web_session_id=web_session_id)
@@ -37,34 +30,28 @@ class AuthenticationService(Service):
         pass
 
     def is_logged_in(self, web_session_id):
-        service = self.create_service(self.web_session_model)
-        service.filter('web_session_id', 'eq', web_session_id)
-        return getattr(service.read(), 'user_id', None)
+        obj = self.filter('web_session_id', 'eq', web_session_id).get()
+        return getattr(obj, 'user_id', None)
 
 
-class AuthorizationService(AuthenticationService):
-    depends_on = AuthenticationService.depends_on + (
-        'role_model', 'user_role_model', "permission_model"
-    )
-
-    query_perm = Query("default")
-    query_role = Query("role")
-
-    def __init__(self, user_role_model, role_model, permission_model, *args, **kwargs):
-        self.user_role_model = user_role_model
+class AuthorizationService(Service):
+    def __init__(self, role_model, permission_model, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.role_model = role_model
         self.permission_model = permission_model
-        super(AuthorizationService, self).__init__(*args, **kwargs)
+
 
     def has_perm(self, uid, controller, action):
-        service = self.create_service(self.user_role_model, self.query_perm)
-        service.filter('user_id', 'eq', uid)
-        service.filter('permission.controller', 'eq', controller)
-        service.filter('permission.action', 'eq', action)
+        perm_service = self.service.filter(
+            'user_id', 'eq', uid
+        ).filter(
+            'permission.controller', 'eq', controller
+        ).filter(
+            'permission.action', 'eq', action)
 
-        role_service = self.create_service(self.user_role_model, self.query_role)
-        role_service.filter('user_id', 'eq', uid)
-        role_service.filter('role.is_super', 'eq', True)
+        role_service = self.filter(
+            'user_id', 'eq', uid
+        ).filter('role.is_super', 'eq', True)
 
         # TODO: придумать нормальный способ доставать данные в один маленький запрос
         # Объединение результатов
@@ -72,4 +59,5 @@ class AuthorizationService(AuthenticationService):
         # res = self.session.query(literal(True)).filter(subquery)
         # return res.scalar()
 
-        return service.read() or role_service.read() or False
+        #FIXME: пока работает некорректно, так как нет джойнов
+        return perm_service.read() or role_service.read() or False

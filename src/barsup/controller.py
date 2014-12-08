@@ -53,36 +53,28 @@ class DictController(metaclass=Injectable):
              query=None, filter=None,
              group=None, sort=None):
 
-        with self.service as service:
+        service = self.service()
+        if filter:
+            service = self.service.filters(filter)
 
-            if filter:
-                service.filters(filter)
+        if sort:
+            service = service.sorts(sort)
 
-            if group:
-                service.filter(**group)
+        if start is not None and limit is not None:
+            service = service.limiter(start, limit)
 
-            if sort:
-                service.sorters(sort)
-
-            if start and limit:
-                service.limiter(start, limit)
-
-            return service.load()
+        return service.read()
 
     def get(self, id_, filter=None):
-        with self.service as service:
-            service.filter_by_id(id_)
-            if filter:
-                service.filters(filter)
-            return to_dict(service.read())
+
+        service = self.service.filter_by_id(id_)
+        if filter:
+            service = service.filters(filter)
+
+        return to_dict(service.get())
 
     def _update(self, id_, record):
-        with self.service as service:
-            service.filter_by_id(id_)
-            service.update(**record)
-
-            obj = service.read()
-        return obj
+        return self.service.filter_by_id(id_).update(**record)
 
     def bulk_update(self, records):
         return map(to_dict,
@@ -92,7 +84,7 @@ class DictController(metaclass=Injectable):
         return map(to_dict, [self._update(id_, data)])
 
     def _destroy(self, id_):
-        self.service.get(id_).delete()
+        self.service.filter_by_id(id_).delete()
 
     def bulk_destroy(self, identifiers):
         for id_ in identifiers:
@@ -104,8 +96,7 @@ class DictController(metaclass=Injectable):
         return id_
 
     def _create(self, record):
-        with self.service as service:
-            return service.create(**record)
+        return self.service.create(**record)
 
     def create(self, records):
         return map(to_dict, (self._create(record) for record in records))

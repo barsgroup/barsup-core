@@ -1,9 +1,9 @@
 # coding: utf-8
+
 import operator
+import weakref
 
 from sqlalchemy.sql import expression, operators
-
-from yadic import Injectable
 
 from barsup.serializers import to_dict, convert
 
@@ -17,9 +17,9 @@ def _mapping_property(f):
         names = property.split('.')
         if len(names) == 2:  # Составной объект, например, user.name
             outer_model, column = names
-            model = getattr(self._db_mapper, outer_model)
+            model = getattr(self.service.db_mapper, outer_model)
         else:
-            model, column = self._model, property
+            model, column = self.service.model, property
 
         return f(self, getattr(model, column), *args, **kwargs)
 
@@ -60,190 +60,153 @@ def _sorter(direction):
     return values[direction]
 
 
-class _Query:
-    serialize = staticmethod(to_dict)
-    deserialize = staticmethod(convert)
+def _delegate_proxy(name):
+    def wrap(self, *args, **kwargs):
+        return _Proxy(self.service, self.queue + [(name, args, kwargs)])
 
+    return wrap
+
+
+def _delegate_service(name):
+    def wrap(self, *args, **kwargs):
+        method = getattr(self.service, name)
+        return method(_QuerySetBuilder(self.service).build(self.queue), *args, **kwargs)
+
+    return wrap
+
+
+class _Proxy:
+    def __init__(self, service, queue=None):
+        self.service = service
+        self.queue = queue or []
+
+    filter = _delegate_proxy('_filter')
+    filters = _delegate_proxy('_filters')
+    filter_by_id = _delegate_proxy('_filter_by_id')
+
+    sort = _delegate_proxy('_sort')
+    sorts = _delegate_proxy('_sorts')
+
+    limiter = _delegate_proxy('_limit')
+
+    get = _delegate_service('_get')
+    read = _delegate_service('_read')
+
+    update = _delegate_service('_update')
+    delete = _delegate_service('_delete')
+
+
+class _QuerySetBuilder:
     apply_filter = staticmethod(_filter)
     apply_sorter = staticmethod(lambda x, y: _sorter(y)(x))
 
+    def __init__(self, service):
+        self.service = service
+        self._qs = self._create_qs()
 
-    def __init__(self, qs, model, session, db_mapper):
-        self._qs = qs
-        self._model = model
-        self._session = session
-        self._db_mapper = db_mapper
+    def _create_qs(self):
+        return self.service.session.query(
+            self.service.model
+        )
 
-    def filters(self, filters):
-        for filter_data in filters:
-            self.filter(**filter_data)
+    def build(self, queue):
+        for item, args, kwargs in queue:
+            getattr(self, item)(*args, **kwargs)
+        return self._qs
 
+    # FILTERS:
     @_mapping_property
-    def filter(self, property, operator, value):
+    def _filter(self, property, operator, value):
         self._qs = self._qs.filter(
-            self.apply_filter(property, operator,
-                              self.deserialize(property, value)))
+            self.apply_filter(
+                property,
+                operator,
+                convert(property, value)))
 
-    def grouper(self, *args):
-        self._qs = self._qs.group_by(*args)
+    def _filters(self, filters):
+        for filter_ in filters:
+            self._filter(**filter_)
 
-    def sorters(self, sorters):
-        for sorter in sorters:
-            self.sorter(**sorter)
+    def _filter_by_id(self, id_):
+        self._filter('id', 'eq', id_)
 
+    # SORTERS:
     @_mapping_property
-    def sorter(self, property, direction):
+    def _sort(self, property, direction):
         sort = self.apply_sorter(property, direction)
         self._qs = self._qs.order_by(sort)
 
-    def _load(self):
-        return self._qs.all()
+    def _sorts(self, sorts):
+        for sort in sorts:
+            self._sort(**sort)
 
-    def load(self):
-        return map(self.serialize, self._load())
-
-    def limiter(self, offset, limit):
+    def _limit(self, offset, limit):
         self._qs = self._qs.limit(limit).offset(offset)
 
-    # Record methods
-    def create(self, **kwargs):
-        instance = self._initialize(**kwargs)
-        self._session.add(instance)
 
-        # Для получения id объекта - flush
-        self._session.flush()
-        return instance
+class Service:
+    def __init__(self,
+                 model,
+                 session,
+                 db_mapper,
+                 models=None,
+                 joins=None,
+                 select=None, ):
+        self.model = model
+        self.models = models
+        self.joins = joins
+        self.select = select
+        self.session = session
+        self.db_mapper = db_mapper
 
-    def read(self):
-        return self._qs.scalar()
+    def __call__(self, model=None):
+        self.model = model or self.model
+        return _Proxy(weakref.proxy(self))
 
-    def update(self, **kwargs):
-        params = {}
-        for item, value in kwargs.items():
-            value = self.deserialize(
-                getattr(self._model, item), value)
+    def __getattr__(self, item):
+        proxy = _Proxy(weakref.proxy(self))
+        return getattr(proxy, item)
 
-            params[item] = value
-        if params:
-            self._qs.update(params)
+    def _get(self, qs):
+            return qs.scalar()
 
-    def delete(self):
-        self._qs.delete()
+    def _read(self, qs):
+        return map(to_dict, qs.all())
+
+    def _update(self, qs, **kwargs):
+        if kwargs:
+            params = {}
+            for item, value in kwargs.items():
+                value = self._deserialize(item, value)
+
+                params[item] = value
+            qs.update(params)
+
+            return qs.scalar()
+
+    def _delete(self, qs):
+        qs.delete()
+
+    # For create
+    def _deserialize(self, item, value):
+        return convert(
+            getattr(self.model, item), value)
 
     def _initialize(self, **kwargs):
-        obj = self._model()
+        obj = self.model()
         for item, value in kwargs.items():
             assert hasattr(obj, item)
-            value = self.deserialize(getattr(self._model, item), value)
+            value = self._deserialize(item, value)
             setattr(obj, item, value)
         return obj
 
-    def filter_by_id(self, value):
-        self.filter(
-            property='id',
-            operator='eq',
-            value=value)
+    def create(self, **kwargs):
+        obj = self._initialize(**kwargs)
+        self.session.add(obj)
 
-    @classmethod
-    def create_query(cls, model, db_mapper, joins, session, entire='*', *args):
-
-        if entire == '*':
-            qs = session.query(model)
-        else:
-            qs = session.query(
-                *map(lambda x: getattr(model, x), args)
-            )
-
-        model_joins = joins.get(model.__name__, [])
-        assert isinstance(model_joins, (list, tuple))
-        for join in model_joins:
-            if ':' in join:
-                method, model_name = join.split(':')
-            else:
-                method, model_name = 'join', join
-
-            qs_method = getattr(qs, method)
-            qs = qs_method(getattr(db_mapper, model_name))
-
-        return cls(qs, model, session, db_mapper)
+        # Для получения id объекта - flush
+        self.session.flush()
+        return obj
 
 
-class Query:
-    ENTIRE = '*'
-
-    CONDITION_VALUES = {
-        '==': 'join',
-        '=': 'outerjoin'
-    }
-
-    def __init__(self, key=None, entire=ENTIRE):
-        self.key = key
-        self.entire = entire
-
-    def __get__(self, obj, objtype):
-        joins = obj.joins and obj.joins.get(self.key)
-
-        if joins:
-            from_model, *from_model_params = joins
-            fmodel = getattr(obj, from_model)
-            query = self.create_query(obj.session, fmodel)
-            for from_field, condition, to_field, *to_model_list in from_model_params:
-                for to_model, *to_model_params in to_model_list:
-                    assert condition in self.CONDITION_VALUES.keys()
-                    oper = getattr(query, self.CONDITION_VALUES[condition])
-
-                    tmodel = getattr(obj, to_model)
-                    query = oper(tmodel, getattr(fmodel, from_field) == getattr(tmodel, to_field))
-
-        else:
-            query = self.create_query(obj.session, obj.model)
-        return query
-
-    def create_query(self, session, model, *args):
-        if self.entire == self.ENTIRE:
-            qs = session.query(model)
-        else:
-            qs = session.query(
-                *map(lambda x: getattr(model, x), args)
-            )
-        return qs
-
-
-class Service(metaclass=Injectable):
-    depends_on = ('model', 'session', 'db_mapper', 'joins')
-
-    query = Query('default')
-
-    def __init__(self, model, session, db_mapper, joins=None):
-        self.model = model
-        self.session = session
-        self.db_mapper = db_mapper
-        self.joins = joins
-
-    def __enter__(self):
-        return self.create_service(self.model)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return
-
-    def get(self, id_):
-        _query = self.create_service(self.model)
-        _query.filter_by_id(id_)
-        return _query
-
-    def create_service(self, model, query=None):
-        self.model = model
-        query = query or self.query
-
-        return _Query(
-            model=model,
-            db_mapper=self.db_mapper,
-            qs=query,
-            session=self.session,
-        )
-
-
-__all__ = (Service, )
-
-
-
+__all__ = (Service,)
