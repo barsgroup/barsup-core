@@ -116,12 +116,15 @@ class _QuerySetBuilder:
 
     # FILTERS:
     @_mapping_property
-    def _filter(self, property, operator, value):
-        self._qs = self._qs.filter(
-            self.apply_filter(
-                property,
-                operator,
-                convert(property, value)))
+    def _filter(self, property, operator, *args, **kwargs):
+        if args or kwargs:
+            value = kwargs.get('value', args[0])
+
+            self._qs = self._qs.filter(
+                self.apply_filter(
+                    property,
+                    operator,
+                    convert(property, value)))
 
     def _filters(self, filters):
         for filter_ in filters:
@@ -141,7 +144,10 @@ class _QuerySetBuilder:
             self._sort(**sort)
 
     def _limit(self, offset, limit):
-        self._qs = self._qs.limit(limit).offset(offset)
+        if offset is not None:
+            self._qs = self._qs.offset(offset)
+        if limit is not None:
+            self._qs = self._qs.limit(limit)
 
 
 class Service:
@@ -168,10 +174,10 @@ class Service:
         return getattr(proxy, item)
 
     def _get(self, qs):
-            return qs.scalar()
+        return qs.scalar()
 
     def _read(self, qs):
-        return map(to_dict, qs.all())
+        return qs.all()
 
     def _update(self, qs, **kwargs):
         if kwargs:

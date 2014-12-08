@@ -5,65 +5,41 @@ from yadic.container import Injectable
 class Authentication(metaclass=Injectable):
     depends_on = ('service',)
 
-    actions = (
-        (r'/login', 'login', {
-            'login': 'str',
-            'password': 'str',
-            'web_session_id': 'str'
-        }),
-        (r'/logout', 'logout', {
-            'web_session_id': 'str'
-        }),
-        (r'/is-login', 'is_login', {
-            'web_session_id': 'str'
-        })
-    )
-
-    def login(self, login, password, web_session_id):
+    def login(self,
+              login: 'str',
+              password: 'str',
+              web_session_id: 'str') -> r'/login':
         return self.service.login(
             login, password, web_session_id
         )
 
-    def logout(self, web_session_id):
+    def logout(self,
+               web_session_id: 'str') -> r'/logout':
         pass
 
-    def is_logged_in(self, web_session_id):
+    def is_logged_in(self,
+                     web_session_id: 'str') -> r'/is-login':
         return self.service.is_logged_in(web_session_id)
 
 
 class Authorization(metaclass=Injectable):
     depends_on = ('service', 'authentication')
 
-    actions = Authentication.actions
-
     def has_perm(self, uid, controller, action):
         return self.service.has_perm(uid, controller, action)
 
-    def login(self, *args, **kwargs):
-        return self.authentication.login(*args, **kwargs)
-
-    def logout(self, *args, **kwargs):
-        return self.authentication.logout(*args, **kwargs)
-
-    def is_logged_in(self, *args, **kwargs):
-        return self.authentication.is_logged_in(*args, **kwargs)
 
 class PermissionController(metaclass=Injectable):
-
     depends_on = ('methods',)
 
-    actions = (
-        (r"/read", "read", {
-            'start': 'int',
-            'limit': 'int',
-            'page': 'int',
-            'filter': 'json',
-            'query': 'str',
-            'sort': 'json'
-        }),
-    )
-
-    def read(self, *args, **kwargs):
+    def read(self,
+             start: 'int'=None,
+             limit: 'int'=None,
+             page: 'int'=None,
+             query: 'str'=None,
+             filter: 'json'=None,
+             group: 'str'=None,
+             sort: 'json'=None) -> r"/read":
         ctrl_set = set()
         for ctrl, action in self.methods:
             ctrl_set.add(ctrl)
@@ -75,18 +51,15 @@ class PermissionAction(metaclass=Injectable):
 
     func_filter = filter
 
-    actions = (
-        (r"/read", "read", {
-            'start': 'int',
-            'limit': 'int',
-            'page': 'int',
-            'filter': 'json',
-            'query': 'str',
-            'sort': 'json'
-        }),
-    )
+    def read(self,
+             filter: 'json',
+             start: 'int'=None,
+             limit: 'int'=None,
+             page: 'int'=None,
+             query: 'str'=None,
+             group: 'str'=None,
+             sort: 'json'=None) -> r"/read":
 
-    def read(self, filter, *args, **kwargs):
         ctrl_param = filter[0]['value']
         action_set = set()
         for ctrl, action in self.methods:

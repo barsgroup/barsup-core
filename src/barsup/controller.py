@@ -21,84 +21,54 @@ class DictController(metaclass=Injectable):
     depends_on = ('service',)
     __slots__ = depends_on + ('uid',)
 
-    actions = (
-        (r"/create", "create", {'records': 'list'}),
+    def read(self,
+             start: 'int'=None,
+             limit: 'int'=None,
+             page: 'int'=None,
+             query: 'str'=None,
+             filter: 'json'=None,
+             group: 'str'=None,
+             sort: 'json'=None) -> r'/read':
+        return map(to_dict,
+                   self.service().filters(
+                       filter or []
+                   ).sorts(
+                       sort or []
+                   ).limiter(start, limit
+                   ).read()
+        )
 
-        (r"/read", "read", {
-            'start': 'int',
-            'limit': 'int',
-            'page': 'int',
-            'filter': 'json',
-            'query': 'str',
-            'sort': 'json'
-        }),
-        (r"/read/{id_:\d+}", "get", {
-            'filter': 'json'
-        }),
-
-        (r"/update", "bulk_update", {'records': 'list'}),
-        (r"/update/{id_:\d+}", "update", {'data': 'dict'}),
-
-        (r"/destroy/", "bulk_destroy", {'records': 'list'}),
-        (r"/destroy/{id_:\d+}", "destroy",),
-    )
-
-    def _init(self):
-        # Данный метод не вызывается
-        # он необходим для правильной подсветки синтаксиса
-        # т. к. синтаксические анализаторы не понимают внедренные зависимости
-        self.service = None
-
-    def read(self, start=None, limit=None, page=None,
-             query=None, filter=None,
-             group=None, sort=None):
-
-        service = self.service()
-        if filter:
-            service = self.service.filters(filter)
-
-        if sort:
-            service = service.sorts(sort)
-
-        if start is not None and limit is not None:
-            service = service.limiter(start, limit)
-
-        return service.read()
-
-    def get(self, id_, filter=None):
-
-        service = self.service.filter_by_id(id_)
-        if filter:
-            service = service.filters(filter)
-
-        return to_dict(service.get())
+    def get(self, id_: "int", filter: "json"=None) -> r"/read/{id_:\d+}":
+        return to_dict(
+            self.service.filter_by_id(id_).filters(filter or []).get()
+        )
 
     def _update(self, id_, record):
         return self.service.filter_by_id(id_).update(**record)
 
-    def bulk_update(self, records):
+    def bulk_update(self, records: "list") -> r"/update":
         return map(to_dict,
                    [self._update(record['id'], record) for record in records])
 
-    def update(self, id_, data):
+    def update(self, id_: "int", data: "dict") -> r"/update/{id_:\d+}":
         return map(to_dict, [self._update(id_, data)])
 
     def _destroy(self, id_):
         self.service.filter_by_id(id_).delete()
 
-    def bulk_destroy(self, identifiers):
+    def bulk_destroy(self, identifiers: "list") -> r"/destroy/":
         for id_ in identifiers:
             self._destroy(id_)
         return identifiers
 
-    def destroy(self, id_):
+    def destroy(self, id_: "int") -> "/destroy/{id_:\d+}":
         self._destroy(id_)
         return id_
 
     def _create(self, record):
         return self.service.create(**record)
 
-    def create(self, records):
+    def create(self, records: "list") -> r"/create":
         return map(to_dict, (self._create(record) for record in records))
 
 
