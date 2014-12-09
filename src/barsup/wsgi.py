@@ -16,8 +16,7 @@ def api(request):
 # Приложение, раздающее статику
 static_serving_app = DirectoryApp(
     path.join(environ['BUP_PATH'], 'static'),
-    index_page='barsup/',
-    hide_index_with_redirect=False
+    hide_index_with_redirect=True
 )
 
 
@@ -30,11 +29,6 @@ def serve_static(request, app):
         return static_serving_app
     else:
         return app
-    # res = request.call_application(static_serving_app)
-    # if res[0] != '200 OK':
-    #     return app
-    # else:
-    #     return static_serving_app
 
 
 application = serve_static(api)
