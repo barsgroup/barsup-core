@@ -4,6 +4,7 @@ from os import environ, path
 
 from webob import Response
 from webob.dec import wsgify
+from webob.exc import HTTPMovedPermanently
 from webob.static import DirectoryApp
 
 
@@ -21,14 +22,14 @@ static_serving_app = DirectoryApp(
 
 
 @wsgify.middleware
-def serve_static(request, app):
+def serve_static(request, app, prefix):
     url = request.path
-    if url == '/' or (
-        url.startswith('/barsup')
-    ):
+    if url == '/':
+        raise HTTPMovedPermanently(location=prefix)
+    elif url.startswith(prefix):
         return static_serving_app
     else:
         return app
 
 
-application = serve_static(api)
+application = serve_static(api, prefix='/barsup')
