@@ -13,14 +13,13 @@ class AuthenticationService(Service):
         service.filter('login', 'eq', login)
         service.filter('password', 'eq', password)
 
-        user_id = getattr(service.read(), 'id', None)
+        user_id = getattr(service.get(), 'id', None)
         if user_id:
-            service = self.service(self.web_session_model)
+            service = self.service()
             service.filter('user_id', 'eq', user_id)
             service.delete()
 
-            service = self.service(self.web_session_model)
-            service.create(
+            self.service.create(
                 user_id=user_id,
                 web_session_id=web_session_id)
 
