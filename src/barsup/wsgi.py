@@ -22,7 +22,12 @@ def handler(config_file_name):
 
     @wsgify
     def app(request):
-        return Response('Hello!')
+        return Response(
+            content_type='application/json',
+            body=json.dumps(
+                api.populate(request.path, **request.POST)
+            )
+        )
 
     return app
 
