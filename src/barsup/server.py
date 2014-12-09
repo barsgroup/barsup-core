@@ -98,7 +98,8 @@ def run(port, sock_pull, sock_push, static_root, base_url):
         (r'^/$', RedirectHandler, {'url': '{0}'.format(base_url)}),
         (r"{0}".format(base_url), MainHandler, {'index_path': static_path}),
         (r"/v\d+", WSHandler, {'mq': push_sock}),
-        (r'{0}(.*)'.format(base_url), StaticFileHandler, {'path': static_path}),
+        (r'{0}(.*)'.format(base_url),
+         StaticFileHandler, {'path': static_path}),
     ])
 
     application.listen(port)
