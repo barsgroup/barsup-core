@@ -76,7 +76,7 @@ def on_mq_recv(msgs):
             print('Unknown session_id:', session_id)
 
 
-def run(port, sock_pull, sock_push, static_root):
+def run(port, sock_pull, sock_push, static_root, base_url):
     """
     Запускает сервер с указанными параметрами
     """
@@ -95,10 +95,10 @@ def run(port, sock_pull, sock_push, static_root):
     os.environ.setdefault('BUP_PATH', '.')
     static_path = os.path.abspath(os.path.expandvars(static_root))
     application = Application([
-        (r'^/$', RedirectHandler, {'url': '/index/'}),
-        (r"/index/", MainHandler, {'index_path': static_path}),
+        (r'^/$', RedirectHandler, {'url': '{0}'.format(base_url)}),
+        (r"{0}".format(base_url), MainHandler, {'index_path': static_path}),
         (r"/v\d+", WSHandler, {'mq': push_sock}),
-        (r'/index/(.*)', StaticFileHandler, {'path': static_path}),
+        (r'{0}(.*)'.format(base_url), StaticFileHandler, {'path': static_path}),
     ])
 
     application.listen(port)
@@ -110,5 +110,6 @@ DEFAULT_PARAMS = {
     'port': 8000,
     'sock_pull': 'tcp://localhost:3001',
     'sock_push': 'tcp://localhost:3002',
-    'static_root': '$BUP_PATH/static/barsup/'
+    'static_root': '$BUP_PATH/static/barsup/',
+    'base_url': '/barsup/'
 }
