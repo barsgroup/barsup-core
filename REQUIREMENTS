@@ -9,4 +9,6 @@ alembic
 simplejson
 yadic
 pytest
+uwsgi
+webob
 
