@@ -166,8 +166,16 @@ class Service:
         self.db_mapper = db_mapper
 
     def __call__(self, model=None):
-        self.model = model or self.model
-        return _Proxy(weakref.proxy(self))
+        service = Service(
+            model=model or self.model,
+            models=self.models,
+            joins=self.joins,
+            select=self.select,
+            session=self.session,
+            db_mapper=self.db_mapper,
+        )
+
+        return _Proxy(service)
 
     def __getattr__(self, item):
         proxy = _Proxy(weakref.proxy(self))

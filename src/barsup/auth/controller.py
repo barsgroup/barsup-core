@@ -23,7 +23,7 @@ class Authentication(metaclass=Injectable):
 
 
 class Authorization(metaclass=Injectable):
-    depends_on = ('service', 'authentication')
+    depends_on = ('service',)
 
     def has_perm(self, uid, controller, action):
         return self.service.has_perm(uid, controller, action)
