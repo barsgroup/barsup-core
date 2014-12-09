@@ -1,45 +1,55 @@
 # coding:utf-8
 
-from os import environ, path
+from os import path
 from sys import stderr, exc_info
 from datetime import datetime
 import traceback
+import json
 
 from webob import Response
 from webob.dec import wsgify
 from webob.exc import HTTPMovedPermanently, HTTPInternalServerError
 from webob.static import DirectoryApp
 
-
-@wsgify
-def api(request):
-    """WSGI-приложение"""
-    raise ValueError('dasdasd')
-    return Response('Hello!')
+from barsup import core
 
 
-# Приложение, раздающее статику
-static_serving_app = DirectoryApp(
-    path.join(environ['BUP_PATH'], 'static'),
-    hide_index_with_redirect=True
-)
+def handler(config_file_name):
+    with open(path.expandvars(config_file_name)) as conf:
+        api = core.init(
+            config=json.load(conf)['container']
+        )
+
+    @wsgify
+    def app(request):
+        return Response('Hello!')
+
+    return app
 
 
-@wsgify.middleware
-def serve_static(request, app, prefix):
-    url = request.path
-    if url == '/':
-        raise HTTPMovedPermanently(location=prefix)
-    elif url.startswith(prefix):
-        return static_serving_app
-    else:
-        return app
+def static_server(url_prefix, static_path):
+    static_app = DirectoryApp(
+        path.expandvars(static_path),
+        hide_index_with_redirect=True
+    )
+
+    @wsgify.middleware
+    def mware(request, app):
+        url = request.path
+        if url == '/':
+            raise HTTPMovedPermanently(location=url_prefix)
+        elif url.startswith(url_prefix):
+            return static_app
+        else:
+            return app
+
+    return mware
 
 
 @wsgify.middleware
 def catch_errors(request, app, debug=False):
     try:
-        return request.call_application(app)
+        return request.get_response(app)
     except Exception:
         trace = ''.join(traceback.format_exception(*exc_info(), limit=20))
         stderr.write('%s\n%s\n' % (
@@ -53,12 +63,17 @@ def catch_errors(request, app, debug=False):
         raise HTTPInternalServerError(**params)
 
 
-application = serve_static(
+application = static_server(
+    url_prefix='/barsup',
+    static_path=path.join('$BUP_PATH', 'static')
+)(
     catch_errors(
-        api,
+        handler(
+            config_file_name='$BUP_CONFIG'
+        ),
         debug=True
-    ),
-    prefix='/barsup')
+    )
+)
 
 
-__all__ = (application, api, catch_errors, serve_static)
+__all__ = (application, handler, catch_errors, static_server)
