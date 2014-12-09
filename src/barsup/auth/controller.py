@@ -1,8 +1,9 @@
 # coding: utf-8
 from yadic.container import Injectable
+from barsup.controller import Controller
 
 
-class Authentication(metaclass=Injectable):
+class Authentication(Controller, metaclass=Injectable):
     depends_on = ('service',)
 
     def login(self,
@@ -22,14 +23,14 @@ class Authentication(metaclass=Injectable):
         return self.service.is_logged_in(web_session_id)
 
 
-class Authorization(metaclass=Injectable):
+class Authorization(Controller, metaclass=Injectable):
     depends_on = ('service',)
 
     def has_perm(self, uid, controller, action):
         return self.service.has_perm(uid, controller, action)
 
 
-class PermissionController(metaclass=Injectable):
+class PermissionController(Controller, metaclass=Injectable):
     depends_on = ('methods',)
 
     def read(self,
@@ -46,7 +47,7 @@ class PermissionController(metaclass=Injectable):
         return map(lambda x: dict(controller=x), sorted(ctrl_set))
 
 
-class PermissionAction(metaclass=Injectable):
+class PermissionAction(Controller, metaclass=Injectable):
     depends_on = ('methods',)
 
     func_filter = filter

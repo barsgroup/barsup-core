@@ -27,7 +27,7 @@ class Router:
         for controller, realization in controllers:
             mapper = self._mapper.submapper(
                 path_prefix='/' + controller.lower())
-            for action_decl in _get_actions(realization):
+            for action_decl in getattr(realization, 'actions'):
                 route, action, params = (action_decl + (None,))[:3]
                 mapper.connect(route, controller=controller, action=action)
                 if params:
@@ -86,13 +86,5 @@ class Router:
 
         return controller_name, action_name, parsed_params
 
-
-def _get_actions(realization):
-    for attr_name in dir(realization):
-        if not attr_name.startswith('_'):
-            attr = getattr(realization, attr_name)
-            if callable(attr) and getattr(attr, '__annotations__', None):
-                decl = attr.__annotations__.copy()
-                yield decl.pop('return'), attr.__name__, decl
 
 __all__ = (Router,)

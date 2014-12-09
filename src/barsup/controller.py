@@ -4,7 +4,22 @@ from yadic.container import Injectable
 from barsup.serializers import to_dict
 
 
-class DictController(metaclass=Injectable):
+class Controller:
+    class _ActionsSet:
+        def __get__(self, instance, owner):
+            assert instance is None
+
+            for attr_name in dir(owner):
+                if not attr_name.startswith('_'):
+                    attr = getattr(owner, attr_name)
+                    if callable(attr) and getattr(attr, '__annotations__', None):
+                        decl = attr.__annotations__.copy()
+                        yield decl.pop('return'), attr.__name__, decl
+
+    actions = _ActionsSet()
+
+
+class DictController(Controller, metaclass=Injectable):
     """
     Представляет уровень контроллера
 
@@ -72,4 +87,4 @@ class DictController(metaclass=Injectable):
         return map(to_dict, (self._create(record) for record in records))
 
 
-__all__ = (DictController,)
+__all__ = (DictController, Controller)
