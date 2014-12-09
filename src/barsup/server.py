@@ -6,7 +6,7 @@ import os
 
 import tornado
 from tornado.ioloop import IOLoop
-from tornado.web import RequestHandler, StaticFileHandler, Application
+from tornado.web import RequestHandler, StaticFileHandler, Application, RedirectHandler
 import tornado.websocket
 
 import zmq
@@ -95,9 +95,10 @@ def run(port, sock_pull, sock_push, static_root):
     os.environ.setdefault('BUP_PATH', '.')
     static_path = os.path.abspath(os.path.expandvars(static_root))
     application = Application([
-        (r"/$", MainHandler, {'index_path': static_path}),
-        (r"/ws$", WSHandler, {'mq': push_sock}),
-        (r'/(.*)', StaticFileHandler, {'path': static_path}),
+        (r'^/$', RedirectHandler, {'url': '/index/'}),
+        (r"/index/", MainHandler, {'index_path': static_path}),
+        (r"/v\d+", WSHandler, {'mq': push_sock}),
+        (r'/index/(.*)', StaticFileHandler, {'path': static_path}),
     ])
 
     application.listen(port)
