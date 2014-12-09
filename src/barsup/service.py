@@ -118,7 +118,10 @@ class _QuerySetBuilder:
     @_mapping_property
     def _filter(self, property, operator, *args, **kwargs):
         if args or kwargs:
-            value = kwargs.get('value', args[0])
+            if kwargs:
+                value = kwargs['value']
+            if args:
+                value = args[0]
 
             self._qs = self._qs.filter(
                 self.apply_filter(
