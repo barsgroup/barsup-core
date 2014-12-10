@@ -5,6 +5,7 @@ from sys import stderr, exc_info
 from datetime import datetime
 import traceback
 import json
+from uuid import uuid4
 
 from webob import Response
 from webob.dec import wsgify
@@ -72,17 +73,31 @@ def catch_errors(request, app, debug=False):
         raise HTTPInternalServerError(**params)
 
 
-application = static_server(
-    url_prefix='/barsup',
-    static_path=path.join('$BUP_PATH', 'static')
-)(
-    catch_errors(
-        handler(
-            config_file_name='$BUP_CONFIG',
-            catch_cookies=('web_session_id',),
-        ),
-        debug=True
-    )
+@wsgify.middleware
+def with_session(request, app, cookie_name, generator):
+    if cookie_name not in request.cookies:
+        request.cookies[cookie_name] = generator()
+    value = request.cookies[cookie_name]
+    res = request.get_response(app)
+    res.set_cookie(cookie_name, value)
+    return res
+
+
+application = with_session(
+    static_server(
+        url_prefix='/barsup',
+        static_path=path.join('$BUP_PATH', 'static')
+    )(
+        catch_errors(
+            handler(
+                config_file_name='$BUP_CONFIG',
+                catch_cookies=('web_session_id',),
+            ),
+            debug=True
+        )
+    ),
+    cookie_name='web_session_id',
+    generator=lambda: uuid4().hex
 )
 
 
