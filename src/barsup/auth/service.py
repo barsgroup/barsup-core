@@ -9,15 +9,19 @@ class AuthenticationService(Service):
         self.user_model = user_model
 
     def login(self, login, password, web_session_id):
-        service = self.service(self.user_model)
-        service.filter('login', 'eq', login)
-        service.filter('password', 'eq', password)
+        obj = self.service(
+            self.user_model
+        ).filter(
+            'login', 'eq', login
+        ).filter(
+            'password', 'eq', password
+        ).get()
 
-        user_id = getattr(service.get(), 'id', None)
+        user_id = getattr(obj, 'id', None)
         if user_id:
-            service = self.service()
-            service.filter('user_id', 'eq', user_id)
-            service.delete()
+            self.service().filter(
+                'user_id', 'eq', user_id
+            ).delete()
 
             self.service.create(
                 user_id=user_id,
@@ -58,5 +62,5 @@ class AuthorizationService(Service):
         # res = self.session.query(literal(True)).filter(subquery)
         # return res.scalar()
 
-        #FIXME: пока работает некорректно, так как нет джойнов
+        # FIXME: пока работает некорректно, так как нет джойнов
         return perm_service.read() or role_service.read() or False

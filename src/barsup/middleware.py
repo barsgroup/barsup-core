@@ -35,14 +35,17 @@ def log_errors_to_stderr(nxt, controller, action, **params):
         raise
 
 
-def access_check(authentication, authorization=None):
+def access_check(authentication, authorization=None, pass_by=False):
     """
     Middleware, проверяющая наличие session id среди параметров.
     При этом web_session_id дальше не передается
     """
 
     def wrapper(nxt, controller, action, **params):
-        if authentication.__class__.__name__ == controller:
+        if pass_by:
+            params.pop('web_session_id')
+
+        if pass_by or authentication.__class__.__name__ == controller:
             return nxt(controller, action, **params)
         else:
             uid = authentication.is_logged_in(params.pop('web_session_id'))

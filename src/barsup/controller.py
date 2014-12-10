@@ -80,11 +80,11 @@ class DictController(Controller, metaclass=Injectable):
         self._destroy(id_)
         return id_
 
-    def _create(self, record):
-        return self.service.create(**record)
+    def create(self, data: "dict") -> r"/create":
+        return to_dict(self.service.create(**data))
 
-    def create(self, records: "list") -> r"/create":
-        return map(to_dict, (self._create(record) for record in records))
+    def bulk_create(self, records: "list") -> r"/bulk-create":
+        return (self._create(data) for data in records)
 
 
 __all__ = (DictController, Controller)

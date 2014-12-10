@@ -13,6 +13,7 @@ from webob.exc import HTTPMovedPermanently, HTTPInternalServerError
 from webob.static import DirectoryApp
 
 from barsup import core
+from barsup.util import serialize_to_json
 
 
 def handler(config_file_name, catch_cookies):
@@ -23,15 +24,22 @@ def handler(config_file_name, catch_cookies):
 
     @wsgify
     def app(request):
-        params = dict(request.POST)
+        params = {}
+        params.update(request.params)
+        if request.body:
+            params.update(request.json)
         for cookie in catch_cookies:
             params[cookie] = request.cookies.get(cookie, None)
 
+        status, result = api.populate(
+            request.path, **params)
+
         return Response(
             content_type='application/json',
-            body=json.dumps(
-                api.populate(request.path, **params)
-            )
+            body=json.dumps({
+                'data': result,
+                'success': status
+            }, default=serialize_to_json)
         )
 
     return app

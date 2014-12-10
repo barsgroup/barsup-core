@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-from types import GeneratorType
 
 import simplejson as json
 
 import zmq
 
 from barsup import core
+from barsup.util import serialize_to_json
 
 
 def run(container, apps, sock_pull, sock_push, **kwargs):
     """
     Запускает worker с указанными параметрами
     """
-    app = core.init(container)
+    api = core.init(container)
     # заполнение актуальной runtime-информации в соответствующем модуле
 
     context = zmq.Context()
@@ -34,7 +34,7 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
         try:
             if not isinstance(params, dict):
                 raise TypeError('Event data must be a dict!')
-            status, result = app.populate(
+            status, result = api.populate(
                 key, web_session_id=web_session_id, **params)
 
         except Exception:
@@ -46,14 +46,7 @@ def run(container, apps, sock_pull, sock_push, **kwargs):
                 'data': json.dumps({'data': result,
                                     'success': status,
                                     'event': key},
-                                   default=_serialize_to_json)})
-
-
-def _serialize_to_json(obj):
-    if isinstance(obj, (map, set, GeneratorType)):
-        return tuple(obj)
-    else:
-        raise TypeError('Type "{0}" not supported'.format(obj))
+                                   default=serialize_to_json)})
 
 
 DEFAULT_PARAMS = {
