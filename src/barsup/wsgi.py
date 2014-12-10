@@ -26,8 +26,9 @@ def handler(config_file_name, catch_cookies):
     def app(request):
         params = {}
         params.update(request.params)
-        if request.body:
+        if request.is_body_readable:
             params.update(request.json)
+
         for cookie in catch_cookies:
             params[cookie] = request.cookies.get(cookie, None)
 
