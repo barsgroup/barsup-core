@@ -14,7 +14,7 @@ from webob.static import DirectoryApp
 from barsup import core
 
 
-def handler(config_file_name):
+def handler(config_file_name, catch_cookies):
     with open(path.expandvars(config_file_name)) as conf:
         api = core.init(
             config=json.load(conf)['container']
@@ -22,10 +22,14 @@ def handler(config_file_name):
 
     @wsgify
     def app(request):
+        params = dict(request.POST)
+        for cookie in catch_cookies:
+            params[cookie] = request.cookies.get(cookie, None)
+
         return Response(
             content_type='application/json',
             body=json.dumps(
-                api.populate(request.path, **request.POST)
+                api.populate(request.path, **params)
             )
         )
 
@@ -74,7 +78,8 @@ application = static_server(
 )(
     catch_errors(
         handler(
-            config_file_name='$BUP_CONFIG'
+            config_file_name='$BUP_CONFIG',
+            catch_cookies=('web_session_id',),
         ),
         debug=True
     )
