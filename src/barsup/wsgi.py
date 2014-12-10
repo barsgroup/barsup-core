@@ -101,4 +101,4 @@ application = with_session(
 )
 
 
-__all__ = (application, handler, catch_errors, static_server)
+__all__ = (application, handler, catch_errors, static_server, with_session)
