@@ -52,7 +52,7 @@ def access_check(authentication, authorization=None, pass_by=False):
             if not uid:
                 return False, NEED_LOGIN
 
-            if authorization and authorization.has_perm(uid, controller, action):
+            if authorization and not authorization.has_perm(uid, controller, action):
                 return False, NOT_PERMIT
 
             return nxt(controller, action, **params)
