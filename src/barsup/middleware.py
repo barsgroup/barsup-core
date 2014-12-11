@@ -35,24 +35,31 @@ def log_errors_to_stderr(nxt, controller, action, **params):
         raise
 
 
-def access_check(authentication, authorization=None, pass_by=False):
+def access_check(authentication, authorization=None):
     """
     Middleware, проверяющая наличие session id среди параметров.
-    При этом web_session_id дальше не передается
+    При этом web_session_id дальше не передается.
+
+    :param authentication: controller аутентификации
+    :type authentication: str
+
+    :param authorization: controller авторизации
+    :type authorization: str
     """
 
-    def wrapper(nxt, controller, action, **params):
-        if pass_by:
-            params.pop('web_session_id')
-
-        if pass_by or authentication.__class__.__name__ == controller:
-            return nxt(controller, action, **params)
+    def wrapper(nxt, controller, action, web_session_id, **params):
+        if controller == authentication:
+            return nxt(controller, action, web_session_id, **params)
         else:
-            uid = authentication.is_logged_in(params.pop('web_session_id'))
+            # пользователь должен быть аутентифицирован
+            uid = nxt(authentication, 'is_logged_in', web_session_id)
             if not uid:
                 return False, NEED_LOGIN
 
-            if authorization and authorization.has_perm(uid, controller, action):
+            # пользователь должен иметь право на выполнение действия
+            if authorization and not nxt(
+                authorization, 'has_perm', uid, controller, action
+            ):
                 return False, NOT_PERMIT
 
             return nxt(controller, action, **params)
@@ -78,9 +85,20 @@ def transact(session):
     return wrapper
 
 
-def wrap_result(nxt, *args, **kwargs):
-    result = nxt(*args, **kwargs)
-    if not (isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], bool)):
-        return True, result
-    else:
+def wrap_result(nxt, controller, action, **kwargs):
+    """
+    Оборачивает результат в кортеж вида (bool, x),
+    где первый элемент обозначает успешность вызова
+    оборачиваемой функции.
+    Результаты вызова, уже имеющие нужный формат
+    не видоизменяются.
+    """
+    result = nxt(controller, action, **kwargs)
+    if (
+        isinstance(result, tuple)
+        and len(result) == 2
+        and isinstance(result[0], bool)
+    ):
         return result
+    else:
+        return True, result
