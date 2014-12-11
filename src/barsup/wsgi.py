@@ -6,6 +6,7 @@ from datetime import datetime
 import traceback
 import json
 from uuid import uuid4
+from simplejson.scanner import JSONDecodeError
 
 from webob import Response
 from webob.dec import wsgify
@@ -25,9 +26,11 @@ def handler(config_file_name, catch_cookies):
     @wsgify
     def app(request):
         params = {}
-        params.update(request.params)
-        if request.is_body_readable:
+
+        try:
             params.update(request.json)
+        except JSONDecodeError:
+            params.update(request.params)
 
         for cookie in catch_cookies:
             params[cookie] = request.cookies.get(cookie, None)

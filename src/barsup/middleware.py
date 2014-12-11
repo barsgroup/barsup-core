@@ -49,16 +49,16 @@ def access_check(authentication, authorization=None):
 
     def wrapper(nxt, controller, action, web_session_id, **params):
         if controller == authentication:
-            return nxt(controller, action, web_session_id, **params)
+            return nxt(controller, action, web_session_id=web_session_id, **params)
         else:
             # пользователь должен быть аутентифицирован
-            uid = nxt(authentication, 'is_logged_in', web_session_id)
+            uid = nxt(authentication, 'is_logged_in', web_session_id=web_session_id)
             if not uid:
                 return False, NEED_LOGIN
 
             # пользователь должен иметь право на выполнение действия
             if authorization and not nxt(
-                authorization, 'has_perm', uid, controller, action
+                authorization, 'has_perm', uid=uid, operation=(controller, action)
             ):
                 return False, NOT_PERMIT
 
@@ -72,9 +72,9 @@ def transact(session):
     Транзакционная mw, оборачивает запрос в транзакцию
     """
 
-    def wrapper(nxt, *args, **params):
+    def wrapper(nxt, controller, action, **params):
         try:
-            result = nxt(*args, **params)
+            result = nxt(controller, action, **params)
             session.commit()
         except Exception:
             session.rollback()
