@@ -4,6 +4,7 @@ from barsup.service import Service
 
 
 class AuthenticationService(Service):
+
     def __init__(self, user_model, **kwargs):
         super().__init__(**kwargs)
         self.user_model = user_model
@@ -38,11 +39,11 @@ class AuthenticationService(Service):
 
 
 class AuthorizationService(Service):
+
     def __init__(self, role_model, permission_model, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.role_model = role_model
         self.permission_model = permission_model
-
 
     def has_perm(self, uid, controller, action):
         perm_service = self.service.filter(
@@ -56,7 +57,8 @@ class AuthorizationService(Service):
             'user_id', 'eq', uid
         ).filter('role.is_super', 'eq', True)
 
-        # TODO: придумать нормальный способ доставать данные в один маленький запрос
+        # TODO: придумать нормальный способ
+        # получения данных в один маленький запрос
         # Объединение результатов
         # subquery = service._qs.union(role_service._qs).exists()
         # res = self.session.query(literal(True)).filter(subquery)

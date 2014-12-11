@@ -5,14 +5,23 @@ from barsup.serializers import to_dict
 
 
 class Controller:
-    class _ActionsSet:
-        def __get__(self, instance, owner):
-            assert instance is None
+    """
+    Прототип контроллера
+    """
 
+    class _ActionsSet:
+        """
+        Итератор actions, предоставляющий для
+        каждого действия декларацию его параметров
+        """
+        def __get__(self, instance, owner):
+            assert instance is None, "\"actions\" is a class-descriptor!"
             for attr_name in dir(owner):
                 if not attr_name.startswith('_'):
                     attr = getattr(owner, attr_name)
-                    if callable(attr) and getattr(attr, '__annotations__', None):
+                    if callable(attr) and getattr(
+                        attr, '__annotations__', None
+                    ):
                         decl = attr.__annotations__.copy()
                         yield decl.pop('return'), attr.__name__, decl
 
@@ -36,55 +45,87 @@ class DictController(Controller, metaclass=Injectable):
     depends_on = ('service',)
     __slots__ = depends_on + ('uid',)
 
-    def read(self,
-             start: 'int'=None,
-             limit: 'int'=None,
-             page: 'int'=None,
-             query: 'str'=None,
-             filter: 'json'=None,
-             group: 'str'=None,
-             sort: 'json'=None) -> r'/read':
-        return map(to_dict,
-                   self.service().filters(
-                       filter or []
-                   ).sorts(
-                       sort or []
-                   ).limiter(start, limit
-                   ).read()
+    # --- actions ---
+
+    def read(
+        self,
+        start: 'int'=None,
+        limit: 'int'=None,
+        page: 'int'=None,
+        query: 'str'=None,
+        filter: 'json'=None,
+        group: 'str'=None,
+        sort: 'json'=None
+    ) -> r'/read':
+        return map(
+            to_dict,
+            self.service().filters(
+                filter or []
+            ).sorts(
+                sort or []
+            ).limiter(
+                start, limit
+            ).read()
         )
 
-    def get(self, id_: "int", filter: "json"=None) -> r"/read/{id_:\d+}":
+    def get(
+        self,
+        id_: "int",
+        filter: "json"=None
+    ) -> r"/read/{id_:\d+}":
         return to_dict(
             self.service.filter_by_id(id_).filters(filter or []).get()
         )
 
-    def _update(self, id_, record):
-        return self.service.filter_by_id(id_).update(**record)
-
-    def bulk_update(self, records: "list") -> r"/update":
+    def bulk_update(
+        self,
+        records: "list"
+    ) -> r"/update":
         return map(to_dict,
-                   [self._update(record['id'], record) for record in records])
+                   [self._update(record['id'], record)
+                    for record in records])
 
-    def update(self, id_: "int", data: "dict") -> r"/update/{id_:\d+}":
+    def update(
+        self,
+        id_: "int",
+        data: "dict"
+    ) -> r"/update/{id_:\d+}":
         return map(to_dict, [self._update(id_, data)])
 
-    def _destroy(self, id_):
-        self.service.filter_by_id(id_).delete()
-
-    def bulk_destroy(self, identifiers: "list") -> r"/destroy/":
+    def bulk_destroy(
+        self,
+        identifiers: "list"
+    ) -> r"/destroy/":
         for id_ in identifiers:
             self._destroy(id_)
         return identifiers
 
-    def destroy(self, id_: "int") -> "/destroy/{id_:\d+}":
+    def destroy(
+        self,
+        id_: "int"
+    ) -> "/destroy/{id_:\d+}":
         self._destroy(id_)
         return id_
 
-    def create(self, data: "dict") -> r"/create":
+    def create(
+        self,
+        data: "dict"
+    ) -> r"/create":
         return to_dict(self.service.create(**data))
 
-    def bulk_create(self, records: "list") -> r"/bulk-create":
+    def bulk_create(
+        self,
+        records: "list"
+    ) -> r"/bulk-create":
         return (self._create(data) for data in records)
+
+    # --- internals ---
+
+    def _update(self, id_, record):
+        return self.service.filter_by_id(id_).update(**record)
+
+    def _destroy(self, id_):
+        self.service.filter_by_id(id_).delete()
 
 
 __all__ = (DictController, Controller)
