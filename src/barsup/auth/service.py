@@ -46,6 +46,7 @@ class AuthorizationService(Service):
         self.permission_model = permission_model
 
     def has_perm(self, uid, controller, action):
+        # FIXME: пока работает некорректно, так как нет джойнов
         perm_service = self.service.filter(
             'user_id', 'eq', uid
         ).filter(
@@ -64,5 +65,5 @@ class AuthorizationService(Service):
         # res = self.session.query(literal(True)).filter(subquery)
         # return res.scalar()
 
-        # FIXME: пока работает некорректно, так как нет джойнов
+
         return perm_service.read() or role_service.read() or False
