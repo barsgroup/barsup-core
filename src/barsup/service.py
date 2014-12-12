@@ -17,11 +17,11 @@ def _mapping_property(f):
         names = property.split('.')
         if len(names) == 2:  # Составной объект, например, user.name
             outer_model, column = names
-            model = getattr(self.service.db_mapper, outer_model)
+            field = self._model.get_field(column, outer_model)
         else:
-            model, column = self.service.model, property
+            field = self._model.get_field(property)
 
-        return f(self, getattr(model, column), *args, **kwargs)
+        return f(self, field, *args, **kwargs)
 
     return wrapper
 
@@ -62,22 +62,29 @@ def _sorter(direction):
 
 def _delegate_proxy(name):
     def wrap(self, *args, **kwargs):
-        return _Proxy(self.service, self.queue + [(name, args, kwargs)])
+        return _Proxy(self._callback,
+                      self._model,
+                      self.queue + [(name, args, kwargs)])
 
     return wrap
 
 
 def _delegate_service(name):
     def wrap(self, *args, **kwargs):
-        method = getattr(self.service, name)
-        return method(_QuerySetBuilder(self.service).build(self.queue), *args, **kwargs)
+        return self._callback(name)(
+            _QuerySetBuilder(
+                self._model
+            ).build(
+                self.queue
+            ), *args, **kwargs)
 
     return wrap
 
 
 class _Proxy:
-    def __init__(self, service, queue=None):
-        self.service = service
+    def __init__(self, callback, model, queue=None):
+        self._callback = callback
+        self._model = model
         self.queue = queue or []
 
     filter = _delegate_proxy('_filter')
@@ -100,14 +107,12 @@ class _QuerySetBuilder:
     apply_filter = staticmethod(_filter)
     apply_sorter = staticmethod(lambda x, y: _sorter(y)(x))
 
-    def __init__(self, service):
-        self.service = service
+    def __init__(self, model):
+        self._model = model
         self._qs = self._create_qs()
 
     def _create_qs(self):
-        return self.service.session.query(
-            self.service.model
-        )
+        return self._model.create_query()
 
     def build(self, queue):
         for item, args, kwargs in queue:
@@ -154,34 +159,19 @@ class _QuerySetBuilder:
 
 
 class Service:
-    def __init__(self,
-                 model,
-                 session,
-                 db_mapper,
-                 models=None,
-                 joins=None,
-                 select=None, ):
+    def __init__(self, model, session):
         self.model = model
-        self.models = models
-        self.joins = joins
-        self.select = select
-        self.session = session
-        self.db_mapper = db_mapper
+        self._session = session
 
     def __call__(self, model=None):
-        service = Service(
-            model=model or self.model,
-            models=self.models,
-            joins=self.joins,
-            select=self.select,
-            session=self.session,
-            db_mapper=self.db_mapper,
-        )
-
-        return _Proxy(service)
+        return _Proxy(
+            callback=lambda name: self.__getattribute__(name),
+            model=model or self.model)
 
     def __getattr__(self, item):
-        proxy = _Proxy(weakref.proxy(self))
+        proxy = _Proxy(
+            callback=lambda name: self.__getattribute__(name),
+            model=self.model)
         return getattr(proxy, item)
 
     def _get(self, qs):
@@ -206,11 +196,10 @@ class Service:
 
     # For create
     def _deserialize(self, item, value):
-        return convert(
-            getattr(self.model, item), value)
+        return convert(self.model.get_field(item), value)
 
     def _initialize(self, **kwargs):
-        obj = self.model()
+        obj = self.model.create_object()
         for item, value in kwargs.items():
             assert hasattr(obj, item)
             value = self._deserialize(item, value)
@@ -219,10 +208,10 @@ class Service:
 
     def create(self, **kwargs):
         obj = self._initialize(**kwargs)
-        self.session.add(obj)
+        self._session.add(obj)
 
         # Для получения id объекта - flush
-        self.session.flush()
+        self._session.flush()
         return obj
 
 

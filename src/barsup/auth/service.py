@@ -10,7 +10,7 @@ class AuthenticationService(Service):
         self.user_model = user_model
 
     def login(self, login, password, web_session_id):
-        obj = self.service(
+        obj = self(
             self.user_model
         ).filter(
             'login', 'eq', login
@@ -20,11 +20,11 @@ class AuthenticationService(Service):
 
         user_id = getattr(obj, 'id', None)
         if user_id:
-            self.service().filter(
+            self.filter(
                 'user_id', 'eq', user_id
             ).delete()
 
-            self.service.create(
+            self.create(
                 user_id=user_id,
                 web_session_id=web_session_id)
 
@@ -40,21 +40,20 @@ class AuthenticationService(Service):
 
 class AuthorizationService(Service):
 
-    def __init__(self, role_model, permission_model, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.role_model = role_model
-        self.permission_model = permission_model
+    def __init__(self, user_role, **kwargs):
+        super().__init__(**kwargs)
+        self.user_role = user_role
 
     def has_perm(self, uid, controller, action):
         # FIXME: пока работает некорректно, так как нет джойнов
-        perm_service = self.service.filter(
+        perm_service = self.filter(
             'user_id', 'eq', uid
         ).filter(
             'permission.controller', 'eq', controller
         ).filter(
             'permission.action', 'eq', action)
 
-        role_service = self.filter(
+        role_service = self(self.user_role).filter(
             'user_id', 'eq', uid
         ).filter('role.is_super', 'eq', True)
 
@@ -64,6 +63,5 @@ class AuthorizationService(Service):
         # subquery = service._qs.union(role_service._qs).exists()
         # res = self.session.query(literal(True)).filter(subquery)
         # return res.scalar()
-
 
         return perm_service.read() or role_service.read() or False
