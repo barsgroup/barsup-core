@@ -175,7 +175,7 @@ class Service:
         return getattr(proxy, item)
 
     def _get(self, qs):
-        return qs.scalar()
+        return qs.one()
 
     def _read(self, qs):
         return qs.all()
@@ -187,12 +187,11 @@ class Service:
                 value = self._deserialize(item, value)
 
                 params[item] = value
-            qs.update(params)
-
-            return qs.scalar()
+            qs.with_entities(self.model.current).update(params)
+            return qs.one()
 
     def _delete(self, qs):
-        qs.delete()
+        qs.with_entities(self.model.current).delete()
 
     # For create
     def _deserialize(self, item, value):

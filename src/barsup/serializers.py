@@ -1,5 +1,6 @@
 # coding: utf-8
 from datetime import date
+from sqlalchemy.util._collections import KeyedTuple
 
 
 def to_dict(obj, excludes=frozenset(['metadata',
@@ -12,6 +13,9 @@ def to_dict(obj, excludes=frozenset(['metadata',
     :param excludes: Исключения
     :return: dict
     """
+    if isinstance(obj, KeyedTuple):
+        return obj._asdict()
+
     fields = {}
     for field in dir(obj):
         # алхимия генерирует вложенные коллекции с таким постфиксом
