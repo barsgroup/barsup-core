@@ -1,11 +1,9 @@
 # coding: utf-8
 
 import operator
-import weakref
-
 from sqlalchemy.sql import expression, operators
 
-from barsup.serializers import to_dict, convert
+from barsup.serializers import convert
 
 
 def _mapping_property(f):
@@ -211,7 +209,8 @@ class Service:
 
         # Для получения id объекта - flush
         self._session.flush()
-        return obj
+
+        return self.filter('id', 'eq', obj.id).get()
 
 
 __all__ = (Service,)

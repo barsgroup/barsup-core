@@ -70,53 +70,53 @@ class Model:
         '=': 'outerjoin'
     }
 
-    def __init__(self, db_mapper, session, name, joins=None, select=ASTERISK):
+    def __init__(self, db_mapper, session, name,
+                 joins=None, select=ASTERISK):
         self._db_mapper = db_mapper
         self._name = name
 
-        qs = self._create_select(
-            session,
-            select,
-            [outher[0] for *_, outher in joins or []])
+        qs = self._create_select(session, select,
+                                 [outher[0] for *_, outher in joins or []])
+
         self._qs = self._create_joins(qs, joins or [])
 
-    def _get_select_by_model(self, model_name=''):
+    def _create_aliases(self, model_name=''):
         model = getattr(self._db_mapper, model_name, self.current)
         for column in inspect(model).attrs:
             if isinstance(column, ColumnProperty):
-                col = getattr(model, column.key)
-                if model_name:
-                    label = col.label('{0}.{1}'.format(model_name, column.key))
-                else:
-                    label = col.label(column.key)
-                yield label
+                yield self._create_alias(column.key, model_name)
 
-    def _create_joins(self, qs, joins):
-        for inner_field_name, condition, outher_field_name, outher in joins:
-            # TODO: Реализовать вложенные джойны
-            outer_model_name = outher[0]  #
+    def _create_alias(self, field, model_name=''):
+        model = getattr(self._db_mapper, model_name, self.current)
 
-            operator = getattr(qs, self.JOIN_CONDITIONS[condition])
-            outer_model = getattr(self._db_mapper, outer_model_name)
-            qs = operator(
-                outer_model,
-                self.get_field(inner_field_name) == self.get_field(outher_field_name, outer_model_name))
-
-        return qs
+        col = getattr(model, field)
+        if model_name:
+            label = col.label('{0}.{1}'.format(model_name, field))
+        else:
+            label = col.label(field)
+        return label
 
     def _create_select(self, session, select, models):
         select_statement = []
         if select == self.ASTERISK:
             # select * from ...
             select_statement.extend(
-                self._get_select_by_model()
+                self._create_aliases()
             )
             # Нужно собрать информацию с джойнов
             for m in models:
-                select_statement.extend(self._get_select_by_model(m))
+                select_statement.extend(self._create_aliases(m))
         else:
             # select id, foo, bar from baz
-            raise RuntimeError("Unsupported operation")
+            for field in select:
+                names = field.split('.')
+                if len(names) == 2:
+                    model, column = names
+                else:
+                    model, column = '', field
+
+                select_statement.append(
+                    self._create_alias(column, model))
 
         assert select_statement
         return session.query(*select_statement)
@@ -135,8 +135,21 @@ class Model:
 
         return getattr(model, field_name)
 
+    def _create_joins(self, qs, joins):
+        for inner_field_name, condition, outher_field_name, outher in joins:
+            # TODO: Реализовать вложенные джойны
+            outer_model_name = outher[0]  #
+
+            operator = getattr(qs, self.JOIN_CONDITIONS[condition])
+            outer_model = getattr(self._db_mapper, outer_model_name)
+            qs = operator(
+                outer_model,
+                self.get_field(inner_field_name) == self.get_field(outher_field_name, outer_model_name))
+
+        return qs
+
     @property
-    def current(self, ):
+    def current(self):
         return getattr(self._db_mapper, self._name)
 
 

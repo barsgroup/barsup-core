@@ -21,7 +21,7 @@ class CLI(AutoCompleteCLI):
         try:
             self.cfg_file = os.environ['BUP_CONFIG']
         except KeyError:
-            print("BUP_CONFIG anviront variable is not provided!")
+            print("BUP_CONFIG environ variable is not provided!")
             sys.exit(1)
         else:
             with open(self.cfg_file) as f:
