@@ -164,19 +164,18 @@ class _Proxy:
 
 
 class Service:
-    def __init__(self, model, session):
-        self.model = model
-        self._session = session
+    def __init__(self, model):
+        self._model = model
 
     def __call__(self, model=None):
         return _Proxy(
             callback=lambda name: self.__getattribute__(name),
-            model=model or self.model)
+            model=model or self._model)
 
     def __getattr__(self, item):
         proxy = _Proxy(
             callback=lambda name: self.__getattribute__(name),
-            model=self.model)
+            model=self._model)
         return getattr(proxy, item)
 
     def _get(self, qs):
@@ -192,32 +191,21 @@ class Service:
                 value = self._deserialize(item, value)
 
                 params[item] = value
-            qs.with_entities(self.model.current).update(params)
+            qs.with_entities(self._model.current).update(params)
             return qs.one()
 
     def _delete(self, qs):
-        qs.with_entities(self.model.current).delete()
+        qs.with_entities(self._model.current).delete()
 
-    # For create
+    # For create & update
     def _deserialize(self, item, value):
-        return convert(self.model.get_field(item), value)
-
-    def _initialize(self, **kwargs):
-        obj = self.model.create_object()
-        for item, value in kwargs.items():
-            assert hasattr(obj, item)
-            value = self._deserialize(item, value)
-            setattr(obj, item, value)
-        return obj
+        return convert(self._model.get_field(item), value)
 
     def create(self, **kwargs):
-        obj = self._initialize(**kwargs)
-        self._session.add(obj)
-
-        # Для получения id объекта - flush
-        self._session.flush()
-
-        return self.filter('id', 'eq', obj.id).get()
+        id_ = self._model.create_object(
+            **{k: self._deserialize(k, v) for k, v in kwargs.items()}
+        )
+        return self.filter('id', 'eq', id_).get()
 
 
 __all__ = (Service,)

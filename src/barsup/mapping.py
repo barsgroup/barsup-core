@@ -74,6 +74,7 @@ class Model:
                  joins=None, select=ASTERISK):
         self._db_mapper = db_mapper
         self._name = name
+        self._session = session
 
         qs = self._create_select(session, select,
                                  [outher[0] for *_, outher in joins or []])
@@ -125,7 +126,14 @@ class Model:
         return self._qs
 
     def create_object(self, *args, **kwargs):
-        return self.current(*args, **kwargs)
+        obj = self.current(*args, **kwargs)
+        for item, value in kwargs.items():
+            assert hasattr(obj, item)
+            setattr(obj, item, value)
+
+        self._session.add(obj)
+        self._session.flush()  # Для получения id объекта
+        return obj.id
 
     def get_field(self, field_name, model_name=None):
         if model_name:
