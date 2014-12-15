@@ -2,9 +2,6 @@
 from datetime import date
 
 
-to_dict = lambda o: o._asdict()
-
-
 def convert(mapping_item, value):
     """
     Преобразование входящих значений согласно типам колонок

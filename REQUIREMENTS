@@ -9,6 +9,7 @@ alembic
 simplejson
 yadic
 pytest
+coverage
 uwsgi
 webob
 

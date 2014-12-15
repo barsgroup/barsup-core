@@ -60,9 +60,10 @@ def _sorter(direction):
 
 def _delegate_proxy(name):
     def wrap(self, *args, **kwargs):
-        return _Proxy(self._callback,
-                      self._model,
-                      self.queue + [(name, args, kwargs)])
+        return self.create_proxy(
+            self._callback,
+            self._model,
+            self.queue + [(name, args, kwargs)])
 
     return wrap
 
@@ -70,35 +71,13 @@ def _delegate_proxy(name):
 def _delegate_service(name):
     def wrap(self, *args, **kwargs):
         return self._callback(name)(
-            _QuerySetBuilder(
+            self.query_builder(
                 self._model
             ).build(
                 self.queue
             ), *args, **kwargs)
 
     return wrap
-
-
-class _Proxy:
-    def __init__(self, callback, model, queue=None):
-        self._callback = callback
-        self._model = model
-        self.queue = queue or []
-
-    filter = _delegate_proxy('_filter')
-    filters = _delegate_proxy('_filters')
-    filter_by_id = _delegate_proxy('_filter_by_id')
-
-    sort = _delegate_proxy('_sort')
-    sorts = _delegate_proxy('_sorts')
-
-    limiter = _delegate_proxy('_limit')
-
-    get = _delegate_service('_get')
-    read = _delegate_service('_read')
-
-    update = _delegate_service('_update')
-    delete = _delegate_service('_delete')
 
 
 class _QuerySetBuilder:
@@ -154,6 +133,34 @@ class _QuerySetBuilder:
             self._qs = self._qs.offset(offset)
         if limit is not None:
             self._qs = self._qs.limit(limit)
+
+
+class _Proxy:
+    query_builder = _QuerySetBuilder
+
+    def __init__(self, callback, model, queue=None):
+        self._callback = callback
+        self._model = model
+        self.queue = queue or []
+
+    @classmethod
+    def create_proxy(cls, *args, **kwargs):
+        return cls(*args, **kwargs)
+
+    filter = _delegate_proxy('_filter')
+    filters = _delegate_proxy('_filters')
+    filter_by_id = _delegate_proxy('_filter_by_id')
+
+    sort = _delegate_proxy('_sort')
+    sorts = _delegate_proxy('_sorts')
+
+    limiter = _delegate_proxy('_limit')
+
+    get = _delegate_service('_get')
+    read = _delegate_service('_read')
+
+    update = _delegate_service('_update')
+    delete = _delegate_service('_delete')
 
 
 class Service:

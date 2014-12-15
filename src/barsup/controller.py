@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from yadic.container import Injectable
-from barsup.serializers import to_dict
 
 
 class Controller:
@@ -14,13 +13,14 @@ class Controller:
         Итератор actions, предоставляющий для
         каждого действия декларацию его параметров
         """
+
         def __get__(self, instance, owner):
             assert instance is None, "\"actions\" is a class-descriptor!"
             for attr_name in dir(owner):
                 if not attr_name.startswith('_'):
                     attr = getattr(owner, attr_name)
                     if callable(attr) and getattr(
-                        attr, '__annotations__', None
+                            attr, '__annotations__', None
                     ):
                         decl = attr.__annotations__.copy()
                         yield decl.pop('return'), attr.__name__, decl
@@ -34,7 +34,6 @@ class DictController(Controller, metaclass=Injectable):
 
     Инжектирует в себя:
         - service - компонент, отвечающий за уровень сервиса
-        - uid - идентификатор соединения
 
     Выполняет задачи:
         - Декларация и проверка на тип входящих параметров
@@ -43,22 +42,24 @@ class DictController(Controller, metaclass=Injectable):
     """
 
     depends_on = ('service',)
-    __slots__ = depends_on + ('uid',)
+    __slots__ = depends_on
+
+    serialize = staticmethod(lambda o: o._asdict())
 
     # --- actions ---
 
     def read(
-        self,
-        start: 'int'=None,
-        limit: 'int'=None,
-        page: 'int'=None,
-        query: 'str'=None,
-        filter: 'json'=None,
-        group: 'str'=None,
-        sort: 'json'=None
+            self,
+            start: 'int'=None,
+            limit: 'int'=None,
+            page: 'int'=None,
+            query: 'str'=None,
+            filter: 'json'=None,
+            group: 'str'=None,
+            sort: 'json'=None
     ) -> r'/read':
         return map(
-            to_dict,
+            self.serialize,
             self.service().filters(
                 filter or []
             ).sorts(
@@ -69,53 +70,52 @@ class DictController(Controller, metaclass=Injectable):
         )
 
     def get(
-        self,
-        id_: "int",
-        filter: "json"=None
+            self,
+            id_: "int",
+            filter: "json"=None
     ) -> r"/read/{id_:\d+}":
-        return to_dict(
+        return self.serialize(
             self.service.filter_by_id(id_).filters(filter or []).get()
         )
 
     def bulk_update(
-        self,
-        records: "list"
+            self,
+            records: "list"
     ) -> r"/update":
-        return map(to_dict,
-                   [self._update(record['id'], record)
-                    for record in records])
+        return [self._update(record.pop('id'), record)
+                for record in records]
 
     def update(
-        self,
-        id_: "int",
-        data: "dict"
+            self,
+            id_: "int",
+            data: "dict"
     ) -> r"/update/{id_:\d+}":
-        return map(to_dict, [self._update(id_, data)])
+        return self.serialize(self._update(id_, data))
 
     def bulk_destroy(
-        self,
-        identifiers: "list"
+            self,
+            identifiers: "list"
     ) -> r"/destroy/":
         for id_ in identifiers:
             self._destroy(id_)
         return identifiers
 
     def destroy(
-        self,
-        id_: "int"
+            self,
+            id_: "int"
     ) -> "/destroy/{id_:\d+}":
         self._destroy(id_)
         return id_
 
     def create(
-        self,
-        data: "dict"
+            self,
+            data: "dict"
     ) -> r"/create":
-        return to_dict(self.service.create(**data))
+        return self.serialize(self.service.create(**data))
 
     def bulk_create(
-        self,
-        records: "list"
+            self,
+            records: "list"
     ) -> r"/bulk-create":
         return (self._create(data) for data in records)
 
