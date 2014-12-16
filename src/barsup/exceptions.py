@@ -1,21 +1,21 @@
 # coding: utf-8
 
 
-class LogicException(Exception):
+class _LogicException(Exception):
     pass
 
 
-class Unauthorized(LogicException):
+class BadRequest(_LogicException):
     pass
 
 
-class BadRequest(LogicException):
+class Unauthorized(_LogicException):
     pass
 
 
-class Forbidden(LogicException):
+class Forbidden(_LogicException):
     pass
 
 
-class NotFound(LogicException):
+class NotFound(_LogicException):
     pass

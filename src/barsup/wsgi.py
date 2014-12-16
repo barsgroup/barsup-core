@@ -8,12 +8,12 @@ import json
 from uuid import uuid4
 from simplejson.scanner import JSONDecodeError
 
-from webob import Response
+from webob import Response, exc
 from webob.dec import wsgify
-from webob.exc import HTTPMovedPermanently, HTTPInternalServerError
 from webob.static import DirectoryApp
 
 from barsup import core
+from barsup import exceptions
 from barsup.util import serialize_to_json
 
 
@@ -35,15 +35,15 @@ def handler(config_file_name, catch_cookies):
         for cookie in catch_cookies:
             params[cookie] = request.cookies.get(cookie, None)
 
-        status, result = api.populate(
+        result = api.populate(
             request.path, **params)
 
         return Response(
             content_type='application/json',
-            body=json.dumps({
-                'data': result,
-                'success': status
-            }, default=serialize_to_json)
+            body=json.dumps(
+                {'data': result,
+                 'success': True
+                }, default=serialize_to_json)
         )
 
     return app
@@ -59,7 +59,7 @@ def static_server(url_prefix, static_path):
     def mware(request, app):
         url = request.path
         if url == '/':
-            raise HTTPMovedPermanently(location=url_prefix)
+            raise exc.HTTPMovedPermanently(location=url_prefix)
         elif url.startswith(url_prefix):
             return static_app
         else:
@@ -72,6 +72,19 @@ def static_server(url_prefix, static_path):
 def catch_errors(request, app, debug=False):
     try:
         return request.get_response(app)
+
+    except exceptions.BadRequest as e:  # 400
+        raise exc.HTTPBadRequest()
+
+    except exceptions.Unauthorized as e:  # 401
+        raise exc.HTTPUnauthorized()
+
+    except exceptions.Forbidden as e:  # 403
+        raise exc.HTTPForbidden()
+
+    except exceptions.NotFound as e:  # 404
+        raise exc.HTTPNotFound()
+
     except Exception:
         trace = ''.join(traceback.format_exception(*exc_info(), limit=20))
         stderr.write('%s\n%s\n' % (
@@ -82,7 +95,7 @@ def catch_errors(request, app, debug=False):
             params = {'body_template': '<pre>%s</pre>' % trace}
         else:
             params = {}
-        raise HTTPInternalServerError(**params)
+        raise exc.HTTPInternalServerError(**params)
 
 
 @wsgify.middleware
@@ -111,6 +124,5 @@ application = with_session(
     cookie_name='web_session_id',
     generator=lambda: uuid4().hex
 )
-
 
 __all__ = (application, handler, catch_errors, static_server, with_session)

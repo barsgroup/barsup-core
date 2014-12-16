@@ -1,4 +1,5 @@
 # coding: utf-8
+from barsup.exceptions import Unauthorized, Forbidden, NotFound
 
 
 def access_check(authentication, authorization=None):
@@ -13,23 +14,24 @@ def access_check(authentication, authorization=None):
     :type authorization: str
     """
 
-    NEED_LOGIN = 'need-login'
-    NOT_PERMIT = 'not-permit'
+    # NEED_LOGIN = 'need-login'
+    # NOT_PERMIT = 'not-permit'
 
     def wrapper(nxt, controller, action, web_session_id, **params):
         if controller == authentication:
             return nxt(controller, action, web_session_id=web_session_id, **params)
         else:
             # пользователь должен быть аутентифицирован
-            uid = nxt(authentication, 'is_logged_in', web_session_id=web_session_id)
-            if not uid:
-                return False, NEED_LOGIN
+            try:
+                uid = nxt(authentication, 'is_logged_in', web_session_id=web_session_id)
+            except NotFound:
+                raise Unauthorized()
 
             # пользователь должен иметь право на выполнение действия
             if authorization and not nxt(
                     authorization, 'has_perm', uid=uid, operation=(controller, action)
             ):
-                return False, NOT_PERMIT
+                raise Forbidden()
 
             return nxt(controller, action, **params)
 

@@ -1,7 +1,9 @@
 # coding: utf-8
 
 import operator
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import expression, operators
+from barsup.exceptions import NotFound
 
 from barsup.serializers import convert
 
@@ -179,7 +181,10 @@ class Service:
         return getattr(proxy, item)
 
     def _get(self, qs):
-        return qs.one()
+        try:
+            return qs.one()
+        except NoResultFound:
+            raise NotFound()
 
     def _read(self, qs):
         return qs.all()

@@ -48,22 +48,3 @@ def transact(session):
             return result
 
     return wrapper
-
-
-def wrap_result(nxt, controller, action, **kwargs):
-    """
-    Оборачивает результат в кортеж вида (bool, x),
-    где первый элемент обозначает успешность вызова
-    оборачиваемой функции.
-    Результаты вызова, уже имеющие нужный формат
-    не видоизменяются.
-    """
-    result = nxt(controller, action, **kwargs)
-    if (
-                    isinstance(result, tuple)
-                and len(result) == 2
-            and isinstance(result[0], bool)
-    ):
-        return result
-    else:
-        return True, result
