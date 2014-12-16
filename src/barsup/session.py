@@ -3,11 +3,23 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import Session
 
 
-class PostgreSQLSession:
-    __slots__ = ('session', )
+class InMemory:
+    def __init__(self):
+        self.engine = create_engine('sqlite://', echo=True)
+        self.session = Session(self.engine)
 
-    def __init__(self, login, password, database,
-                 engine='postgresql', host='localhost', port=5432,
+    def __getattr__(self, item):
+        return getattr(self.session, item)
+
+
+class PostgreSQLSession:
+    def __init__(self,
+                 login,
+                 password,
+                 database,
+                 engine='postgresql',
+                 host='localhost',
+                 port=5432,
                  echo=True):
         connection_string = '{engine}://{login}:{password}@{host}:{port}/{database}'.format(
             login=login,
@@ -24,4 +36,4 @@ class PostgreSQLSession:
         return getattr(self.session, item)
 
 
-__all__ = (PostgreSQLSession, )
+__all__ = (PostgreSQLSession, InMemory)

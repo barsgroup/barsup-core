@@ -125,8 +125,8 @@ class Model:
     def create_query(self):
         return self._qs
 
-    def create_object(self, *args, **kwargs):
-        obj = self.current(*args, **kwargs)
+    def create_object(self, **kwargs):
+        obj = self.current()
         for item, value in kwargs.items():
             assert hasattr(obj, item)
             setattr(obj, item, value)
