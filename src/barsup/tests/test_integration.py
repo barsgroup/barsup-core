@@ -1,11 +1,13 @@
 # coding: utf-8
 from _collections_abc import Iterable
+from functools import wraps
 import pytest
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.sql.schema import MetaData
+
+import barsup.exceptions as exc
 from barsup.core import init
-from barsup.exceptions import ValidationError, NotFound
 from barsup.mapping import DBMapper, _BuildMapping
 
 
@@ -42,7 +44,23 @@ def create_api(f):
                         "__type__": {
                             "__name__": sqlalchemy.String,
                             "length": 50
-                        }
+                        },
+                        "nullable": False
+                    },
+                    {
+                        "__name__": "lname",
+                        "__type__": {
+                            "__name__": sqlalchemy.String,
+                            "length": 50
+                        },
+                        "nullable": True
+                    }, {
+                        "__name__": "oname",
+                        "__type__": {
+                            "__name__": sqlalchemy.String,
+                            "length": 50
+                        },
+                        "nullable": True
                     }
                 ]
             },
@@ -56,14 +74,24 @@ def create_api(f):
                 "SimpleController": {
                     "service": "SimpleService"
                 },
+                "AdapterController": {
+                    "service": "AdapterService"
+                }
             },
             "service": {
                 "__default__": {
-                    "__realization__": "barsup.service.Service"
+                    "__realization__": "barsup.service.Service",
+                    "$adapters": {}
                 },
                 "SimpleService": {
                     "model": "simple_model"
                 },
+                "AdapterService": {
+                    "$adapters": {
+                        "full_name": ["Splitter", ["lname", "oname"], {'sep': ', '}]
+                    },
+                    "model": "simple_model"
+                }
             },
             "model": {
                 "__default__": {
@@ -145,18 +173,18 @@ def test_create(api):
     data = api.call(
         'SimpleController', 'create',
         data={
-            'name': 'one record'
+            'name': '42'
         }
     )
 
-    assert data['name'] == 'one record'
+    assert data['name'] == '42'
     assert data['id'] == 1
 
     data = api.call(
         'SimpleController', 'get',
         id_=1)
 
-    assert data['name'] == 'one record'
+    assert data['name'] == '42'
     assert data['id'] == 1
 
 
@@ -237,7 +265,7 @@ def test_sorts(api):
 
 @create_api
 def test_wrong_sort_name(api):
-    with pytest.raises(ValidationError):
+    with pytest.raises(exc.NameValidationError):
         api.call(
             'SimpleController', 'read',
             limit=1,
@@ -247,7 +275,7 @@ def test_wrong_sort_name(api):
 
 @create_api
 def test_wrong_sort_direction(api):
-    with pytest.raises(ValidationError):
+    with pytest.raises(exc.NameValidationError):
         api.call(
             'SimpleController', 'read',
             limit=1,
@@ -257,7 +285,7 @@ def test_wrong_sort_direction(api):
 
 @create_api
 def test_wrong_filter_operator(api):
-    with pytest.raises(ValidationError):
+    with pytest.raises(exc.NameValidationError):
         api.call(
             'SimpleController', 'read',
             filter=[
@@ -268,7 +296,69 @@ def test_wrong_filter_operator(api):
 
 @create_api
 def test_not_found_record(api):
-    with pytest.raises(NotFound):
+    with pytest.raises(exc.NotFound):
         api.call(
             'SimpleController', 'get', id_=1
         )
+
+
+@create_api
+def test_create_overflow_name(api):
+    with pytest.raises(exc.LengthValidationError):
+        api.call(
+            'SimpleController', 'create',
+            data={
+                'name': '42' * 100
+            }
+        )
+
+
+@create_api
+def test_create_nullable_name(api):
+    with pytest.raises(exc.NullValidationError):
+        api.call(
+            'SimpleController', 'create',
+            data={
+                'name': None
+            }
+        )
+
+
+@create_api
+def test_create_wrong_type_name(api):
+    with pytest.raises(exc.TypeValidationError):
+        api.call(
+            'SimpleController', 'create',
+            data={
+                'name': {"complex": "type"}
+            }
+        )
+
+
+@create_api
+def test_create_wrong_value_with_adapters(api):
+    with pytest.raises(exc.ValueValidationError):
+        api.call(
+            'AdapterController', 'create', data={
+                'name': 'atata' * 5,
+                'full_name': "Complex field"
+            }
+        )
+
+
+@create_api
+def test_create_with_adapters(api):
+    api.call(
+        'AdapterController', 'create', data={
+            'name': 'atata' * 5,
+            'full_name': "Complex, field"
+        }
+    )
+
+    data = api.call(
+        'AdapterController', 'get', id_=1
+    )
+
+    assert isinstance(data, dict)
+    assert data.get('full_name', None)
+    assert data['full_name'] == "Complex, field"

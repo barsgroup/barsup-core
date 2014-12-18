@@ -13,6 +13,26 @@ class ValidationError(BadRequest):
     pass
 
 
+class NameValidationError(ValidationError):
+    pass
+
+
+class ValueValidationError(ValidationError):
+    pass
+
+
+class TypeValidationError(ValueValidationError):
+    pass
+
+
+class NullValidationError(ValueValidationError):
+    pass
+
+
+class LengthValidationError(ValueValidationError):
+    pass
+
+
 class Unauthorized(_LogicException):
     pass
 

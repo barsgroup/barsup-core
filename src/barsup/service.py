@@ -3,7 +3,7 @@
 import operator
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import expression, operators
-from barsup.exceptions import NotFound, ValidationError
+import barsup.exceptions as exc
 
 from barsup.serializers import convert
 
@@ -41,7 +41,7 @@ def _filter(column, operator_text, value):
     }
 
     if operator_text not in values.keys():
-        raise ValidationError('Operator "{0}" not supported. Available operators: [{1}]'.format(
+        raise exc.NameValidationError('Operator "{0}" not supported. Available operators: [{1}]'.format(
             operator_text,
             ', '.join(values.keys())
         ))
@@ -62,7 +62,7 @@ def _sorter(direction):
         'DESC': expression.desc
     }
     if direction not in values.keys():
-        raise ValidationError('Direction "{0}" not supported. Available directions: [{1}]'.format(
+        raise exc.NameValidationError('Direction "{0}" not supported. Available directions: [{1}]'.format(
             direction,
             ', '.join(values.keys())
         ))
@@ -174,9 +174,86 @@ class _Proxy:
     delete = _delegate_service('_delete')
 
 
+class Splitter:
+    def __init__(self, name, names, sep=' '):
+        self._name = name
+        self._names = names
+        self._sep = sep
+
+    def to_record(self, params):
+        value = params.pop(self._name)
+        values = value.split(self._sep)
+        if len(self._names) != len(values):
+            raise exc.ValueValidationError('Wrong matching value "{0}" to {1} with "{2}"'.format(
+                value, self._names, self._sep
+            ))
+        params.update(dict(zip(self._names, values)))
+        return params
+
+    def from_record(self, params):
+        value = self._sep.join([params.pop(name) for name in self._names])
+        params[self._name] = value
+        return params
+
+
+ADAPTERS = {
+    'Splitter': Splitter
+}
+
+
+class Adapter:
+    def __init__(self, adapters, current_model):
+        self._adapters = adapters
+        self._current_model = current_model
+
+    @property
+    def adapters(self):
+        for name, (adapter_name, from_names, kwargs) in self._adapters.items():
+            yield ADAPTERS[adapter_name](name, from_names, **kwargs)
+
+    def from_record(self, params):
+        for adapter in self.adapters:
+            params = adapter.from_record(params)
+
+        return params
+
+    def to_record(self, params):
+
+        # 1. Преобразования на уровне адаптеров
+        for adapter in self.adapters:
+            params = adapter.to_record(params)
+
+        # 2. Умолчательная валидация на уровне типов значений
+        for name, value in params.items():
+            field = getattr(self._current_model, name)
+
+            if value is None:
+                if field.expression.nullable:
+                    continue
+                else:
+                    raise exc.NullValidationError('Field "{0}" can not be null'.format(
+                        name
+                    ))
+
+            if not isinstance(value, field.type.python_type):
+                raise exc.TypeValidationError('Field "{0}" must be {1} type, but has value "{2}"'.format(
+                    name, field.type.python_type, value
+                ))
+
+            if hasattr(field.type, 'length') and len(value) > field.type.length:
+                raise exc.LengthValidationError('Field "{0}" must be length "{1}", but has "{3}" for "{2}"'.format(
+                    name, field.type.length, value, len(value)
+                ))
+
+        return params
+
+
 class Service:
-    def __init__(self, model):
+    to_dict = staticmethod(lambda o: o._asdict())
+
+    def __init__(self, model, adapters):
         self._model = model
+        self._adapter = Adapter(adapters, model.current)
 
     def __call__(self, model=None):
         return _Proxy(
@@ -191,12 +268,19 @@ class Service:
 
     def _get(self, qs):
         try:
-            return qs.one()
+            record = qs.one()
         except NoResultFound:
-            raise NotFound()
+            raise exc.NotFound()
+
+        return self._adapter.from_record(
+            self.to_dict(record)
+        )
 
     def _read(self, qs):
-        return qs.all()
+        return map(
+            self._adapter.from_record,
+            map(self.to_dict, qs.all())
+        )
 
     def _update(self, qs, **kwargs):
         if kwargs:
@@ -205,8 +289,12 @@ class Service:
                 value = self._deserialize(item, value)
 
                 params[item] = value
-            qs.with_entities(self._model.current).update(params)
-            return qs.one()
+            qs.with_entities(self._model.current).update(
+                self._adapter.to_record(params)
+            )
+            return self._adapter.from_record(
+                self.to_dict(qs.one())
+            )
 
     def _delete(self, qs):
         qs.with_entities(self._model.current).delete()
@@ -216,8 +304,9 @@ class Service:
         return convert(self._model.get_field(item), value)
 
     def create(self, **kwargs):
+        # params = {k: self._deserialize(k, v) for k, v in kwargs.items()}
         id_ = self._model.create_object(
-            **{k: self._deserialize(k, v) for k, v in kwargs.items()}
+            **self._adapter.to_record(kwargs)
         )
         return self.filter('id', 'eq', id_).get()
 

@@ -44,8 +44,6 @@ class DictController(Controller, metaclass=Injectable):
     depends_on = ('service',)
     __slots__ = depends_on
 
-    serialize = staticmethod(lambda o: o._asdict())
-
     # --- actions ---
 
     def read(
@@ -58,25 +56,20 @@ class DictController(Controller, metaclass=Injectable):
             group: 'str'=None,
             sort: 'json'=None
     ) -> r'/read':
-        return map(
-            self.serialize,
-            self.service().filters(
-                filter or []
-            ).sorts(
-                sort or []
-            ).limiter(
-                start, limit
-            ).read()
-        )
+        return self.service().filters(
+            filter or []
+        ).sorts(
+            sort or []
+        ).limiter(
+            start, limit
+        ).read()
 
     def get(
             self,
             id_: "int",
             filter: "json"=None
     ) -> r"/read/{id_:\d+}":
-        return self.serialize(
-            self.service.filter_by_id(id_).filters(filter or []).get()
-        )
+        return self.service.filter_by_id(id_).filters(filter or []).get()
 
     def bulk_update(
             self,
@@ -90,7 +83,7 @@ class DictController(Controller, metaclass=Injectable):
             id_: "int",
             data: "dict"
     ) -> r"/update/{id_:\d+}":
-        return self.serialize(self._update(id_, data))
+        return self._update(id_, data)
 
     def bulk_destroy(
             self,
@@ -111,7 +104,7 @@ class DictController(Controller, metaclass=Injectable):
             self,
             data: "dict"
     ) -> r"/create":
-        return self.serialize(self.service.create(**data))
+        return self.service.create(**data)
 
     def bulk_create(
             self,

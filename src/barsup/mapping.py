@@ -10,7 +10,7 @@ from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.sql.schema import Table, MetaData, Column, Index
 from sqlalchemy.sql.sqltypes import Integer
 
-from barsup.exceptions import ValidationError
+import barsup.exceptions as exc
 
 
 class _BuildMapping:
@@ -147,7 +147,7 @@ class Model:
         try:
             field = getattr(model, field_name)
         except AttributeError:
-            raise ValidationError(
+            raise exc.NameValidationError(
                 'Model "{0}" not has field "{1}". Available fields ["{2}"]:'.format(
                     model.__name__,
                     field_name,
