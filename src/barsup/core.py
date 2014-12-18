@@ -5,7 +5,6 @@ from functools import partial
 from yadic.container import Container as _Container
 from yadic.util import deep_merge as _deep_merge
 
-from barsup.router import Router as _Router
 from barsup import runtime as _runtime
 
 

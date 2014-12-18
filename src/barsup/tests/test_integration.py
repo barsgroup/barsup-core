@@ -1,9 +1,11 @@
 # coding: utf-8
 from _collections_abc import Iterable
+import pytest
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.sql.schema import MetaData
 from barsup.core import init
+from barsup.exceptions import ValidationError, NotFound
 from barsup.mapping import DBMapper, _BuildMapping
 
 
@@ -22,7 +24,7 @@ class _DBMapperMock(DBMapper):
             table.create(engine)
 
 
-def api(f):
+def create_api(f):
     def wrap(*args, **kwargs):
         _tables = [
             {
@@ -90,14 +92,7 @@ def api(f):
             "api_options": {
                 "default": {
                     "middleware": [
-                        "wrap_result"
                     ]
-                }
-            },
-            "middleware": {
-                "__default__": {"__type__": "static"},
-                "wrap_result": {
-                    "__realization__": "barsup.middleware.wrap_result"
                 }
             },
             "runtime": {
@@ -112,49 +107,60 @@ def api(f):
     return wrap
 
 
-@api
+def generate_series(f):
+    def wrap(api, *args, **kwargs):
+        for i in range(100):
+            api.call(
+                'SimpleController', 'create',
+                data={
+                    'name': 'data {0}'.format(i)
+                }
+            )
+        return f(api, *args, **kwargs)
+
+    return wrap
+
+
+@create_api
 def test_empty_read(api):
-    status, data = api.call('SimpleController', 'read')
-    assert status is True
+    data = api.call('SimpleController', 'read')
     assert isinstance(data, Iterable)
     assert len(list(data)) == 0
 
 
-@api
+@create_api
 def test_empty_filter(api):
-    status, data = api.call(
+    data = api.call(
         'SimpleController', 'read',
         filter=[
             {'property': 'name', 'operator': 'eq', 'value': 'Test test'}
         ], start=0, limit=100
     )
-    assert status is True
     assert isinstance(data, Iterable)
     assert len(list(data)) == 0
 
 
-@api
+@create_api
 def test_create(api):
-    status, data = api.call(
+    data = api.call(
         'SimpleController', 'create',
         data={
             'name': 'one record'
         }
     )
-    assert status is True
+
     assert data['name'] == 'one record'
     assert data['id'] == 1
 
-    status, data = api.call(
+    data = api.call(
         'SimpleController', 'get',
         id_=1)
 
-    assert status is True
     assert data['name'] == 'one record'
     assert data['id'] == 1
 
 
-@api
+@create_api
 def test_update(api):
     api.call(
         'SimpleController', 'create',
@@ -163,26 +169,24 @@ def test_update(api):
         }
     )
 
-    status, data = api.call(
+    data = api.call(
         'SimpleController', 'update',
         id_=1, data={
             'name': 'updated record'
         })
 
-    assert status is True
     assert data['name'] == 'updated record'
     assert data['id'] == 1
 
-    status, data = api.call(
+    data = api.call(
         'SimpleController', 'get',
         id_=1)
 
-    assert status is True
     assert data['name'] == 'updated record'
     assert data['id'] == 1
 
 
-@api
+@create_api
 def test_delete(api):
     api.call(
         'SimpleController', 'create',
@@ -191,15 +195,80 @@ def test_delete(api):
         }
     )
 
-    status, data = api.call(
+    data = api.call(
         'SimpleController', 'destroy', id_=1)
 
-    assert status is True
     assert data == 1
 
-    status, data = api.call(
+    data = api.call(
         'SimpleController', 'read')
 
-    assert status is True
     assert isinstance(data, Iterable)
     assert len(list(data)) == 0
+
+
+@create_api
+@generate_series
+def test_read(api):
+    data = api.call(
+        'SimpleController', 'read',
+        start=10, limit=15
+    )
+    data = list(data)
+
+    assert len(data) == 15
+    for i, j in enumerate(range(10, 25)):
+        assert 'data {0}'.format(j) == data[i]['name']
+
+
+@create_api
+@generate_series
+def test_sorts(api):
+    data = api.call(
+        'SimpleController', 'read',
+        limit=1,
+        sort=[{'property': 'name', 'direction': 'DESC'}]
+    )
+    data = list(data)
+
+    assert len(data) == 1
+    assert data[0]['name'] == 'data 99'
+
+
+@create_api
+def test_wrong_sort_name(api):
+    with pytest.raises(ValidationError):
+        api.call(
+            'SimpleController', 'read',
+            limit=1,
+            sort=[{'property': 'not_real_name', 'direction': 'DESC'}]
+        )
+
+
+@create_api
+def test_wrong_sort_direction(api):
+    with pytest.raises(ValidationError):
+        api.call(
+            'SimpleController', 'read',
+            limit=1,
+            sort=[{'property': 'name', 'direction': 'desc'}]
+        )
+
+
+@create_api
+def test_wrong_filter_operator(api):
+    with pytest.raises(ValidationError):
+        api.call(
+            'SimpleController', 'read',
+            filter=[
+                {'property': 'name', 'operator': '=', 'value': 'Test test'}
+            ], start=0, limit=100
+        )
+
+
+@create_api
+def test_not_found_record(api):
+    with pytest.raises(NotFound):
+        api.call(
+            'SimpleController', 'get', id_=1
+        )

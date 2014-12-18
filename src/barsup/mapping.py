@@ -8,6 +8,9 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.sql.schema import Table, MetaData, Column, Index
+from sqlalchemy.sql.sqltypes import Integer
+
+from barsup.exceptions import ValidationError
 
 
 class _BuildMapping:
@@ -141,7 +144,18 @@ class Model:
         else:
             model = self.current
 
-        return getattr(model, field_name)
+        try:
+            field = getattr(model, field_name)
+        except AttributeError:
+            raise ValidationError(
+                'Model "{0}" not has field "{1}". Available fields ["{2}"]:'.format(
+                    model.__name__,
+                    field_name,
+                    ', '.join(col.key for col in inspect(model).attrs)
+                )
+            )
+
+        return field
 
     def _create_joins(self, qs, joins):
         for inner_field_name, condition, outher_field_name, outher in joins:

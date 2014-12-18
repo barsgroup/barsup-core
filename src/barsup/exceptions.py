@@ -9,6 +9,10 @@ class BadRequest(_LogicException):
     pass
 
 
+class ValidationError(BadRequest):
+    pass
+
+
 class Unauthorized(_LogicException):
     pass
 

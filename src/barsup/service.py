@@ -3,7 +3,7 @@
 import operator
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import expression, operators
-from barsup.exceptions import NotFound
+from barsup.exceptions import NotFound, ValidationError
 
 from barsup.serializers import convert
 
@@ -40,7 +40,12 @@ def _filter(column, operator_text, value):
         'in': operators.in_op
     }
 
-    assert operator_text in values.keys()
+    if operator_text not in values.keys():
+        raise ValidationError('Operator "{0}" not supported. Available operators: [{1}]'.format(
+            operator_text,
+            ', '.join(values.keys())
+        ))
+
     oper = values[operator_text]
     if isinstance(oper, dict):
         func = oper['type']
@@ -56,7 +61,11 @@ def _sorter(direction):
         'ASC': expression.asc,
         'DESC': expression.desc
     }
-    assert direction in values.keys()
+    if direction not in values.keys():
+        raise ValidationError('Direction "{0}" not supported. Available directions: [{1}]'.format(
+            direction,
+            ', '.join(values.keys())
+        ))
     return values[direction]
 
 
