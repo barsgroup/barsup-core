@@ -5,8 +5,6 @@ from functools import partial
 from yadic.container import Container as _Container
 from yadic.util import deep_merge as _deep_merge
 
-from barsup import runtime as _runtime
-
 
 class _Wrappable:
     """
@@ -29,7 +27,7 @@ class API:
     """
 
     def __init__(self, *,
-                 container, middleware, router,
+                 container, middleware, initware, router,
                  controller_group='controller'):
         """
         :param container: DI-контейнер
@@ -59,6 +57,10 @@ class API:
             (name, clz) for (name, _, clz) in
             container.itergroup(controller_group)
         ))
+
+        # вызов возможных инициализаторов
+        for iw in initware:
+            iw(container, self)
 
     def _call(self, controller, action, **kwargs):
         """Вызывает API-функцию с указанными параметрами.
@@ -95,6 +97,7 @@ def init(config, *,
                  'default': {
                      '__realization__': 'builtins.dict',
                      'middleware': [],
+                     'initware': [],
                      'router:api_options': 'router',
                  },
                  'api_class': {
@@ -117,8 +120,6 @@ def init(config, *,
     api = cont.get('api_options', 'api_class')(
         container=cont,
         **cont.get('api_options', 'default'))
-    _runtime.ACTIONS = tuple(api)
-    _runtime.LOADED = True
     return api
 
 
