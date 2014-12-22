@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import simplejson as json
 from itertools import chain
 
+import simplejson as json
 import routes
 
 

@@ -9,7 +9,6 @@ from barsup import core
 
 
 class CLI(AutoCompleteCLI):
-
     @property
     def hierarchy(self):
         res = {}

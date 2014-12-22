@@ -1,6 +1,6 @@
 # coding: utf-8
 from _collections_abc import Iterable
-from functools import wraps
+
 import pytest
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
@@ -366,6 +366,7 @@ def test_create_with_adapters(api):
     assert isinstance(data, dict)
     assert data.get('full_name', None)
     assert data['full_name'] == "Complex, field"
+
 
 @create_api
 def test_create_with_wrong_name_adapters(api):

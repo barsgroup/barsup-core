@@ -1,6 +1,7 @@
 # coding:utf-8
 
 from pytest import raises
+
 from barsup.router import Router
 
 
@@ -8,7 +9,6 @@ def test_router():
     """Tests the Router"""
 
     class CalcController:
-
         actions = (
             ('/{x:\d+}/{y:\d+}/sum', 'sum'),
             ('/{x:\d+}/{y:\d+}/mul', 'mul'),
@@ -16,7 +16,6 @@ def test_router():
         )
 
     class Parametrized:
-
         actions = (
             ('/{x:\d+}/add', 'add',
              {'x': 'int', 'y': 'int', 'msg': 'str', 'raw': 'json'}),

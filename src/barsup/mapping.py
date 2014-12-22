@@ -2,13 +2,11 @@
 import os
 
 import simplejson as json
-
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.sql.schema import Table, MetaData, Column, Index
-from sqlalchemy.sql.sqltypes import Integer
 
 import barsup.exceptions as exc
 

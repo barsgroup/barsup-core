@@ -29,7 +29,7 @@ def access_check(authentication, authorization=None):
 
             # пользователь должен иметь право на выполнение действия
             if authorization and not nxt(
-                    authorization, 'has_perm', uid=uid, operation=(controller, action)
+                authorization, 'has_perm', uid=uid, operation=(controller, action)
             ):
                 raise Forbidden()
 

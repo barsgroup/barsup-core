@@ -6,7 +6,6 @@ import os
 
 
 class AutoCompleteCLI:
-
     usage = ''
 
     hierarchy = {}
@@ -43,8 +42,8 @@ class AutoCompleteCLI:
                 return
 
         pred = (lambda x: x.startswith(partial)
-                if partial else
-                lambda x: True)
+        if partial else
+        lambda x: True)
 
         if prev and not partial:
             data = data.get(prev, [])

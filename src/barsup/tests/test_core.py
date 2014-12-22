@@ -27,9 +27,7 @@ def test_api():
     """Tests the API"""
 
     class FakeContainer:
-
         class Math:
-
             actions = (('/add', 'add', {}),)
 
             @staticmethod
@@ -37,7 +35,6 @@ def test_api():
                 return a + b
 
         class Str:
-
             actions = (('/upper', 'upper', {}),)
 
             @staticmethod
@@ -45,7 +42,6 @@ def test_api():
                 return s.upper()
 
         class Router(object):
-
             def __init__(self, controllers):
                 pass
 
@@ -101,6 +97,7 @@ def test_api():
 
 def test_complex_example():
     """Test the complex example"""
+
     class Controller(object):
 
         actions = (('/{x:\d+}/add', 'add', {'x': 'int'}),)
@@ -122,12 +119,12 @@ def test_complex_example():
                 return super(LocalContainer, self)._get_entity(name)
 
     real_api = init({
-        'controller': {
-            'cont': {
-                '__realization__': 'local.Controller',
-                '$y': 100
-            }
-        },
-    }, container_clz=LocalContainer)
+                        'controller': {
+                            'cont': {
+                                '__realization__': 'local.Controller',
+                                '$y': 100
+                            }
+                        },
+                    }, container_clz=LocalContainer)
 
     assert real_api.populate('/cont/10/add') == 110

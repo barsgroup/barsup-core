@@ -12,6 +12,7 @@ class _Wrappable:
     """
     Оборачиватель метода/функции в слои middleware
     """
+
     def __init__(self, fn):
         self.fn = fn
 

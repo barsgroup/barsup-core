@@ -1,5 +1,6 @@
 # coding: utf-8
 from _collections_abc import Iterable
+
 from _pytest.python import fixture
 from yadic.container import Container
 

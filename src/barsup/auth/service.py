@@ -4,7 +4,6 @@ from barsup.service import Service
 
 
 class AuthenticationService(Service):
-
     def __init__(self, user_model, **kwargs):
         super().__init__(**kwargs)
         self.user_model = user_model
@@ -39,7 +38,6 @@ class AuthenticationService(Service):
 
 
 class AuthorizationService(Service):
-
     def __init__(self, user_role, **kwargs):
         super().__init__(**kwargs)
         self.user_role = user_role

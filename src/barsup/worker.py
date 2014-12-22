@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import simplejson as json
-
 import zmq
 
 from barsup import core

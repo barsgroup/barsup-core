@@ -20,7 +20,7 @@ class Controller:
                 if not attr_name.startswith('_'):
                     attr = getattr(owner, attr_name)
                     if callable(attr) and getattr(
-                            attr, '__annotations__', None
+                        attr, '__annotations__', None
                     ):
                         decl = attr.__annotations__.copy()
                         yield decl.pop('return'), attr.__name__, decl
@@ -47,14 +47,14 @@ class DictController(Controller, metaclass=Injectable):
     # --- actions ---
 
     def read(
-            self,
-            start: 'int'=None,
-            limit: 'int'=None,
-            page: 'int'=None,
-            query: 'str'=None,
-            filter: 'json'=None,
-            group: 'str'=None,
-            sort: 'json'=None
+        self,
+        start: 'int'=None,
+        limit: 'int'=None,
+        page: 'int'=None,
+        query: 'str'=None,
+        filter: 'json'=None,
+        group: 'str'=None,
+        sort: 'json'=None
     ) -> r'/read':
         return self.service().filters(
             filter or []
@@ -65,50 +65,50 @@ class DictController(Controller, metaclass=Injectable):
         ).read()
 
     def get(
-            self,
-            id_: "int",
-            filter: "json"=None
+        self,
+        id_: "int",
+        filter: "json"=None
     ) -> r"/read/{id_:\d+}":
         return self.service.filter_by_id(id_).filters(filter or []).get()
 
     def bulk_update(
-            self,
-            records: "list"
+        self,
+        records: "list"
     ) -> r"/update":
         return [self._update(record.pop('id'), record)
                 for record in records]
 
     def update(
-            self,
-            id_: "int",
-            data: "dict"
+        self,
+        id_: "int",
+        data: "dict"
     ) -> r"/update/{id_:\d+}":
         return self._update(id_, data)
 
     def bulk_destroy(
-            self,
-            identifiers: "list"
+        self,
+        identifiers: "list"
     ) -> r"/destroy/":
         for id_ in identifiers:
             self._destroy(id_)
         return identifiers
 
     def destroy(
-            self,
-            id_: "int"
+        self,
+        id_: "int"
     ) -> "/destroy/{id_:\d+}":
         self._destroy(id_)
         return id_
 
     def create(
-            self,
-            data: "dict"
+        self,
+        data: "dict"
     ) -> r"/create":
         return self.service.create(**data)
 
     def bulk_create(
-            self,
-            records: "list"
+        self,
+        records: "list"
     ) -> r"/bulk-create":
         return (self._create(data) for data in records)
 

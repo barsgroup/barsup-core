@@ -4,6 +4,7 @@
 """
 
 from yadic.container import Injectable
+
 from barsup.controller import Controller
 
 
@@ -37,7 +38,6 @@ class Authentication(Controller, metaclass=Injectable):
 
 
 class Authorization(Controller, metaclass=Injectable):
-
     depends_on = ('service',)
 
     def has_perm(self, uid, operation):
@@ -46,7 +46,6 @@ class Authorization(Controller, metaclass=Injectable):
 
 
 class PermissionController(Controller, metaclass=Injectable):
-
     depends_on = ('methods',)
 
     def read(
@@ -66,7 +65,6 @@ class PermissionController(Controller, metaclass=Injectable):
 
 
 class PermissionAction(Controller, metaclass=Injectable):
-
     depends_on = ('methods',)
 
     func_filter = filter

@@ -6,8 +6,8 @@ from datetime import datetime
 import traceback
 import json
 from uuid import uuid4
-from simplejson.scanner import JSONDecodeError
 
+from simplejson.scanner import JSONDecodeError
 from webob import Response, exc
 from webob.dec import wsgify
 from webob.static import DirectoryApp

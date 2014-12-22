@@ -1,12 +1,12 @@
 # coding: utf-8
 
 from datetime import date
-
 import operator
+
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import expression, operators
-import barsup.exceptions as exc
 
+import barsup.exceptions as exc
 from barsup.service_adapter import ADAPTERS
 
 
