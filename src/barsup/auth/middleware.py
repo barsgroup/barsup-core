@@ -19,17 +19,19 @@ def access_check(authentication, authorization=None):
 
     def wrapper(nxt, controller, action, web_session_id, **params):
         if controller == authentication:
-            return nxt(controller, action, web_session_id=web_session_id, **params)
+            return nxt(controller, action,
+                       web_session_id=web_session_id, **params)
         else:
             # пользователь должен быть аутентифицирован
             try:
-                uid = nxt(authentication, 'is_logged_in', web_session_id=web_session_id)
+                uid = nxt(authentication, 'is_logged_in',
+                          web_session_id=web_session_id)
             except NotFound:
                 raise Unauthorized()
 
             # пользователь должен иметь право на выполнение действия
             if authorization and not nxt(
-                authorization, 'has_perm', uid=uid, operation=(controller, action)
+                    authorization, 'has_perm', uid=uid, operation=(controller, action)
             ):
                 raise Forbidden()
 

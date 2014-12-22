@@ -26,6 +26,8 @@ def test_wrappable():
 def test_api():
     """Tests the API"""
 
+    mutable = []
+
     class FakeContainer:
         class Math:
             actions = (('/add', 'add', {}),)
@@ -60,6 +62,10 @@ def test_api():
         def res_to_str(nxt, *args, **kwargs):
             return str(nxt(*args, **kwargs))
 
+        @staticmethod
+        def iware(container, api):
+            mutable.extend((container, api))
+
         @classmethod
         def get(cls, grp, name):
             return {
@@ -71,6 +77,7 @@ def test_api():
                 ('api_options', 'default'): {
                     'middleware': [cls.res_to_str,
                                    cls.args_to_strs],
+                    'initware': [cls.iware],
                     'router': cls.Router
                 }
             }[(grp, name)]
@@ -88,6 +95,9 @@ def test_api():
             pass
 
     api = init({}, container_clz=FakeContainer)
+    # iware к этому моменту должна была заполнить mutable
+    cont, api_inst = mutable
+    assert isinstance(cont, FakeContainer) and api_inst is api
 
     assert api.call('math', 'add', a=1, b=2) == '12'
     assert api.call('str', 'upper', s='hello') == 'HELLO'
