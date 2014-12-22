@@ -81,14 +81,18 @@ def create_api(f):
             "service": {
                 "__default__": {
                     "__realization__": "barsup.service.Service",
-                    "$adapters": {}
+                    "$view": {}
                 },
                 "SimpleService": {
                     "model": "simple_model"
                 },
                 "AdapterService": {
-                    "$adapters": {
-                        "full_name": ["Splitter", ["lname", "oname"], {'sep': ', '}]
+                    "$view": {
+                        "adapters": [
+                            ["Splitter", "full_name", ["lname", "oname"], {'sep': ', '}]
+                        ],
+                        "include": ["id", "full_name", "name"],
+                        "exclude": ["lname", "oname"],
                     },
                     "model": "simple_model"
                 }
@@ -362,3 +366,14 @@ def test_create_with_adapters(api):
     assert isinstance(data, dict)
     assert data.get('full_name', None)
     assert data['full_name'] == "Complex, field"
+
+@create_api
+def test_create_with_wrong_name_adapters(api):
+    with pytest.raises(exc.NameValidationError):
+        api.call(
+            'AdapterController', 'create', data={
+                'name': 'atata' * 5,
+                'atata': "Yet another value",
+                'full_name': "Complex, field"
+            }
+        )

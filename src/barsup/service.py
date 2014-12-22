@@ -1,11 +1,13 @@
 # coding: utf-8
 
+from datetime import date
+
 import operator
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import expression, operators
 import barsup.exceptions as exc
 
-from barsup.serializers import convert
+from barsup.service_adapter import ADAPTERS
 
 
 def _mapping_property(f):
@@ -120,7 +122,7 @@ class _QuerySetBuilder:
                 self.apply_filter(
                     property,
                     operator,
-                    convert(property, value)))
+                    Serializer.to_record(property, value)))
 
     def _filters(self, filters):
         for filter_ in filters:
@@ -174,86 +176,115 @@ class _Proxy:
     delete = _delegate_service('_delete')
 
 
-class Splitter:
-    def __init__(self, name, names, sep=' '):
-        self._name = name
-        self._names = names
-        self._sep = sep
+class Serializer:
+    @staticmethod
+    def to_record(field, value):
+        type_ = field.type
+        if issubclass(type_.python_type, date):
+            if len(str(value)) == 13:  # timestamp c милисекундами
+                value /= 1000.0
+            value = date.fromtimestamp(float(value))
+        return value
 
-    def to_record(self, params):
-        value = params.pop(self._name)
-        values = value.split(self._sep)
-        if len(self._names) != len(values):
-            raise exc.ValueValidationError('Wrong matching value "{0}" to {1} with "{2}"'.format(
-                value, self._names, self._sep
-            ))
-        params.update(dict(zip(self._names, values)))
-        return params
-
-    def from_record(self, params):
-        value = self._sep.join([params.pop(name) for name in self._names])
-        params[self._name] = value
-        return params
+    @staticmethod
+    def from_record(value):
+        if isinstance(value, date):
+            return date.strftime(value, '%m/%d/%Y')
+        return value
 
 
-ADAPTERS = {
-    'Splitter': Splitter
-}
+class View:
+    serialization = staticmethod(Serializer.to_record)
+    deserialization = staticmethod(Serializer.from_record)
 
-
-class Adapter:
-    def __init__(self, adapters, current_model):
-        self._adapters = adapters
+    def __init__(self, view, current_model):
+        self._adapters = view.get('adapters', [])
+        self._include = view.get('include', [])
+        self._exclude = view.get('exclude', [])
         self._current_model = current_model
 
     @property
     def adapters(self):
-        for name, (adapter_name, from_names, kwargs) in self._adapters.items():
+        for adapter_name, name, from_names, kwargs in self._adapters:
             yield ADAPTERS[adapter_name](name, from_names, **kwargs)
 
-    def from_record(self, params):
-        for adapter in self.adapters:
-            params = adapter.from_record(params)
+        yield ADAPTERS['default'](self._current_model,
+                                  self._include, self._exclude)
 
-        return params
+    def from_record(self, params):
+        """
+        Controller <- Model
+
+        Правило работы:
+        Deserialization <- Include/Exclude <- Adapters
+
+        :param params:
+        :return:
+        """
+        result = {}
+        for adapter in self.adapters:
+            result, params = adapter.from_record(result, params)
+
+        return {name: self.deserialization(value) for name, value in result.items()}
 
     def to_record(self, params):
+        """
+        Controller -> Model
 
-        # 1. Преобразования на уровне адаптеров
+        Правило работы:
+        Include/Exclude -> Adapters -> Serialization -> Validation
+
+        :param params:
+        :return:
+        """
+
+        # Преобразования на уровне адаптеров
+        result = {}
         for adapter in self.adapters:
-            params = adapter.to_record(params)
+            result, params = adapter.to_record(result, params)
 
-        # 2. Умолчательная валидация на уровне типов значений
-        for name, value in params.items():
+        new_params = {}
+        for name, value in result.items():
             field = getattr(self._current_model, name)
 
-            if value is None:
-                if field.expression.nullable:
-                    continue
-                else:
-                    raise exc.NullValidationError('Field "{0}" can not be null'.format(
-                        name
-                    ))
+            # Серриализация перед валидацией
+            value = self.serialization(field, value)
 
-            if not isinstance(value, field.type.python_type):
-                raise exc.TypeValidationError('Field "{0}" must be {1} type, but has value "{2}"'.format(
-                    name, field.type.python_type, value
+            # Умолчательная валидация на уровне типов значений
+            self.validation(field, value)
+
+            new_params[name] = value
+
+        return new_params
+
+    @staticmethod
+    def validation(field, value):
+
+        if value is None:
+            if field.expression.nullable:
+                return
+            else:
+                raise exc.NullValidationError('Field "{0}" can not be null'.format(
+                    field.key
                 ))
 
-            if hasattr(field.type, 'length') and len(value) > field.type.length:
-                raise exc.LengthValidationError('Field "{0}" must be length "{1}", but has "{3}" for "{2}"'.format(
-                    name, field.type.length, value, len(value)
-                ))
+        if not isinstance(value, field.type.python_type):
+            raise exc.TypeValidationError('Field "{0}" must be {1} type, but has value "{2}"'.format(
+                field.key, field.type.python_type, value
+            ))
 
-        return params
+        if hasattr(field.type, 'length') and len(value) > field.type.length:
+            raise exc.LengthValidationError('Field "{0}" must be length "{1}", but has "{3}" for "{2}"'.format(
+                field.key, field.type.length, value, len(value)
+            ))
 
 
 class Service:
     to_dict = staticmethod(lambda o: o._asdict())
 
-    def __init__(self, model, adapters):
+    def __init__(self, model, view):
         self._model = model
-        self._adapter = Adapter(adapters, model.current)
+        self._adapter = View(view, model.current)
 
     def __call__(self, model=None):
         return _Proxy(
@@ -289,6 +320,7 @@ class Service:
                 value = self._deserialize(item, value)
 
                 params[item] = value
+
             qs.with_entities(self._model.current).update(
                 self._adapter.to_record(params)
             )
@@ -301,7 +333,7 @@ class Service:
 
     # For create & update
     def _deserialize(self, item, value):
-        return convert(self._model.get_field(item), value)
+        return Serializer.to_record(self._model.get_field(item), value)
 
     def create(self, **kwargs):
         # params = {k: self._deserialize(k, v) for k, v in kwargs.items()}
