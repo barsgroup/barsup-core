@@ -17,7 +17,7 @@ class AuthenticationService(Service):
             'password', 'eq', password
         ).get()
 
-        user_id = getattr(obj, 'id', None)
+        user_id = obj.get('id')
         if user_id:
             self.filter(
                 'user_id', 'eq', user_id

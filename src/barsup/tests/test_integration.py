@@ -81,20 +81,26 @@ def create_api(f):
             "service": {
                 "__default__": {
                     "__realization__": "barsup.service.Service",
-                    "$view": {}
+                    "adapters": []
                 },
                 "SimpleService": {
                     "model": "simple_model"
                 },
                 "AdapterService": {
-                    "$view": {
-                        "adapters": [
-                            ["Splitter", "full_name", ["lname", "oname"], {'sep': ', '}]
-                        ],
-                        "include": ["id", "full_name", "name"],
-                        "exclude": ["lname", "oname"],
-                    },
+                    "adapters": [
+                        "AdapterSplitter"
+                    ],
+                    "$include": ["id", "full_name", "name"],
+                    "$exclude": ["oname", "lname"],
                     "model": "simple_model"
+                }
+            },
+            "adapters": {
+                "AdapterSplitter": {
+                    "__realization__": "barsup.adapters.Splitter",
+                    "$to_name": "full_name",
+                    "$from_names": ["lname", "oname"],
+                    "$sep": ", "
                 }
             },
             "model": {
@@ -115,7 +121,8 @@ def create_api(f):
             },
             "db_mapper": {
                 "default": {
-                    "__realization__": "barsup.tests.test_integration._DBMapperMock",
+                    "__realization__":
+                        "barsup.tests.test_integration._DBMapperMock",
                     "__type__": "singleton",
                     "$tables": _tables,
                     "session": "default"

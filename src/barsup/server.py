@@ -6,7 +6,8 @@ import os
 
 import tornado
 from tornado.ioloop import IOLoop
-from tornado.web import RequestHandler, StaticFileHandler, Application, RedirectHandler
+from tornado.web import RequestHandler, StaticFileHandler, Application, \
+    RedirectHandler
 import tornado.websocket
 import zmq
 from zmq.eventloop import ioloop

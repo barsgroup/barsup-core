@@ -5,9 +5,9 @@ import operator
 
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import expression, operators
+from barsup.adapters import DefaultAdapter
 
 import barsup.exceptions as exc
-from barsup.service_adapter import ADAPTERS
 
 
 def _mapping_property(f):
@@ -43,10 +43,11 @@ def _filter(column, operator_text, value):
     }
 
     if operator_text not in values.keys():
-        raise exc.NameValidationError('Operator "{0}" not supported. Available operators: [{1}]'.format(
-            operator_text,
-            ', '.join(values.keys())
-        ))
+        raise exc.NameValidationError(
+            'Operator "{0}" not supported. Available operators: [{1}]'.format(
+                operator_text,
+                ', '.join(values.keys())
+            ))
 
     oper = values[operator_text]
     if isinstance(oper, dict):
@@ -64,10 +65,11 @@ def _sorter(direction):
         'DESC': expression.desc
     }
     if direction not in values.keys():
-        raise exc.NameValidationError('Direction "{0}" not supported. Available directions: [{1}]'.format(
-            direction,
-            ', '.join(values.keys())
-        ))
+        raise exc.NameValidationError(
+            'Direction "{0}" not supported. Available directions: [{1}]'.format(
+                direction,
+                ', '.join(values.keys())
+            ))
     return values[direction]
 
 
@@ -197,19 +199,9 @@ class View:
     serialization = staticmethod(Serializer.to_record)
     deserialization = staticmethod(Serializer.from_record)
 
-    def __init__(self, view, current_model):
-        self._adapters = view.get('adapters', [])
-        self._include = view.get('include', [])
-        self._exclude = view.get('exclude', [])
+    def __init__(self, adapters, current_model):
+        self.adapters = adapters
         self._current_model = current_model
-
-    @property
-    def adapters(self):
-        for adapter_name, name, from_names, kwargs in self._adapters:
-            yield ADAPTERS[adapter_name](name, from_names, **kwargs)
-
-        yield ADAPTERS['default'](self._current_model,
-                                  self._include, self._exclude)
 
     def from_record(self, params):
         """
@@ -225,7 +217,8 @@ class View:
         for adapter in self.adapters:
             result, params = adapter.from_record(result, params)
 
-        return {name: self.deserialization(value) for name, value in result.items()}
+        return {name: self.deserialization(value) for name, value in
+                result.items()}
 
     def to_record(self, params):
         """
@@ -264,27 +257,32 @@ class View:
             if field.expression.nullable:
                 return
             else:
-                raise exc.NullValidationError('Field "{0}" can not be null'.format(
-                    field.key
-                ))
+                raise exc.NullValidationError(
+                    'Field "{0}" can not be null'.format(
+                        field.key
+                    ))
 
         if not isinstance(value, field.type.python_type):
-            raise exc.TypeValidationError('Field "{0}" must be {1} type, but has value "{2}"'.format(
-                field.key, field.type.python_type, value
-            ))
+            raise exc.TypeValidationError(
+                'Field "{0}" must be {1} type, but has value "{2}"'.format(
+                    field.key, field.type.python_type, value
+                ))
 
         if hasattr(field.type, 'length') and len(value) > field.type.length:
-            raise exc.LengthValidationError('Field "{0}" must be length "{1}", but has "{3}" for "{2}"'.format(
-                field.key, field.type.length, value, len(value)
-            ))
+            raise exc.LengthValidationError(
+                'Field "{0}" must be length "{1}", but has "{3}" for "{2}"'.format(
+                    field.key, field.type.length, value, len(value)
+                ))
 
 
 class Service:
     to_dict = staticmethod(lambda o: o._asdict())
 
-    def __init__(self, model, view):
+    def __init__(self, model, adapters, include=None, exclude=None):
         self._model = model
-        self._adapter = View(view, model.current)
+
+        adapters += (DefaultAdapter(model.current, include, exclude),)
+        self._adapter = View(adapters, model.current)
 
     def __call__(self, model=None):
         return _Proxy(

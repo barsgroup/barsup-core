@@ -40,12 +40,14 @@ class _BuildMapping:
         for table in tables:
             indices = []
             if table.get('__indices__'):
-                indices = [cls.create_indeces(**index) for index in table['__indices__']]
+                indices = [cls.create_indeces(**index) for index in
+                           table['__indices__']]
 
             Table(
                 table['__name__'],
                 meta,
-                *([cls.create_column(**column) for column in table['__columns__']] + indices))
+                *([cls.create_column(**column) for column in
+                   table['__columns__']] + indices))
 
     @classmethod
     def create_indeces(cls, __name__, __columns__, **kwargs):
@@ -164,7 +166,8 @@ class Model:
             outer_model = getattr(self._db_mapper, outer_model_name)
             qs = operator(
                 outer_model,
-                self.get_field(inner_field_name) == self.get_field(outher_field_name, outer_model_name))
+                self.get_field(inner_field_name) == self.get_field(
+                    outher_field_name, outer_model_name))
 
         return qs
 

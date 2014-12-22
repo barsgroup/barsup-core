@@ -5,6 +5,8 @@
 
 from yadic.container import Injectable
 
+from barsup.auth import AVAILABLE_ACTIONS
+
 from barsup.controller import Controller
 
 
@@ -46,8 +48,6 @@ class Authorization(Controller, metaclass=Injectable):
 
 
 class PermissionController(Controller, metaclass=Injectable):
-    depends_on = ('methods',)
-
     def read(
         self,
         start: 'int'=None,
@@ -59,14 +59,12 @@ class PermissionController(Controller, metaclass=Injectable):
         sort: 'json'=None
     ) -> r"/read":
         ctrl_set = set()
-        for ctrl, action in self.methods:
+        for ctrl, action in AVAILABLE_ACTIONS:
             ctrl_set.add(ctrl)
         return map(lambda x: dict(controller=x), sorted(ctrl_set))
 
 
 class PermissionAction(Controller, metaclass=Injectable):
-    depends_on = ('methods',)
-
     func_filter = filter
 
     def read(
@@ -81,7 +79,7 @@ class PermissionAction(Controller, metaclass=Injectable):
     ) -> r"/read":
         ctrl_param = filter[0]['value']
         action_set = set()
-        for ctrl, action in self.methods:
+        for ctrl, action in AVAILABLE_ACTIONS:
             if ctrl == ctrl_param:
                 action_set.add(action)
         return map(lambda x: dict(action=x), sorted(action_set))
