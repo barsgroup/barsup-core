@@ -78,11 +78,13 @@ class Model:
         self._db_mapper = db_mapper
         self._name = name
         self._session = session
+        self._labels = {}
 
         qs = self._create_select(session, select,
                                  [outher[0] for *_, outher in joins or []])
 
         self._qs = self._create_joins(qs, joins or [])
+
 
     def _create_aliases(self, model_name=''):
         model = getattr(self._db_mapper, model_name, self.current)
@@ -95,9 +97,13 @@ class Model:
 
         col = getattr(model, field)
         if model_name:
-            label = col.label('{0}.{1}'.format(model_name, field))
+            key = '{0}.{1}'.format(model_name, field)
         else:
-            label = col.label(field)
+            key = field
+
+        label = col.label(key)
+        self._labels[key] = label
+
         return label
 
     def _create_select(self, session, select, models):
@@ -136,9 +142,18 @@ class Model:
 
         self._session.add(obj)
         self._session.flush()  # Для получения id объекта
-        return obj.id
+        return obj
 
-    def get_field(self, field_name, model_name=None):
+    def get_field(self, field_name):
+        # Если есть джойны, тогда должны быть алиасы:
+        # alias = self._labels.get(field_name, None)
+        # if alias is not None:
+        #     return alias
+
+        model_name = None
+        if '.' in field_name:
+            model_name, field_name = field_name.split('.')
+
         if model_name:
             model = getattr(self._db_mapper, model_name)
         else:
@@ -167,7 +182,8 @@ class Model:
             qs = operator(
                 outer_model,
                 self.get_field(inner_field_name) == self.get_field(
-                    outher_field_name, outer_model_name))
+                    '{0}.{1}'.format(outer_model_name, outher_field_name)
+                ))
 
         return qs
 

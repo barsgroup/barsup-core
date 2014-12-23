@@ -63,6 +63,76 @@ def create_api(f):
                         "nullable": True
                     }
                 ]
+            }, {
+                "__name__": "master",
+                "__columns__": [
+                    {
+                        "__name__": "id",
+                        "__type__": {
+                            "__name__": sqlalchemy.Integer
+                        },
+                        "primary_key": True
+                    },
+                    {
+                        "__name__": "name",
+                        "__type__": {
+                            "__name__": sqlalchemy.String,
+                            "length": 50
+                        },
+                        "nullable": False
+                    }
+                ]
+            },
+            {
+                "__name__": "detail",
+                "__columns__": [
+                    {
+                        "__name__": "id",
+                        "__type__": {
+                            "__name__": sqlalchemy.Integer
+                        },
+                        "primary_key": True
+                    },
+                    {
+                        "__name__": "name",
+                        "__type__": {
+                            "__name__": sqlalchemy.String,
+                            "length": 50
+                        },
+                        "nullable": False
+                    },
+                    {
+                        "__name__": "master_id",
+                        "__type__": {
+                            "__name__": sqlalchemy.Integer
+                        },
+                        "__fk__": {
+                            "__name__": sqlalchemy.ForeignKey,
+                            "column": "master.id",
+                            "ondelete": "RESTRICT"
+                        },
+                        "nullable": False
+                    },
+                ]
+            },
+            {
+                "__name__": "types",
+                "__columns__": [
+                    {
+                        "__name__": "id",
+                        "__type__": {
+                            "__name__": sqlalchemy.Integer
+                        },
+                        "primary_key": True
+                    },
+                    {
+                        "__name__": "date",
+                        "__type__": {
+                            "__name__": sqlalchemy.Date
+                        },
+                        "nullable": False
+                    }
+                ]
             },
         ]
 
@@ -76,6 +146,15 @@ def create_api(f):
                 },
                 "AdapterController": {
                     "service": "AdapterService"
+                },
+                "Master": {
+                    "service": "MasterService"
+                },
+                "Detail": {
+                    "service": "DetailService"
+                },
+                "Types": {
+                    "service": "TypesService"
                 }
             },
             "service": {
@@ -83,8 +162,17 @@ def create_api(f):
                     "__realization__": "barsup.service.Service",
                     "adapters": []
                 },
+                "MasterService": {
+                    "model": "master"
+                },
+                "DetailService": {
+                    "model": "detail"
+                },
                 "SimpleService": {
                     "model": "simple_model"
+                },
+                "TypesService": {
+                    "model": "types"
                 },
                 "AdapterService": {
                     "adapters": [
@@ -111,6 +199,23 @@ def create_api(f):
                 },
                 "simple_model": {
                     "$name": "simple_table"
+                },
+                "detail": {
+                    "$name": "detail",
+                    "$joins": [
+                        ["master_id", "==", "id", ["master", []]],
+                    ],
+                    "$select": [
+                        "id",
+                        "master_id",
+                        "name"
+                    ]
+                },
+                "master": {
+                    "$name": "master"
+                },
+                "types": {
+                    "$name": "types"
                 }
             },
             "session": {
@@ -385,3 +490,95 @@ def test_create_with_wrong_name_adapters(api):
                 'full_name': "Complex, field"
             }
         )
+
+
+def generate_master_detail_series(f):
+    def wrap(api, *args, **kwargs):
+        for i in range(10):
+            master = api.call(
+                'Master', 'create',
+                data={
+                    'name': 'master {0}'.format(i)
+                }
+            )
+            for j in range(20):
+                api.call(
+                    'Detail', 'create',
+                    data={
+                        'name': 'master {0}; detail {1}'.format(i, j),
+                        'master_id': master['id']
+                    }
+                )
+        return f(api, *args, **kwargs)
+
+    return wrap
+
+
+@create_api
+@generate_master_detail_series
+def test_complex_filter_detail(api):
+    data = api.call(
+        "Detail", "read",
+        filter=[
+            {'property': 'master.name',
+             'operator': 'like',
+             'value': '1'
+            }, {
+                'property': 'name',
+                'operator': 'like',
+                'value': '2'}
+        ]
+    )
+    data = list(data)
+    assert len(data) == 2
+    assert data[0]['name'] == 'master 1; detail 2'
+    assert data[1]['name'] == 'master 1; detail 12'
+
+
+# В sqlite тест ниже не работает с параметром RESTRICT
+# Видимо, всегда работает как каскадное (CASCADE) удаление
+@create_api
+@generate_master_detail_series
+def test_delete_with_fk(api):
+    data = api.call(
+        "Detail", "read", filter=[
+            {'property': 'master_id',
+             'operator': 'eq',
+             'value': 1
+            }]
+    )
+    data = list(data)
+    assert len(data) == 20  # 20 дочерних записей
+
+    # Должно было упасть с BadRequest, так как на master есть ссылки
+    # Вместо этого sqlite делает каскадное удаление
+    api.call(
+        "Master", "destroy", id_=1
+    )
+
+    with pytest.raises(exc.NotFound):
+        api.call(
+            "Master", "get", id_=1
+        )
+
+    data = api.call(
+        "Detail", "read", filter=[
+            {'property': 'master_id',
+             'operator': 'eq',
+             'value': 1
+            }]
+    )
+    data = list(data)
+    assert len(data) == 0  # Записи удалились
+
+@create_api
+def test_date(api):
+    data = api.call(
+        'Types', 'create',
+        data={
+            'date': 1419341293000  # timestamp
+        }
+    )
+
+    assert data
+    assert data['date'] == '12/23/2014'

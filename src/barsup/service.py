@@ -3,10 +3,11 @@
 from datetime import date
 import operator
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import expression, operators
-from barsup.adapters import DefaultAdapter
 
+from barsup.adapters import DefaultAdapter
 import barsup.exceptions as exc
 
 
@@ -16,14 +17,7 @@ def _mapping_property(f):
     """
 
     def wrapper(self, property, *args, **kwargs):
-        names = property.split('.')
-        if len(names) == 2:  # Составной объект, например, user.name
-            outer_model, column = names
-            field = self._model.get_field(column, outer_model)
-        else:
-            field = self._model.get_field(property)
-
-        return f(self, field, *args, **kwargs)
+        return f(self, self._model.get_field(property), *args, **kwargs)
 
     return wrapper
 
@@ -327,18 +321,30 @@ class Service:
             )
 
     def _delete(self, qs):
-        qs.with_entities(self._model.current).delete()
+        try:
+            qs.with_entities(self._model.current).delete()
+        except IntegrityError as e:
+            info = getattr(e, 'orig', None)
+
+            # Код ошибки 23503 в postgresql
+            # соотвествует имеющимся ссылкам на запись
+            # http://www.postgresql.org/docs/8.2/static/errcodes-appendix.html
+            if info and getattr(info, 'pgcode', None) == '23503':
+                raise exc.BadRequest(
+                    "Record can't be delete, because it has FK")
+
+            raise
 
     # For create & update
     def _deserialize(self, item, value):
         return Serializer.to_record(self._model.get_field(item), value)
 
     def create(self, **kwargs):
-        # params = {k: self._deserialize(k, v) for k, v in kwargs.items()}
-        id_ = self._model.create_object(
+        obj = self._model.create_object(
             **self._adapter.to_record(kwargs)
         )
-        return self.filter('id', 'eq', id_).get()
+        as_dict = {x.name: getattr(obj, x.name) for x in obj.__table__.columns}
+        return self._adapter.from_record(as_dict)
 
 
 __all__ = (Service,)
