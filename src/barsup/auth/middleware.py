@@ -1,5 +1,5 @@
 # coding: utf-8
-from barsup.exceptions import Unauthorized, Forbidden, NotFound
+import barsup.exceptions as exc
 
 
 def access_check(authentication, authorization=None):
@@ -17,7 +17,10 @@ def access_check(authentication, authorization=None):
     # NEED_LOGIN = 'need-login'
     # NOT_PERMIT = 'not-permit'
 
-    def wrapper(nxt, controller, action, web_session_id, **params):
+    def wrapper(nxt, controller, action, web_session_id=None, **params):
+        if not web_session_id:
+            raise exc.BadRequest("session must be defined")
+
         if controller == authentication:
             return nxt(controller, action,
                        web_session_id=web_session_id, **params)
@@ -26,14 +29,14 @@ def access_check(authentication, authorization=None):
             try:
                 uid = nxt(authentication, 'is_logged_in',
                           web_session_id=web_session_id)
-            except NotFound:
-                raise Unauthorized()
+            except exc.NotFound:
+                raise exc.Unauthorized()
 
             # пользователь должен иметь право на выполнение действия
             if authorization and not nxt(
                     authorization, 'has_perm', uid=uid, operation=(controller, action)
             ):
-                raise Forbidden()
+                raise exc.Forbidden()
 
             return nxt(controller, action, **params)
 

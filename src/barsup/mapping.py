@@ -3,6 +3,7 @@ import os
 
 import simplejson as json
 import sqlalchemy
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm.properties import ColumnProperty
@@ -85,7 +86,6 @@ class Model:
 
         self._qs = self._create_joins(qs, joins or [])
 
-
     def _create_aliases(self, model_name=''):
         model = getattr(self._db_mapper, model_name, self.current)
         for column in inspect(model).attrs:
@@ -137,18 +137,28 @@ class Model:
     def create_object(self, **kwargs):
         obj = self.current()
         for item, value in kwargs.items():
-            assert hasattr(obj, item)
+            if not hasattr(obj, item):
+                raise exc.NameValidationError(
+                    'Name "{0}" hot has in model "{1}"'.format(
+                        item, obj.__class__.__name__
+                    )
+                )
             setattr(obj, item, value)
 
         self._session.add(obj)
-        self._session.flush()  # Для получения id объекта
+        try:
+            self._session.flush()  # Для получения id объекта
+        except IntegrityError as e:
+            raise exc.ValueValidationError(
+                str(e.orig)
+            )
         return obj
 
     def get_field(self, field_name):
         # Если есть джойны, тогда должны быть алиасы:
         # alias = self._labels.get(field_name, None)
         # if alias is not None:
-        #     return alias
+        # return alias
 
         model_name = None
         if '.' in field_name:
@@ -190,6 +200,9 @@ class Model:
     @property
     def current(self):
         return getattr(self._db_mapper, self._name)
+
+    def exists(self, qs):
+        return self._session.query(qs.exists())
 
 
 class DBMapper:

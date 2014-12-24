@@ -168,6 +168,7 @@ class _Proxy:
 
     get = _delegate_service('_get')
     read = _delegate_service('_read')
+    exists = _delegate_service('_exists')
 
     update = _delegate_service('_update')
     delete = _delegate_service('_delete')
@@ -305,6 +306,9 @@ class Service:
             self._adapter.from_record,
             map(self.to_dict, qs.all())
         )
+
+    def _exists(self, qs):
+        return self._model.exists(qs).scalar()
 
     def _update(self, qs, **kwargs):
         if kwargs:

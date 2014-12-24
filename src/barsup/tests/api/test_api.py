@@ -1,23 +1,9 @@
 # coding: utf-8
-from os import path
-import json
 
 import pytest
 
 import barsup.exceptions as exc
-from barsup.core import init
-
-
-def create_api(f):
-    def wrap(*args, **kwargs):
-        test_path = path.expandvars('$BUP_TESTS')
-        with open(path.join(test_path, 'api', 'api.json')) as conf:
-            api = init(
-                config=json.load(conf)['container']
-            )
-            return f(api, *args, **kwargs)
-
-    return wrap
+from barsup.tests import create_api
 
 
 def generate_series(f):
@@ -34,14 +20,17 @@ def generate_series(f):
     return wrap
 
 
-@create_api
+get_api = create_api('api', 'api.json')
+
+
+@get_api
 def test_empty_read(api):
     data = api.call('SimpleController', 'read')
     # assert isinstance(data, Iterable)
     assert len(list(data)) == 0
 
 
-@create_api
+@get_api
 def test_empty_filter(api):
     data = api.call(
         'SimpleController', 'read',
@@ -53,7 +42,7 @@ def test_empty_filter(api):
     assert len(list(data)) == 0
 
 
-@create_api
+@get_api
 def test_create(api):
     data = api.call(
         'SimpleController', 'create',
@@ -73,7 +62,7 @@ def test_create(api):
     assert data['id'] == 1
 
 
-@create_api
+@get_api
 def test_update(api):
     api.call(
         'SimpleController', 'create',
@@ -99,7 +88,7 @@ def test_update(api):
     assert data['id'] == 1
 
 
-@create_api
+@get_api
 def test_delete(api):
     api.call(
         'SimpleController', 'create',
@@ -120,7 +109,7 @@ def test_delete(api):
     assert len(list(data)) == 0
 
 
-@create_api
+@get_api
 @generate_series
 def test_read(api):
     data = api.call(
@@ -134,7 +123,7 @@ def test_read(api):
         assert 'data {0}'.format(j) == data[i]['name']
 
 
-@create_api
+@get_api
 @generate_series
 def test_sorts(api):
     data = api.call(
@@ -148,7 +137,7 @@ def test_sorts(api):
     assert data[0]['name'] == 'data 99'
 
 
-@create_api
+@get_api
 def test_wrong_sort_name(api):
     with pytest.raises(exc.NameValidationError):
         api.call(
@@ -158,7 +147,7 @@ def test_wrong_sort_name(api):
         )
 
 
-@create_api
+@get_api
 def test_wrong_sort_direction(api):
     with pytest.raises(exc.NameValidationError):
         api.call(
@@ -168,7 +157,7 @@ def test_wrong_sort_direction(api):
         )
 
 
-@create_api
+@get_api
 def test_wrong_filter_operator(api):
     with pytest.raises(exc.NameValidationError):
         api.call(
@@ -179,7 +168,7 @@ def test_wrong_filter_operator(api):
         )
 
 
-@create_api
+@get_api
 def test_not_found_record(api):
     with pytest.raises(exc.NotFound):
         api.call(
@@ -187,7 +176,7 @@ def test_not_found_record(api):
         )
 
 
-@create_api
+@get_api
 def test_create_overflow_name(api):
     with pytest.raises(exc.LengthValidationError):
         api.call(
@@ -198,7 +187,7 @@ def test_create_overflow_name(api):
         )
 
 
-@create_api
+@get_api
 def test_create_nullable_name(api):
     with pytest.raises(exc.NullValidationError):
         api.call(
@@ -209,7 +198,7 @@ def test_create_nullable_name(api):
         )
 
 
-@create_api
+@get_api
 def test_create_wrong_type_name(api):
     with pytest.raises(exc.TypeValidationError):
         api.call(
@@ -220,7 +209,7 @@ def test_create_wrong_type_name(api):
         )
 
 
-@create_api
+@get_api
 def test_create_wrong_value_with_adapters(api):
     with pytest.raises(exc.ValueValidationError):
         api.call(
@@ -231,7 +220,7 @@ def test_create_wrong_value_with_adapters(api):
         )
 
 
-@create_api
+@get_api
 def test_create_with_adapters(api):
     api.call(
         'AdapterController', 'create', data={
@@ -249,7 +238,7 @@ def test_create_with_adapters(api):
     assert data['full_name'] == "Complex, field"
 
 
-@create_api
+@get_api
 def test_create_with_wrong_name_adapters(api):
     with pytest.raises(exc.NameValidationError):
         api.call(
@@ -283,7 +272,7 @@ def generate_master_detail_series(f):
     return wrap
 
 
-@create_api
+@get_api
 @generate_master_detail_series
 def test_complex_filter_detail(api):
     data = api.call(
@@ -306,7 +295,7 @@ def test_complex_filter_detail(api):
 
 # В sqlite тест ниже не работает с параметром RESTRICT
 # Видимо, всегда работает как каскадное (CASCADE) удаление
-@create_api
+@get_api
 @generate_master_detail_series
 def test_delete_with_fk(api):
     data = api.call(
@@ -341,7 +330,7 @@ def test_delete_with_fk(api):
     assert len(data) == 0  # Записи удалились
 
 
-@create_api
+@get_api
 def test_date(api):
     from datetime import datetime as dt
     import time
@@ -358,3 +347,31 @@ def test_date(api):
 
     assert data
     assert data['date'] == dt.fromtimestamp(timestamp).strftime(format_)
+
+
+@get_api
+def test_create_with_wrong_data(api):
+    with pytest.raises(exc.NameValidationError):
+        api.call(
+            'SimpleController', 'create',
+            data={
+                'anothername': '42'
+            }
+        )
+
+
+@get_api
+def test_create_without_constraint_field(api):
+    with pytest.raises(exc.ValueValidationError):
+        api.call(
+            'SimpleController', 'create',
+            data={}
+        )
+
+
+@get_api
+def test_without_params(api):
+    with pytest.raises(TypeError):
+        api.call(
+            'SimpleController', 'create',
+        )

@@ -34,7 +34,7 @@ class AuthenticationService(Service):
 
     def is_logged_in(self, web_session_id):
         obj = self.filter('web_session_id', 'eq', web_session_id).get()
-        return getattr(obj, 'user_id', None)
+        return obj.get('user_id')
 
 
 class AuthorizationService(Service):
@@ -43,7 +43,6 @@ class AuthorizationService(Service):
         self.user_role = user_role
 
     def has_perm(self, uid, controller, action):
-        # FIXME: пока работает некорректно, так как нет джойнов
         perm_service = self.filter(
             'user_id', 'eq', uid
         ).filter(
@@ -62,4 +61,4 @@ class AuthorizationService(Service):
         # res = self.session.query(literal(True)).filter(subquery)
         # return res.scalar()
 
-        return perm_service.read() or role_service.read() or False
+        return perm_service.exists() or role_service.exists() or False

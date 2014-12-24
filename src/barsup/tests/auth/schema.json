@@ -1,0 +1,180 @@
+[
+  {
+    "__name__": "user",
+    "__columns__": [
+      {
+        "__name__": "id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "primary_key": true
+      },
+      {
+        "__name__": "name",
+        "__type__": {
+          "__name__": "$String",
+          "length": 50
+        },
+        "nullable": false
+      },
+      {
+        "__name__": "email",
+        "__type__": {
+          "__name__": "$String",
+          "length": 50
+        },
+        "nullable": false
+      },
+      {
+        "__name__": "login",
+        "__type__": {
+          "__name__": "$String",
+          "length": 50
+        },
+        "nullable": false,
+        "unique": true
+      },
+      {
+        "__name__": "password",
+        "__type__": {
+          "__name__": "$String",
+          "length": 50
+        },
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "__name__": "web_session",
+    "__columns__": [
+      {
+        "__name__": "id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "primary_key": true
+      },
+      {
+        "__name__": "user_id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "__fk__": {
+          "__name__": "$ForeignKey",
+          "column": "user.id"
+        },
+        "nullable": false
+      },
+      {
+        "__name__": "web_session_id",
+        "__type__": {
+          "__name__": "$String",
+          "length": 40
+        },
+        "nullable": false,
+        "unique": true
+      }
+    ]
+  },
+  {
+    "__name__": "role",
+    "__columns__": [
+      {
+        "__name__": "id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "primary_key": true
+      },
+      {
+        "__name__": "name",
+        "__type__": {
+          "__name__": "$String",
+          "length": 100
+        },
+        "nullable": false
+      },
+      {
+        "__name__": "is_super",
+        "__type__": {
+          "__name__": "$Boolean"
+        },
+        "nullable": false,
+        "default": false
+      }
+    ]
+  },
+  {
+    "__name__": "user_role",
+    "__columns__": [
+      {
+        "__name__": "id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "primary_key": true
+      },
+      {
+        "__name__": "user_id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "__fk__": {
+          "__name__": "$ForeignKey",
+          "column": "user.id"
+        },
+        "nullable": false
+      },
+      {
+        "__name__": "role_id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "__fk__": {
+          "__name__": "$ForeignKey",
+          "column": "role.id"
+        },
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "__name__": "permission",
+    "__columns__": [
+      {
+        "__name__": "id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "primary_key": true
+      },
+      {
+        "__name__": "role_id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "__fk__": {
+          "__name__": "$ForeignKey",
+          "column": "role.id"
+        },
+        "nullable": false
+      },
+      {
+        "__name__": "controller",
+        "__type__": {
+          "__name__": "$String",
+          "length": 100
+        },
+        "nullable": false
+      },
+      {
+        "__name__": "action",
+        "__type__": {
+          "__name__": "$String",
+          "length": 100
+        },
+        "nullable": false
+      }
+    ]
+  }
+]

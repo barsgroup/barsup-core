@@ -29,8 +29,8 @@ class Splitter:
 
 class DefaultAdapter:
     def __init__(self, model, include, exclude):
-        self._include = include
-        self._exclude = exclude
+        self._include = include or []
+        self._exclude = exclude or []
 
         self._model = model
 
