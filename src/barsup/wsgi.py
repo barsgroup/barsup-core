@@ -40,10 +40,10 @@ def handler(config_file_name, catch_cookies):
 
         return Response(
             content_type='application/json',
-            body=json.dumps(
-                {'data': result,
-                 'success': True
-                }, default=serialize_to_json)
+            body=json.dumps({
+                'data': result,
+                'success': True
+            }, default=serialize_to_json)
         )
 
     return app
@@ -73,16 +73,16 @@ def catch_errors(request, app, debug=False):
     try:
         return request.get_response(app)
 
-    except exceptions.BadRequest as e:  # 400
+    except exceptions.BadRequest:  # 400
         raise exc.HTTPBadRequest()
 
-    except exceptions.Unauthorized as e:  # 401
+    except exceptions.Unauthorized:  # 401
         raise exc.HTTPUnauthorized()
 
-    except exceptions.Forbidden as e:  # 403
+    except exceptions.Forbidden:  # 403
         raise exc.HTTPForbidden()
 
-    except exceptions.NotFound as e:  # 404
+    except exceptions.NotFound:  # 404
         raise exc.HTTPNotFound()
 
     except Exception:
