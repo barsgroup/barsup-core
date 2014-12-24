@@ -21,7 +21,10 @@ class PostgreSQLSession:
                  host='localhost',
                  port=5432,
                  echo=True):
-        connection_string = '{engine}://{login}:{password}@{host}:{port}/{database}'.format(
+        connection_string = ('{engine}://'
+                             '{login}:{password}'
+                             '@{host}:{port}/'
+                             '{database}').format(
             login=login,
             password=password,
             database=database,

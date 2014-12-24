@@ -201,11 +201,10 @@ class DBMapper:
     def __init__(self, path=None):
         if not path:
             path = os.path.abspath('.')
-
-        fullpath = os.path.join(path, 'mapping.json')
+            path = os.path.join(path, 'mapping.json')
 
         self._metadata = MetaData()
-        _BuildMapping.load(self._metadata, fullpath)
+        _BuildMapping.load(self._metadata, path)
 
         self._base = automap_base(metadata=self._metadata)
         self._base.prepare()

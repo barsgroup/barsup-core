@@ -1,0 +1,109 @@
+[
+  {
+    "__name__": "simple_table",
+    "__columns__": [
+      {
+        "__name__": "id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "primary_key": true
+      },
+      {
+        "__name__": "name",
+        "__type__": {
+          "__name__": "$String",
+          "length": 50
+        },
+        "nullable": false
+      },
+      {
+        "__name__": "lname",
+        "__type__": {
+          "__name__": "$String",
+          "length": 50
+        },
+        "nullable": true
+      },
+      {
+        "__name__": "oname",
+        "__type__": {
+          "__name__": "$String",
+          "length": 50
+        },
+        "nullable": true
+      }
+    ]
+  },
+  {
+    "__name__": "master",
+    "__columns__": [
+      {
+        "__name__": "id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "primary_key": true
+      },
+      {
+        "__name__": "name",
+        "__type__": {
+          "__name__": "$String",
+          "length": 50
+        },
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "__name__": "detail",
+    "__columns__": [
+      {
+        "__name__": "id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "primary_key": true
+      },
+      {
+        "__name__": "name",
+        "__type__": {
+          "__name__": "$String",
+          "length": 50
+        },
+        "nullable": false
+      },
+      {
+        "__name__": "master_id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "__fk__": {
+          "__name__": "$ForeignKey",
+          "column": "master.id",
+          "ondelete": "RESTRICT"
+        },
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "__name__": "types",
+    "__columns__": [
+      {
+        "__name__": "id",
+        "__type__": {
+          "__name__": "$Integer"
+        },
+        "primary_key": true
+      },
+      {
+        "__name__": "date",
+        "__type__": {
+          "__name__": "$Date"
+        },
+        "nullable": false
+      }
+    ]
+  }
+]

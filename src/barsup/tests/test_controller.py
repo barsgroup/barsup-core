@@ -1,5 +1,4 @@
 # coding: utf-8
-from _collections_abc import Iterable
 
 from _pytest.python import fixture
 from yadic.container import Container
@@ -95,7 +94,8 @@ def get_api():
 
 def test_read():
     read_result = get_api().call('cont', 'read', )
-    assert isinstance(read_result, Iterable)
+    read_result = list(read_result)
+    assert isinstance(read_result, list)
 
 
 def test_get():

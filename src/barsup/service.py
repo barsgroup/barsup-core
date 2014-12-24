@@ -1,7 +1,8 @@
 # coding: utf-8
 
-from datetime import date
 import operator
+from datetime import date
+
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
