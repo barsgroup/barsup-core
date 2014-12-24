@@ -24,7 +24,7 @@ def load_configs(fnames, parser=json.load):
     через ообновление с заменой в порядке следования имен файлов.
     """
     config = {}
-    for fname in fnames.split(';'):
+    for fname in os.path.expandvars(fnames).split(';'):
         with open(os.path.expandvars(fname)) as f:
             patch = parser(f)
             config = merge(
