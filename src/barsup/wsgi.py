@@ -14,14 +14,14 @@ from webob.static import DirectoryApp
 
 from barsup import core
 from barsup import exceptions
-from barsup.util import serialize_to_json
+from barsup.util import serialize_to_json, load_configs
 
 
 def handler(config_file_name, catch_cookies):
-    with open(path.expandvars(config_file_name)) as conf:
-        api = core.init(
-            config=json.load(conf)['container']
-        )
+    """
+    Обработчик HTTP-запросов к приложению
+    """
+    api = core.init(config=load_configs(config_file_name))
 
     @wsgify
     def app(request):
