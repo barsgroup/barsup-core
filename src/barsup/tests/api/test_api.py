@@ -1,4 +1,5 @@
 # coding: utf-8
+from os import path
 import json
 
 import pytest
@@ -9,7 +10,8 @@ from barsup.core import init
 
 def create_api(f):
     def wrap(*args, **kwargs):
-        with open('tests/api/api.json') as conf:
+        test_path = path.expandvars('$BUP_TESTS')
+        with open(path.join(test_path, 'api', 'api.json')) as conf:
             api = init(
                 config=json.load(conf)['container']
             )
