@@ -1,17 +1,14 @@
 language: python
 python:
-#  - "3.3"
+  - "3.3"
   - "3.4"
-env:
-  - BUP_TESTS=$TRAVIS_BUILD_DIR/src/barsup/tests
+
 install:
   - easy_install -U pip
   - pip install -r REQUIREMENTS.test
 
-
-# command to run tests
 script:
-  - py.test --pep8 --cov .
+  - py.test --pep8 --cov $TRAVIS_BUILD_DIR/src/barsup/tests
 
 after_success:
   - coveralls
