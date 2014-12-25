@@ -2,30 +2,24 @@ language: python
 python:
 - '3.3'
 - '3.4'
-
 env:
 - BUP_TESTS=$TRAVIS_BUILD_DIR/src/barsup/tests
-
 install:
 - easy_install -U pip routes
 - pip install -r REQUIREMENTS.test
-
 script:
 - py.test --pep8 --cov ./src --cov-config=.coveragerc
-
 after_success:
 - coveralls
-
 notifications:
   email:
     recipients:
     - telepenin@bars-open.ru
     - pirogov@bars-open.ru
-
 deploy:
   provider: pypi
   user: bars-travis
   password:
-    secure: RP3qdaW7Vya4tNm6XzInpJ1WaegYP95fNnMgaaSKsn9UYr8Pei9jNIArANEh6b//6BPV/hnUSRB9/AlD3u47oiJFJnqTEMULYaPNIc/utbNJDlJcrymke2V3CMK/UtJhXrQ+6WlAdshAzKxlPby6Voh8x21MWXCYAh4EXcIv32Y=
+    secure: A1OQV61yMsbLh4B9Bf+vNo+dAvIIEu47rMP84f9gdQqxwQ9Ms7MYTJb0PupSnqQpV58nMjtwI3HitqUdLR/RDcw1ScHIa1RqRDFquK1IUcziDtHjCHu6QLAd24fxwWwHo7o4FeUVa0ohfmcRLzrLSAHda0NAcwlxmM/RO7ds/kM=
   on:
     tags: true
