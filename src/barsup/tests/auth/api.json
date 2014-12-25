@@ -4,7 +4,6 @@
       "__default__": {
         "__realization__": "barsup.controller.DictController"
       },
-
       "User": {
         "service": "UserService"
       },
@@ -75,7 +74,6 @@
       "user": {
         "$name": "user"
       },
-
       "web_session": {
         "$name": "web_session"
       },
@@ -87,9 +85,25 @@
       },
       "user_role": {
         "$name": "user_role",
-        "$joins":[
-          ["user_id", "==", "id", ["user", []]],
-          ["role_id", "==", "id", ["role", []]]
+        "$joins": [
+          [
+            "user_id",
+            "==",
+            "id",
+            [
+              "user",
+              []
+            ]
+          ],
+          [
+            "role_id",
+            "==",
+            "id",
+            [
+              "role",
+              []
+            ]
+          ]
         ],
         "$select": [
           "id"
@@ -97,10 +111,34 @@
       },
       "user_role_permission": {
         "$name": "user_role",
-        "$joins":[
-          ["user_id", "==", "id", ["user", []]],
-          ["role_id", "==", "id", ["role", []]],
-          ["role_id", "==", "role_id", ["permission", []]]
+        "$joins": [
+          [
+            "user_id",
+            "==",
+            "id",
+            [
+              "user",
+              []
+            ]
+          ],
+          [
+            "role_id",
+            "==",
+            "id",
+            [
+              "role",
+              []
+            ]
+          ],
+          [
+            "role_id",
+            "==",
+            "role_id",
+            [
+              "permission",
+              []
+            ]
+          ]
         ]
       }
     },
@@ -109,7 +147,10 @@
         "__realization__": "barsup.tests.auth.DBMapperAuth",
         "__type__": "singleton",
         "session": "default",
-        "$path": ["auth", "schema.json"]
+        "$path": [
+          "auth",
+          "schema.json"
+        ]
       }
     },
     "api_options": {

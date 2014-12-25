@@ -40,10 +40,9 @@ def handler(config_file_name, catch_cookies):
 
         return Response(
             content_type='application/json',
-            body=json.dumps({
-                'data': result,
-                'success': True
-            }, default=serialize_to_json)
+            body=json.dumps({'data': result,
+                             'success': True},
+                            default=serialize_to_json)
         )
 
     return app

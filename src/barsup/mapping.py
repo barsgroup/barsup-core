@@ -173,7 +173,8 @@ class Model:
             field = getattr(model, field_name)
         except AttributeError:
             raise exc.NameValidationError(
-                'Model "{0}" not has field "{1}". Available fields ["{2}"]:'.format(
+                ('Model "{0}" not has field "{1}". '
+                 'Available fields ["{2}"]:').format(
                     model.__name__,
                     field_name,
                     ', '.join(col.key for col in inspect(model).attrs)

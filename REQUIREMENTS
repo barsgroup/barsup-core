@@ -8,8 +8,12 @@ python-dateutil
 alembic
 simplejson
 yadic
-pytest
-coverage
+
 uwsgi
 webob
+
+# for test
+pytest
+pytest-pep8
+coverage
 

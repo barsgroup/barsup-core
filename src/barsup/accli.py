@@ -41,9 +41,7 @@ class AutoCompleteCLI:
             except KeyError:
                 return
 
-        pred = (lambda x: x.startswith(partial)
-        if partial else
-        lambda x: True)
+        pred = (lambda x: x.startswith(partial) if partial else lambda x: True)
 
         if prev and not partial:
             data = data.get(prev, [])

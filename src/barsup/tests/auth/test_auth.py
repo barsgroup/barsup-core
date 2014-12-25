@@ -182,6 +182,7 @@ def test_permissions_controller(api):
     assert 'RolePermission' in data  # например
     assert 'PermissionController' in data  # и сам тоже
 
+
 @get_api
 def test_permissions_actions(api):
     """
@@ -192,8 +193,7 @@ def test_permissions_actions(api):
     data = api.call('PermissionAction', 'read',
                     filter=[{'property': '_',
                              'operator': '_',
-                             'value': 'UserRole'}
-                    ],
+                             'value': 'UserRole'}],
                     web_session_id=ADMIN_SESSION)
     data = list(item['action'] for item in data)
     assert 'get' in data

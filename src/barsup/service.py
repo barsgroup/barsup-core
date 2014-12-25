@@ -3,7 +3,6 @@
 import operator
 from datetime import date
 
-
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import expression, operators
@@ -61,7 +60,8 @@ def _sorter(direction):
     }
     if direction not in values.keys():
         raise exc.NameValidationError(
-            'Direction "{0}" not supported. Available directions: [{1}]'.format(
+            ('Direction "{0}" not supported. '
+             'Available directions: [{1}]').format(
                 direction,
                 ', '.join(values.keys())
             ))
@@ -266,7 +266,8 @@ class View:
 
         if hasattr(field.type, 'length') and len(value) > field.type.length:
             raise exc.LengthValidationError(
-                'Field "{0}" must be length "{1}", but has "{3}" for "{2}"'.format(
+                ('Field "{0}" must be length "{1}", '
+                 'but has "{3}" for "{2}"').format(
                     field.key, field.type.length, value, len(value)
                 ))
 

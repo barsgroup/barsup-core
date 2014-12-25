@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+
 from setuptools import setup, find_packages
 
 
@@ -8,6 +9,7 @@ def read(fname):
         return open(os.path.join(os.path.dirname(__file__), fname)).read()
     except IOError:
         return ''
+
 
 setup(
     name="barsup-core",
@@ -34,4 +36,3 @@ setup(
     install_requires=read('REQUIREMENTS'),
     scripts=['scripts/bup_start', 'scripts/bup_cli'],
 )
-

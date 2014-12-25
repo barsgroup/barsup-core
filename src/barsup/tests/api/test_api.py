@@ -280,11 +280,10 @@ def test_complex_filter_detail(api):
         filter=[
             {'property': 'master.name',
              'operator': 'like',
-             'value': '1'
-            }, {
-                'property': 'name',
-                'operator': 'like',
-                'value': '2'}
+             'value': '1'},
+            {'property': 'name',
+             'operator': 'like',
+             'value': '2'}
         ]
     )
     data = list(data)
@@ -302,8 +301,7 @@ def test_delete_with_fk(api):
         "Detail", "read", filter=[
             {'property': 'master_id',
              'operator': 'eq',
-             'value': 1
-            }]
+             'value': 1}]
     )
     data = list(data)
     assert len(data) == 20  # 20 дочерних записей
@@ -323,8 +321,8 @@ def test_delete_with_fk(api):
         "Detail", "read", filter=[
             {'property': 'master_id',
              'operator': 'eq',
-             'value': 1
-            }]
+             'value': 1}
+        ]
     )
     data = list(data)
     assert len(data) == 0  # Записи удалились

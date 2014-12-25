@@ -110,7 +110,10 @@
         "__realization__": "barsup.tests.DBMapperMock",
         "__type__": "singleton",
         "session": "default",
-        "$path": ["api", "schema.json"]
+        "$path": [
+          "api",
+          "schema.json"
+        ]
       }
     },
     "api_options": {

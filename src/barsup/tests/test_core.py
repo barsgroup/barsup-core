@@ -128,13 +128,11 @@ def test_complex_example():
             except KeyError:
                 return super(LocalContainer, self)._get_entity(name)
 
-    real_api = init({
-                        'controller': {
-                            'cont': {
-                                '__realization__': 'local.Controller',
-                                '$y': 100
-                            }
-                        },
-                    }, container_clz=LocalContainer)
+    real_api = init({'controller': {
+        'cont': {
+            '__realization__': 'local.Controller',
+            '$y': 100
+        }
+    }, }, container_clz=LocalContainer)
 
     assert real_api.populate('/cont/10/add') == 110

@@ -6,7 +6,6 @@
 from yadic.container import Injectable
 
 from barsup.auth import AVAILABLE_ACTIONS
-
 from barsup.controller import Controller
 
 

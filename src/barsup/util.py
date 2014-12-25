@@ -1,5 +1,4 @@
 # coding: utf-8
-from datetime import date
 from types import GeneratorType
 import json
 import os
