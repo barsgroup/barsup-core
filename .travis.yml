@@ -1,7 +1,12 @@
 language: python
+os:
+  - linux
+  - osx
+
 python:
   - "3.3"
   - "3.4"
+
 env:
   - BUP_TESTS=$TRAVIS_BUILD_DIR/src/barsup/tests
 install:
@@ -13,3 +18,9 @@ script:
 
 after_success:
   - coveralls
+
+notifications:
+  email:
+    recipients:
+      - telepenin@bars-open.ru
+      - pirogov@bars-open.ru
