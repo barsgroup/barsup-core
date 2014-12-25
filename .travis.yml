@@ -21,3 +21,5 @@ deploy:
   user: bars-travis
   password:
     secure: C8KHE81/HnOoLZcYW3DuqLPR4ovvAqN2l3Wr4lCujUnjFqhnXb33+Mz+JumfdNFbqz6JSAihpkU0xA0VQ+ox1I7LnP8e7wSUWURqfePH3b0Y4fX7LbK0ehWcsdlkHmxNfzc6VIEN8CQkXnfuy6Uj27NtRSkbgHJWBFGb9yHvz+U=
+  on:
+    tags: true
