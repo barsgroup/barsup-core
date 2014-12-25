@@ -5,8 +5,11 @@ python:
 env:
   - BUP_TESTS=$TRAVIS_BUILD_DIR/src/barsup/tests
 install:
-  - pip install pytest pytest-cov coveralls
   - pip install -r REQUIREMENTS
 
 # command to run tests
-script: python -m pytest
+script:
+  py.test --pep8 --cov .
+
+after_success:
+  coveralls

@@ -16,4 +16,5 @@ webob
 pytest
 pytest-pep8
 coverage
-
+pytest-cov
+coveralls
