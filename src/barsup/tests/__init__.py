@@ -9,7 +9,8 @@ from barsup.mapping import DBMapper
 
 class DBMapperMock(DBMapper):
     def __init__(self, session, path):
-        super().__init__(os.path.join(*path))
+        test_path = os.path.expandvars('$BUP_TESTS')
+        super().__init__(os.path.join(test_path, *path))
         self.session = session
         self.create_tables()
         self.create_data()
@@ -25,7 +26,8 @@ class DBMapperMock(DBMapper):
 def create_api(*path):
     def inner(f):
         def wrap(*args, **kwargs):
-            with open(os.path.join(*path)) as conf:
+            test_path = os.path.expandvars('$BUP_TESTS')
+            with open(os.path.join(test_path, *path)) as conf:
                 api = init(
                     config=json.load(conf)['container']
                 )

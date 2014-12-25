@@ -4,7 +4,7 @@ coveralls
 pytest-pep8
 
 sqlalchemy
-routes
+Routes
 python-dateutil
 alembic
 simplejson

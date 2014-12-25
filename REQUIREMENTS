@@ -2,7 +2,7 @@ tornado>=4.0
 sqlalchemy
 psycopg2
 sockjs-tornado
-routes
+Routes
 pyzmq
 python-dateutil
 alembic
