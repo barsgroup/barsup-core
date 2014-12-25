@@ -10,7 +10,7 @@ install:
   - pip install -r REQUIREMENTS.test
 
 script:
-  - py.test --pep8 --cov ./ --cov-config=.coveragerc
+  - py.test --pep8 --cov ./ --cov-config=.coveragerc ./src
 
 after_success:
   - coveralls
