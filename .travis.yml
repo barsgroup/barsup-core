@@ -5,12 +5,11 @@ python:
 env:
   - BUP_TESTS=$TRAVIS_BUILD_DIR/src/barsup/tests
 install:
-  - easy_install -U pip
-  - easy_install routes
+  - easy_install -U pip routes
   - pip install -r REQUIREMENTS.test
 
 script:
-  - py.test --pep8 --cov ./ --cov-config=.coveragerc ./src
+  - py.test --pep8 --cov ./src --cov-config=.coveragerc
 
 after_success:
   - coveralls
