@@ -4,9 +4,10 @@ python:
   - "3.4"
 env:
   - BUP_TESTS=$TRAVIS_BUILD_DIR/src/barsup/tests
+  - CC=gcc
 install:
-  - pip install -r REQUIREMENTS
-  - pip install pytest pytest-cov coveralls pytest-pep8
+  - easy_install -U pip
+  - pip install -r REQUIREMENTS.test
 
 
 # command to run tests

@@ -16,3 +16,5 @@ tests/env/*
 .DS_Store
 .idea/*
 .sass-cache/*
+.cache/*
+.coverage

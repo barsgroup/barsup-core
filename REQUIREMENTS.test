@@ -1,13 +1,12 @@
-tornado>=4.0
 sqlalchemy
-psycopg2
-sockjs-tornado
 routes
-pyzmq
 python-dateutil
 alembic
 simplejson
 yadic
 
-uwsgi
-webob
+
+pytest
+pytest-cov
+coveralls
+pytest-pep8
