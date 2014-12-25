@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name="barsup-core",
-    version="0.1.1",
+    version="0.1.2",
     license='MIT',
     description=read('DESCRIPTION'),
     author="Telepenin Nikolay, Aleksey Pirogov",
@@ -28,6 +28,9 @@ setup(
         'Programming Language :: Python',
         'License :: OSI Approved :: MIT License',
         'Development Status :: 5 - Production/Stable',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: Implementation :: CPython'
     ],
     package_dir={'': 'src'},
     packages=find_packages('src'),

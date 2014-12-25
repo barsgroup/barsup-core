@@ -9,5 +9,4 @@ alembic
 simplejson
 yadic
 
-uwsgi
 webob
