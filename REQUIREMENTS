@@ -12,9 +12,4 @@ yadic
 uwsgi
 webob
 
-# for test
 pytest
-pytest-pep8
-coverage
-pytest-cov
-coveralls
