@@ -6,14 +6,9 @@ env:
   - BUP_TESTS=$TRAVIS_BUILD_DIR/src/barsup/tests
 install:
   - easy_install -U pip
-
-  # иначе переодически вылетает routes is in an unsupported or invalid wheel
   - easy_install routes
-
   - pip install -r REQUIREMENTS.test
 
-
-# command to run tests
 script:
   - py.test --pep8 --cov ./
 
