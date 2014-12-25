@@ -6,7 +6,7 @@
    :target: https://coveralls.io/r/barsgroup/barsup-core?branch=master
    :alt: Coverage
 
-.. image:: https://pypip.in/version/barsup-core/badge.svg?style=flat&text=version
+.. image:: https://pypip.in/version/barsup-core/badge.svg?style=flat&text=version&0.1.7
     :target: https://pypi.python.org/pypi/barsup-core/
     :alt: Latest Version
 
@@ -14,13 +14,9 @@
     :target: https://pypi.python.org/pypi/barsup-core/
     :alt: Supported Python versions
 
-.. image:: https://pypip.in/status/barsup-core/badge.svg?style=flat
+.. image:: https://pypip.in/status/barsup-core/badge.svg?style=flat&beta
     :target: https://pypi.python.org/pypi/barsup-core/
     :alt: Development Status
-
-.. image:: https://pypip.in/format/barsup-core/badge.svg?style=flat
-    :target: https://pypi.python.org/pypi/barsup-core/
-    :alt: Download format
 
 .. image:: https://pypip.in/license/barsup-core/badge.svg?style=flat
     :target: https://pypi.python.org/pypi/barsup-core/
