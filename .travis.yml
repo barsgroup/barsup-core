@@ -17,6 +17,7 @@ notifications:
     recipients:
     - telepenin@bars-open.ru
     - pirogov@bars-open.ru
+    on_success: never
 deploy:
   provider: pypi
   user: bars-travis

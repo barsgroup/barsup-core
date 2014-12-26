@@ -9,8 +9,7 @@ class MockAPI:
 
     def populate(self, key, **params):
         result = {
-            '/controller/success': True,
-            '/wrong-controller/success': RoutingError(),
+            '/wrong-controller': RoutingError(),
             '/controller/with_data': params,
             '/unauthorized': exc.Unauthorized(),
             '/forbidden': exc.Forbidden(),

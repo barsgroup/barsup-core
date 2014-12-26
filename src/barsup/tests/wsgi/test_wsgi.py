@@ -20,7 +20,7 @@ def process(request):
 
 def test_handler():
     request = Request.blank(
-        '/controller/success',
+        '/controller/with_data',
         content_type='application/json',
         charset='utf-8',
         method='POST')
@@ -29,13 +29,33 @@ def test_handler():
     assert response.status_code == 200
     assert response.content_type == 'application/json'
     assert isinstance(response.json, dict)
-    assert response.json['data'] is True
+
+    data = response.json['data']
+    assert isinstance(data, dict)
+    assert response.json['success'] is True
+
+
+def test_get_request():
+    request = Request.blank(
+        '/controller/with_data?a=1&b=2',
+        content_type='application/json',
+        charset='utf-8',
+        method='POST')
+
+    response = process(request)
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+    assert isinstance(response.json, dict)
+
+    data = response.json['data']
+    assert data['a'] == '1'
+    assert data['b'] == '2'
     assert response.json['success'] is True
 
 
 def test_wrong_controller():
     request = Request.blank(
-        '/wrong-controller/success',
+        '/wrong-controller',
         content_type='application/json',
         charset='utf-8',
         method='POST')
@@ -122,3 +142,33 @@ def test_wrong_serialize():
     )
     with pytest.raises(TypeError):
         process(request)
+
+
+def test_cookies():
+    request = Request.blank(
+        '/controller/with_data',
+        charset='utf-8',
+        method='GET',
+        cookies={'something-cookies': 'coockie-1'}
+    )
+
+    response = process(request)
+    assert response.status_code == 200
+    data = response.json['data']
+    assert data['something-cookies'] == 'coockie-1'
+
+
+def test_wrong_cookies():
+    request = Request.blank(
+        '/controller/with_data',
+        charset='utf-8',
+        method='GET',
+        cookies={'a': 'coockie-1', 'b': 'secret-coockie'}
+    )
+
+    response = process(request)
+    assert response.status_code == 200
+    data = response.json['data']
+    assert data['something-cookies'] is None
+    assert 'a' not in data
+    assert 'b' not in data
