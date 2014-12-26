@@ -1,10 +1,9 @@
 # coding:utf-8
-
+import json
+import traceback
 from os import path
 from sys import stderr, exc_info
 from datetime import datetime
-import traceback
-import json
 from uuid import uuid4
 
 from simplejson.scanner import JSONDecodeError
@@ -14,6 +13,7 @@ from webob.static import DirectoryApp
 
 from barsup import core
 from barsup import exceptions
+from barsup.router import RoutingError
 from barsup.util import serialize_to_json, load_configs
 
 
@@ -35,8 +35,20 @@ def handler(config_file_name, catch_cookies):
         for cookie in catch_cookies:
             params[cookie] = request.cookies.get(cookie, None)
 
-        result = api.populate(
-            request.path, **params)
+        try:
+            result = api.populate(
+                request.path, **params)
+        except (exceptions.BadRequest, RoutingError):  # 400
+            raise exc.HTTPBadRequest()
+
+        except exceptions.Unauthorized:  # 401
+            raise exc.HTTPUnauthorized()
+
+        except exceptions.Forbidden:  # 403
+            raise exc.HTTPForbidden()
+
+        except exceptions.NotFound:  # 404
+            raise exc.HTTPNotFound()
 
         return Response(
             content_type='application/json',
@@ -71,18 +83,6 @@ def static_server(url_prefix, static_path):
 def catch_errors(request, app, debug=False):
     try:
         return request.get_response(app)
-
-    except exceptions.BadRequest:  # 400
-        raise exc.HTTPBadRequest()
-
-    except exceptions.Unauthorized:  # 401
-        raise exc.HTTPUnauthorized()
-
-    except exceptions.Forbidden:  # 403
-        raise exc.HTTPForbidden()
-
-    except exceptions.NotFound:  # 404
-        raise exc.HTTPNotFound()
 
     except Exception:
         trace = ''.join(traceback.format_exception(*exc_info(), limit=20))

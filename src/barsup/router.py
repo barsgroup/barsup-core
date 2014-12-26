@@ -15,6 +15,10 @@ PARAM_PARSERS = {
 }
 
 
+class RoutingError(Exception):
+    pass
+
+
 class Router:
     def __init__(self, controllers, bypass_params=set(('web_session_id',))):
         """
@@ -51,7 +55,7 @@ class Router:
         """
         dest = self._mapper.match(key)
         if not dest:
-            raise ValueError('Wrong key: "%s"!' % key)
+            raise RoutingError('Wrong key: "%s"!' % key)
 
         controller_name, action_name = map(dest.pop, ('controller', 'action'))
 
@@ -72,14 +76,14 @@ class Router:
                     parser = lambda x: x
                 else:
                     # тогда как прочие должны декларироваться
-                    raise ValueError(
+                    raise RoutingError(
                         'Undeclared parameter "%s" (%s.%s)'
                         % (name, controller_name, action_name)
                     )
             try:
                 parsed_params[name] = parser(value)
             except (TypeError, ValueError):
-                raise ValueError(
+                raise RoutingError(
                     'Wrong value for param "%s" (%s.%s)'
                     % (name, controller_name, action_name)
                 )

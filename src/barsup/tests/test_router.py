@@ -2,7 +2,7 @@
 
 from pytest import raises
 
-from barsup.router import Router
+from barsup.router import Router, RoutingError
 
 
 def test_router():
@@ -37,11 +37,11 @@ def test_router():
     assert r('/par/10/add', {'y': '20', 'msg': 'Hi!'}) == (
         'par', 'add', {'x': 10, 'y': 20, 'msg': 'Hi!'})
 
-    with raises(ValueError):
+    with raises(RoutingError):
         r('/parametrized/1000/add', {'z': 1})
 
-    with raises(ValueError):
+    with raises(RoutingError):
         r('/parametrized/1000/add', {'y': 'asd'})
 
-    with raises(ValueError):
+    with raises(RoutingError):
         r('/parametrized/1000/add', {'raw': '!'})
