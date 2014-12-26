@@ -1,0 +1,9 @@
+{
+  "container": {
+    "controller": {
+      "SimpleController": {
+        "__realization__": "barsup.tests.cli.CLIController"
+      }
+    }
+  }
+}
