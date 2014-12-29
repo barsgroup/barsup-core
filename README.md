@@ -5,26 +5,26 @@
 [![Development Status](https://pypip.in/status/barsup-core/badge.svg?style=flat&beta)](https://pypi.python.org/pypi/barsup-core/)
 [![License](https://pypip.in/license/barsup-core/badge.svg?style=flat)](https://pypi.python.org/pypi/barsup-core/)
 
-* [WTF?](#wtf)
-* [Возможности](#facilities)
-* [Установка и запуск](#setup)
-* [Описание конфигураций верхнего уровня контейнера](#description)
-    * [Контроллеры](#controller)
-    * [Сервисы](#service)
-    * [Модели](#model)
-    * [Сессия](#session)
-    * [Отображение таблиц](#db-mapper)
-    * [Опции API](#api-options)
-    * [middleware](#middleware)
-    * [initware](#initware)
-* [Работа роутинга](#routing)
-* [CLI как management команды](#cli)
-* [Работа с аутентификацией и авторизацией](#auth)
+* [WTF?](#markdown-header-wtf)
+* [Возможности](#markdown-header-facilities)
+* [Установка и запуск](#markdown-header-setup)
+* [Описание конфигураций верхнего уровня контейнера](#markdown-header-description)
+    * [Контроллеры](#markdown-header-controller)
+    * [Сервисы](#markdown-header-service)
+    * [Модели](#markdown-header-model)
+    * [Сессия](#markdown-header-session)
+    * [Отображение таблиц](#markdown-header-db-mapper)
+    * [Опции API](#markdown-header-api-options)
+    * [middleware](#markdown-header-middleware)
+    * [initware](#markdown-header-initware)
+* [Работа роутинга](#markdown-header-routing)
+* [CLI как management команды](#markdown-header-cli)
+* [Работа с аутентификацией и авторизацией](#markdown-header-auth)
 
-## <a name="wtf">WTF? RTFM!</a>
+## wtf
 **barsup-core** - представляет собой базовые серверные реализации различных уровней rest-приложения, с возможностью декларативного описания функционала на базе [IoC](https://bitbucket.org/astynax/yadic).
 
-## <a name="facilities">Возможности</a>
+## facilities
 
 * строгая зависимость между уровнями приложения с отслеживанием утечек абстракции
 * возможности расширять конфигурацию своими реализациями
@@ -32,17 +32,18 @@
 * возможности создания business-middleware и initware
 * встроенные механизмы аутентификации и авторизации
 
-## <a name="setup">Установка и запуск</a>
+## setup
 Последнюю версию можно установить из [PYPI](https://pypi.python.org/pypi/barsup-core) командой:
 ```bash
 $ pip install barsup-core
 ```
 В качестве примера использования рекомендуется посмотреть [demo](https://bitbucket.org/barsgroup/barsup-demo) (с возможностью [очень быстрого запуска средствами Vagrant'a](https://bitbucket.org/barsgroup/barsup-demo/wiki/vagrant)), а так же примеры использования из [тестов](https://bitbucket.org/barsgroup/barsup-core/src/1998af93d9a30cbb3416ff356c33fce5657bab43/src/barsup/tests/?at=default)
 
-## <a name="description">Описание конфигурации верхнего уровня контейнера</a>
-Диаграмма зависимостей уровней:
+## description
+Диаграмма зависимостей уровней
+![layers.png](https://bitbucket.org/repo/6nnLdx/images/1725052173-layers.png)
 
-### <a name="controller">Контролер</a>
+### controller
 Контроллер представляет собой тонкий внешний интерфейс для работы с приложением. Имеет автоматическую генерацию url-ов по названию контроллера и методам. Так же включает в себя базовую параметров на уровне типов значений.
 
 #### CRUD контроллер
@@ -92,7 +93,7 @@ data = api.populate('/SimpleController/update/4', {'name': 'Преступлен
 }
 ```
 
-## <a name="service">Сервис</a>
+## service
 Уровень сервисов включает в себя основу для работы с бизнес-логикой приложения. Выполняет задачи:
 
 * фильтрации
@@ -144,7 +145,7 @@ data = api.populate('/SimpleController/update/4', {'name': 'Преступлен
 }
 ```
 
-### <a name="model">Модель</a>
+### model
 Представляет собой отображение таблицы базы данных, создание query set'a с возможностью использования внешних и внутренних соединений (joins) и ограничение выборки (select) через *session*. Так же дает доступ, при необходимости, ко всем таблицам и их полям в базе данных через *db_mapper*.
 
 Реализация `barsup.schema.Model`
@@ -181,7 +182,7 @@ data = api.populate('/SimpleController/update/4', {'name': 'Преступлен
     },
 ```
 
-### <a name="session">Сессия</a>
+### session
 Решает задачу [Repository](http://techspot.zzzeek.org/2012/02/07/patterns-implemented-by-sqlalchemy/) для объектов в контексте sqlalchemy.
 
 Реализации `barsup.session.PostgreSQLSession`, `barsup.session.InMemory`.
@@ -208,7 +209,7 @@ data = api.populate('/SimpleController/update/4', {'name': 'Преступлен
 }
 ```
 
-### <a name="db-mapper">Отображение таблиц db_mapper</a>
+### db-mapper
 Предоставляет доступ к таблицам в базе данных.
 
 Зависимости:
@@ -225,7 +226,7 @@ data = api.populate('/SimpleController/update/4', {'name': 'Преступлен
   }
 ```
 
-### <a name="api-options">Опции API</a>
+### api-options
 Контейнер для служебных конфигураций.
 
 Зависимости:
@@ -249,9 +250,9 @@ data = api.populate('/SimpleController/update/4', {'name': 'Преступлен
   }
 ```
 
-### <a name="middleware">Middleware</a>
+### middleware
 Уровень обслуживающий входящие/исходящие request'ы.
-Демонстрация работы
+![Middleware](https://bitbucket.org/repo/6nnLdx/images/3070979907-clack-middleware-2.png)
 
 Доступные middleware:
 
@@ -280,10 +281,10 @@ data = api.populate('/SimpleController/update/4', {'name': 'Преступлен
   }
 ```
 
-### <a name="initware">Initware</a>
+### initware
 
-## <a name="routing">Роутинг</a>
+## routing
 
-## <a name="cli">CLI как management команды</a>
+## cli
 
-## <a name="auth">Аутентификацией и авторизацией</a>
+## auth
