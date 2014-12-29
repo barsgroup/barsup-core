@@ -4,6 +4,7 @@
 [![Supported Python versions](https://pypip.in/py_versions/barsup-core/badge.svg?style=flat)](https://pypi.python.org/pypi/barsup-core/)
 [![Development Status](https://pypip.in/status/barsup-core/badge.svg?style=flat&beta)](https://pypi.python.org/pypi/barsup-core/)
 [![License](https://pypip.in/license/barsup-core/badge.svg?style=flat)](https://pypi.python.org/pypi/barsup-core/)
+
 * [WTF?](#wtf)
 * [Возможности](#facilities)
 * [Установка и запуск](#setup)
