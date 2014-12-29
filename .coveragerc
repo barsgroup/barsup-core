@@ -1,2 +1,2 @@
 [run]
-omit = src/barsup/tests/*
+omit = src/barsup/tests/*, src/barsup/bup_start.py,  src/barsup/server.py,  src/barsup/worker.py
