@@ -1,0 +1,6 @@
+[![Build Status](https://travis-ci.org/barsgroup/barsup-core.svg?branch=master)](https://travis-ci.org/barsgroup/barsup-core)
+[![Coverage Status](https://img.shields.io/coveralls/barsgroup/barsup-core.svg?style=flat)](https://coveralls.io/r/barsgroup/barsup-core?branch=master)
+[![Latest Version](https://pypip.in/version/barsup-core/badge.svg?style=flat&text=version&0.1.8)](https://pypi.python.org/pypi/barsup-core/)
+[![Supported Python versions](https://pypip.in/py_versions/barsup-core/badge.svg?style=flat)](https://pypi.python.org/pypi/barsup-core/)
+[![Development Status](https://pypip.in/status/barsup-core/badge.svg?style=flat&beta)](https://pypi.python.org/pypi/barsup-core/)
+[![License](https://pypip.in/license/barsup-core/badge.svg?style=flat)](https://pypi.python.org/pypi/barsup-core/)
