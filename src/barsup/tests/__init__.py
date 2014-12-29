@@ -4,7 +4,7 @@ import os
 import json
 
 from barsup.core import init
-from barsup.mapping import DBMapper
+from barsup.schema import DBMapper
 
 
 class DBMapperMock(DBMapper):

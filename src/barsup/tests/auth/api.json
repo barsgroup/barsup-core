@@ -67,7 +67,7 @@
     },
     "model": {
       "__default__": {
-        "__realization__": "barsup.mapping.Model",
+        "__realization__": "barsup.schema.Model",
         "db_mapper": "default",
         "session": "default"
       },
@@ -86,24 +86,8 @@
       "user_role": {
         "$name": "user_role",
         "$joins": [
-          [
-            "user_id",
-            "==",
-            "id",
-            [
-              "user",
-              []
-            ]
-          ],
-          [
-            "role_id",
-            "==",
-            "id",
-            [
-              "role",
-              []
-            ]
-          ]
+          ["user_id", "==", "id", ["user", []]],
+          ["role_id", "==", "id", ["role", []]]
         ],
         "$select": [
           "id"
@@ -112,33 +96,9 @@
       "user_role_permission": {
         "$name": "user_role",
         "$joins": [
-          [
-            "user_id",
-            "==",
-            "id",
-            [
-              "user",
-              []
-            ]
-          ],
-          [
-            "role_id",
-            "==",
-            "id",
-            [
-              "role",
-              []
-            ]
-          ],
-          [
-            "role_id",
-            "==",
-            "role_id",
-            [
-              "permission",
-              []
-            ]
-          ]
+          ["user_id", "==", "id", ["user", []]],
+          ["role_id", "==", "id", ["role", []]],
+          ["role_id", "==", "role_id", ["permission", []]]
         ]
       }
     },

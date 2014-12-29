@@ -214,8 +214,12 @@ class DBMapper:
 
     def __init__(self, path=None):
         if not path:
-            path = os.path.abspath('.')
-            path = os.path.join(path, 'mapping.json')
+            path = os.environ['BUP_SCHEMA']
+
+        if not os.path.isfile(path):
+            raise ValueError('$BUP_SCHEMA is not file - "{0}"'.format(
+                path
+            ))
 
         self._metadata = MetaData()
         _BuildMapping.load(self._metadata, path)

@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name="barsup-core",
-    version="0.1.7",
+    version="0.1.8",
     license='MIT',
     description=read('DESCRIPTION'),
     author="Telepenin Nikolay, Aleksey Pirogov",
