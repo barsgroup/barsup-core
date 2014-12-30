@@ -20,7 +20,7 @@
 
 .. image:: https://pypip.in/license/barsup-core/badge.svg?style=flat
     :target: https://pypi.python.org/pypi/yadic/
-    :alt: Development Status
+    :alt: License
 
 WTF
 ---
