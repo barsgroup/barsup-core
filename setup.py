@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name="barsup-core",
-    version="0.1.10",
+    version="0.1.11",
     license='MIT',
     description=read('DESCRIPTION'),
     author="Telepenin Nikolay, Aleksey Pirogov",
@@ -35,7 +35,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     include_package_data=True,
-    long_description=read('README.md'),
+    long_description=read('README.src'),
     install_requires=read('REQUIREMENTS'),
     scripts=['scripts/bup_start', 'scripts/bup_cli'],
 )
