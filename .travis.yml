@@ -26,4 +26,4 @@ deploy:
   on:
     tags: true
     all_branches: true
-  distributions: "sdist bdist_wheel"
+  distributions: sdist bdist_wheel
