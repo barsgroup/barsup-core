@@ -1,4 +1,3 @@
-
 .. image:: https://travis-ci.org/barsgroup/barsup-core.svg?branch=master
     :target: https://travis-ci.org/barsgroup/barsup-core
     :alt: Tests
@@ -7,7 +6,7 @@
     :target: https://coveralls.io/r/barsgroup/barsup-core?branch=master
     :alt: Coverage
 
-.. image:: https://pypip.in/version/barsup-core/badge.svg?style=flat&text=version
+.. image:: https://pypip.in/version/barsup-core/badge.svg?style=flat&text=version&0
     :target: https://pypi.python.org/pypi/barsup-core/
     :alt: Latest Version
 
