@@ -35,7 +35,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     include_package_data=True,
-    long_description=read('README.src'),
+    long_description=read('README.rst'),
     install_requires=read('REQUIREMENTS'),
     scripts=['scripts/bup_start', 'scripts/bup_cli'],
 )
