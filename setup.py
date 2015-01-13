@@ -37,5 +37,5 @@ setup(
     include_package_data=True,
     long_description=read('README.rst'),
     install_requires=read('REQUIREMENTS'),
-    scripts=['scripts/bup_start', 'scripts/bup_cli'],
+    scripts=['scripts/bup_cli'],
 )
