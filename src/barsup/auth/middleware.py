@@ -36,7 +36,7 @@ def access_check(authentication, authorization=None, preserve_user=None):
             ):
                 raise exc.Forbidden()
 
-            if controller in preserve_user:
+            if controller in (preserve_user or []):
                 params['uid'] = uid
 
             return nxt(controller, action, **params)
