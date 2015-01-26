@@ -2,7 +2,7 @@
 import barsup.exceptions as exc
 
 
-def access_check(authentication, authorization=None):
+def access_check(authentication, authorization=None, preserve_user=None):
     """
     Middleware, проверяющая наличие session id среди параметров.
     При этом web_session_id дальше не передается.
@@ -13,9 +13,6 @@ def access_check(authentication, authorization=None):
     :param authorization: controller авторизации
     :type authorization: str
     """
-
-    # NEED_LOGIN = 'need-login'
-    # NOT_PERMIT = 'not-permit'
 
     def wrapper(nxt, controller, action, web_session_id=None, **params):
         if not web_session_id:
@@ -38,6 +35,9 @@ def access_check(authentication, authorization=None):
                 operation=(controller, action)
             ):
                 raise exc.Forbidden()
+
+            if controller in preserve_user:
+                params['uid'] = uid
 
             return nxt(controller, action, **params)
 

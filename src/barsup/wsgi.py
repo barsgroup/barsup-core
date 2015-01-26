@@ -11,8 +11,7 @@ from webob import Response, exc
 from webob.dec import wsgify
 from webob.static import DirectoryApp
 
-from barsup import core
-from barsup import exceptions
+from barsup import core, exceptions
 from barsup.router import RoutingError
 from barsup.util import serialize_to_json, load_configs
 
