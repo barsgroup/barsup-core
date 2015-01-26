@@ -5,9 +5,6 @@ python:
 install:
 - easy_install -U pip routes
 - pip install -r REQUIREMENTS.test
-- export BUP_TESTS=$TRAVIS_BUILD_DIR/src/barsup/tests
-- export BUP_PATH=$TRAVIS_BUILD_DIR/src/barsup/tests/wsgi
-- export BUP_CONFIG=$TRAVIS_BUILD_DIR/src/barsup/tests/wsgi/container.json
 script:
 - py.test --pep8 --cov ./src --cov-config=.coveragerc
 after_success:

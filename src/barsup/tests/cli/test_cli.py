@@ -33,8 +33,8 @@ def test_simple_cli():
     Обычное тестирование вызова контроллера и экшена
     """
 
-    path_test = os.environ.get('BUP_TESTS')
-    cli = CLI(os.path.join(path_test, 'cli', 'container.json'))
+    path_test = os.path.join(os.path.dirname(__file__), 'container.json')
+    cli = CLI(path_test)
     cli.run(['SimpleController', 'read', "{'params': {'a':1}}"])
 
 
@@ -52,15 +52,15 @@ def test_wrong_action():
     """
     Несуществующий контроллер
     """
-    path_test = os.environ.get('BUP_TESTS')
-    cli = CLI(os.path.join(path_test, 'cli', 'container.json'))
+    path_test = os.path.join(os.path.dirname(__file__), 'container.json')
+    cli = CLI(path_test,)
     with pytest.raises(ValueError):
         cli.run(['SimpleController', 'get', ])
 
 
 def test_hierarchy():
-    path_test = os.environ.get('BUP_TESTS')
-    cli = CLI(os.path.join(path_test, 'cli', 'container.json'))
+    path_test = os.path.join(os.path.dirname(__file__), 'container.json')
+    cli = CLI(path_test)
 
     result = cli.hierarchy
     assert isinstance(result, dict)
@@ -76,8 +76,8 @@ def without_args(*args, sep=' ', end='\n', file=None):
 
 @wrap_print(without_args)
 def test_without_args():
-    path_test = os.environ.get('BUP_TESTS')
-    cli = CLI(os.path.join(path_test, 'cli', 'container.json'))
+    path_test = os.path.join(os.path.dirname(__file__), 'container.json')
+    cli = CLI(path_test)
     cli.run(args=[])
 
 
@@ -88,6 +88,6 @@ def complete_actions(*args, sep=' ', end='\n', file=None):
 @wrap_print(complete_actions)
 def test_complete_actions():
     os.environ['COMP_LINE'] = 'cli SimpleController read'
-    path_test = os.environ.get('BUP_TESTS')
-    cli = CLI(os.path.join(path_test, 'cli', 'container.json'))
+    path_test = os.path.join(os.path.dirname(__file__), 'container.json')
+    cli = CLI(path_test)
     cli.run(args=['--complete', 'SimpleController', ''])

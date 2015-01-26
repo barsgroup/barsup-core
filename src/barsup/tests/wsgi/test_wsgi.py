@@ -1,11 +1,9 @@
 # coding: utf-8
 
 import os
-
 import json
 
 import pytest
-
 from webob import Request, exc
 
 from barsup.wsgi import handler
@@ -13,11 +11,12 @@ from barsup.wsgi import handler
 
 @pytest.fixture
 def process(request):
+    os.environ['BUP_CONFIG'] = os.path.join(
+        os.path.dirname(__file__),
+        'container.json'
+    )
     return handler(
-        config_file_name=os.path.join(
-            os.path.split(__file__)[0],
-            'container.json'
-        ),
+        config_file_name='$BUP_CONFIG',
         catch_cookies=('something-cookies',),
     )(request)
 

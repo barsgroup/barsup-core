@@ -2,7 +2,7 @@
 
 from yadic.container import Container
 
-from barsup.core import _Wrappable, API, init
+from barsup.core import _Wrappable, API, init, ModuleContainer
 
 
 def test_wrappable():
@@ -91,7 +91,7 @@ def test_api():
                 ]
             }[grp]
 
-        def __init__(self, *args):
+        def __init__(self, *args, **kwargs):
             pass
 
     api = init({}, container_clz=FakeContainer)
@@ -118,7 +118,7 @@ def test_complex_example():
         def add(self, x):
             return x + self._y
 
-    class LocalContainer(Container):
+    class LocalContainer(ModuleContainer):
 
         def _get_entity(self, name):
             try:

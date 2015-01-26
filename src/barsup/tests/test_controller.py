@@ -4,7 +4,7 @@ import pytest
 from yadic.container import Container
 
 from barsup.controller import DictController
-from barsup.core import init
+from barsup.core import init, ModuleContainer
 from barsup.service import _Proxy
 
 
@@ -71,7 +71,7 @@ class Service:
         pass
 
 
-class LocalContainer(Container):
+class LocalContainer(ModuleContainer):
     def _get_entity(self, name):
         try:
             return {
