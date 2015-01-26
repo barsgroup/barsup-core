@@ -121,4 +121,17 @@ class DictController(Controller, metaclass=Injectable):
         self.service.filter_by_id(id_).delete()
 
 
+class ModuleController:
+
+    from barsup.router import CATCH_ALL_PARAMS
+
+    actions = (('{_path:.*}', 'call', CATCH_ALL_PARAMS),)
+
+    def __init__(self, module):
+        self._module = module
+
+    def call(self, *, _path, **kwargs):
+        return self._module.populate(_path, **kwargs)
+
+
 __all__ = (DictController, Controller)

@@ -1,19 +1,23 @@
 # coding: utf-8
+
+import os
+
 import json
 
 import pytest
-
-from _pytest.python import fixture
 
 from webob import Request, exc
 
 from barsup.wsgi import handler
 
 
-@fixture
+@pytest.fixture
 def process(request):
     return handler(
-        config_file_name='$BUP_CONFIG',
+        config_file_name=os.path.join(
+            os.path.split(__file__)[0],
+            'container.json'
+        ),
         catch_cookies=('something-cookies',),
     )(request)
 

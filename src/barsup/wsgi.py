@@ -13,14 +13,14 @@ from webob.static import DirectoryApp
 
 from barsup import core, exceptions
 from barsup.router import RoutingError
-from barsup.util import serialize_to_json, load_configs
+from barsup.util import serialize_to_json
 
 
 def handler(config_file_name, catch_cookies):
     """
     Обработчик HTTP-запросов к приложению
     """
-    api = core.init(config=load_configs(config_file_name))
+    api = core.init(config=config_file_name)
 
     @wsgify
     def app(request):
@@ -60,6 +60,7 @@ def handler(config_file_name, catch_cookies):
 
 
 def static_server(url_prefix, static_path):
+
     static_app = DirectoryApp(
         path.expandvars(static_path),
         hide_index_with_redirect=True
@@ -106,21 +107,26 @@ def with_session(request, app, cookie_name, generator):
     return res
 
 
-application = with_session(
-    static_server(
-        url_prefix='/barsup',
-        static_path=path.join('$BUP_PATH', 'static')
-    )(
-        catch_errors(
-            handler(
-                config_file_name='$BUP_CONFIG',
-                catch_cookies=('web_session_id',),
-            ),
-            debug=True
-        )
-    ),
-    cookie_name='web_session_id',
-    generator=lambda: uuid4().hex
-)
+def make_application():
+    return with_session(
+        static_server(
+            url_prefix='/barsup',
+            static_path=path.join('$BUP_PATH', 'static')
+        )(
+            catch_errors(
+                handler(
+                    config_file_name='$BUP_CONFIG',
+                    catch_cookies=('web_session_id',),
+                ),
+                debug=True
+            )
+        ),
+        cookie_name='web_session_id',
+        generator=lambda: uuid4().hex
+    )
 
-__all__ = (application, handler, catch_errors, static_server, with_session)
+
+__all__ = (
+    make_application, handler, catch_errors,
+    static_server, with_session
+)

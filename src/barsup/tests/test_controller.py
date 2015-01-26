@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from _pytest.python import fixture
+import pytest
 from yadic.container import Container
 
 from barsup.controller import DictController
@@ -81,7 +81,7 @@ class LocalContainer(Container):
             return super(LocalContainer, self)._get_entity(name)
 
 
-@fixture
+@pytest.fixture
 def get_api():
     api = init({'controller': {
         'cont': {

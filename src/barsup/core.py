@@ -1,9 +1,12 @@
 # coding: utf-8
 
 from functools import partial
+import re
 
 from yadic.container import Container as _Container
 from yadic.util import deep_merge as _deep_merge
+
+from barsup.util import load_configs
 
 
 class _Wrappable:
@@ -19,6 +22,32 @@ class _Wrappable:
 
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)
+
+
+class ModuleContainer(_Container):
+
+    _PATH_RE = re.compile(r'(?:(.*)/)?([^/]+)')
+
+    def __init__(self, config, parent):
+        self._parent = parent
+        super().__init__(config)
+
+    def get(self, group, name):
+        if (group, name) == ('__internal__', '__this__'):
+            return self
+        path, real_name = self._PATH_RE.match(name).groups()
+        if path is None:
+            ctr = super()
+        else:
+            ctr = self
+            for step in path.split('/'):
+                if step == '..':
+                    ctr = ctr._parent
+                elif step == '':
+                    raise ValueError('Unobtainable path: $r!' % path)
+                else:
+                    ctr = ctr.get('module', step)._container
+        return ctr.get(group, real_name)
 
 
 class API:
@@ -44,12 +73,6 @@ class API:
         call = self.call = _Wrappable(self._call)
         for mw in middleware[::-1]:
             call.wrap_with(mw)
-
-        # Контроллер должен быть хотя бы один!
-        for _ in container.itergroup(controller_group):
-            break
-        else:
-            raise ValueError('No one controller was configured!')
 
         self._controller_group = controller_group
         self._container = container
@@ -91,33 +114,56 @@ class API:
         return self.call(ctl, action, **params)
 
 
-def init(config, *,
-         container_clz=_Container,
-         defaults=lambda: {
-             'api_options': {
-                 'default': {
-                     '__realization__': 'builtins.dict',
-                     'middleware': [],
-                     'initware': [],
-                     'router:api_options': 'router',
-                 },
-                 'api_class': {
-                     '__realization__': 'barsup.core.API',
-                     '__type__': 'static'
-                 },
-                 'router': {
-                     '__realization__': 'barsup.router.Router',
-                     '__type__': 'static'
-                 }
-             }
-         }):
+def init(
+    config,
+    *,
+    container_clz=ModuleContainer,
+    get_config=load_configs,
+    get_defaults=lambda: {
+        'controller': {},
+        'api_options': {
+            'default': {
+                '__realization__': 'builtins.dict',
+                'middleware': [],
+                'initware': [],
+                'router:api_options': 'router',
+            },
+            'api_class': {
+                '__realization__': 'barsup.core.API',
+                '__type__': 'static'
+            },
+            'router': {
+                '__realization__': 'barsup.router.Router',
+                '__type__': 'static',
+                '$bypass_params': set(('web_session_id',),)
+            }
+        },
+        'module': {
+            '__default__': {
+                '__realization__': 'barsup.core.init',
+                '__type__': 'singleton',
+                'parent:__internal__': '__this__',
+            }
+        }
+    },
+    parent=None
+):
     """Производит инициализацию ядра согласно
     указанной конфигурации и возвращает экземпляр API
-    :param config: конфигурация
-    :type config: dict
+    :param get_config: callable, возвращающий конфигурацию в виде словаря
+    :type get_config: object
+    :param container_clz: class реализации DI-контейнера
+    :type container_clz: object
+    :param get_defaults: callable, возвращающий умолчательную конфигурацию
+    :type get_defaults: object
     :return type: API"""
     cont = container_clz(
-        _deep_merge(defaults(), config, fn=lambda x, y, m, p: y))
+        config=_deep_merge(
+            get_defaults(),
+            get_config(config),
+            fn=lambda x, y, m, p: y),
+        parent=parent
+    )
     api = cont.get('api_options', 'api_class')(
         container=cont,
         **cont.get('api_options', 'default'))
