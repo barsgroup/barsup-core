@@ -1,7 +1,5 @@
 # coding:utf-8
 
-from yadic.container import Container
-
 from barsup.core import _Wrappable, API, init, ModuleContainer
 
 
@@ -94,7 +92,7 @@ def test_api():
         def __init__(self, *args, **kwargs):
             pass
 
-    api = init({}, container_clz=FakeContainer)
+    api = init({}, container_clz=FakeContainer, get_config=lambda x: x)
     # iware к этому моменту должна была заполнить mutable
     cont, api_inst = mutable
     assert isinstance(cont, FakeContainer) and api_inst is api
@@ -128,11 +126,13 @@ def test_complex_example():
             except KeyError:
                 return super(LocalContainer, self)._get_entity(name)
 
-    real_api = init({'controller': {
-        'cont': {
-            '__realization__': 'local.Controller',
-            '$y': 100
-        }
-    }, }, container_clz=LocalContainer)
+    real_api = init({
+        'controller': {
+            'cont': {
+                '__realization__': 'local.Controller',
+                '$y': 100
+            }
+        },
+    }, container_clz=LocalContainer, get_config=lambda x: x)
 
     assert real_api.populate('/cont/10/add') == 110

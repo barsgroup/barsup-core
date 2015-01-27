@@ -170,4 +170,4 @@ def init(
     return api
 
 
-__all__ = (init,)
+__all__ = (init, ModuleContainer)

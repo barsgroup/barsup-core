@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import pytest
-from yadic.container import Container
 
 from barsup.controller import DictController
 from barsup.core import init, ModuleContainer
@@ -88,7 +87,7 @@ def get_api():
             '__realization__': 'local.Controller',
             '$service': Service()
         }
-    }, }, container_clz=LocalContainer)
+    }, }, container_clz=LocalContainer, get_config=lambda x: x)
     return api
 
 

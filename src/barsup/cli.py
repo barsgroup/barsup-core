@@ -66,8 +66,7 @@ class CLI(AutoCompleteCLI):
             print("BUP_CONFIG environ variable is not provided!")
             sys.exit(1)
         else:
-            with open(cfg_file) as f:
-                self.api = core.init(json.load(f)['container'])
+            self.api = core.init(cfg_file)
 
     def _call(self, args):
         ctl, action, param = (args + ["{}"])[:3]

@@ -1,5 +1,4 @@
 {
-  "container": {
     "controller": {
       "__default__": {
         "__realization__": "barsup.controller.DictController"
@@ -128,5 +127,4 @@
         "__realization__": "barsup.runtime.ACTIONS"
       }
     }
-  }
 }

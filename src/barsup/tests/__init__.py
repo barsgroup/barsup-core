@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import os
-import json
 
 from barsup.core import init
 from barsup.schema import DBMapper
@@ -26,13 +25,8 @@ class DBMapperMock(DBMapper):
 def create_api(*path):
     def inner(f):
         def wrap(*args, **kwargs):
-            test_path = os.path.dirname(__file__)
-            with open(os.path.join(test_path, *path)) as conf:
-                api = init(
-                    config=json.load(conf)['container']
-                )
-                return f(api, *args, **kwargs)
-
+            test_path = os.path.join(os.path.dirname(__file__), *path)
+            api = init(config=test_path)
+            return f(api, *args, **kwargs)
         return wrap
-
     return inner

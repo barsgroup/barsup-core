@@ -134,4 +134,4 @@ class ModuleController:
         return self._module.populate(_path, **kwargs)
 
 
-__all__ = (DictController, Controller)
+__all__ = (DictController, Controller, ModuleController)
