@@ -10,10 +10,13 @@ def read(fname):
     except IOError:
         return ''
 
+requires = []
+with open('REQUIREMENTS', 'r') as f:
+    requires.extend(f.readlines())
 
 setup(
     name="barsup-core",
-    version="0.2.0",
+    version="0.2.4",
     license='MIT',
     description=read('DESCRIPTION'),
     author="Telepenin Nikolay, Aleksey Pirogov",
@@ -36,6 +39,6 @@ setup(
     packages=find_packages('src'),
     include_package_data=True,
     long_description=read('README.rst'),
-    install_requires=read('REQUIREMENTS'),
+    install_requires=requires,
     scripts=['scripts/bup_cli'],
 )

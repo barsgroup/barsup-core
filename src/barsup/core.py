@@ -134,8 +134,7 @@ def init(
             },
             'router': {
                 '__realization__': 'barsup.router.Router',
-                '__type__': 'static',
-                '$bypass_params': set(('web_session_id',),)
+                '__type__': 'static'
             }
         },
         'module': {

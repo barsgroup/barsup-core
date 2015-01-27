@@ -1,0 +1,2 @@
+include REQUIREMENTS
+recursive-include data *
