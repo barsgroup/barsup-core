@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import pytest
+from barsup.adapters import AdapterException
 
 import barsup.exceptions as exc
 from barsup.tests import create_api
@@ -149,7 +150,7 @@ def test_wrong_sort_name(api):
 
 @get_api
 def test_wrong_sort_direction(api):
-    with pytest.raises(exc.NameValidationError):
+    with pytest.raises(exc.ValidationError):
         api.call(
             'SimpleController', 'read',
             limit=1,
@@ -159,7 +160,7 @@ def test_wrong_sort_direction(api):
 
 @get_api
 def test_wrong_filter_operator(api):
-    with pytest.raises(exc.NameValidationError):
+    with pytest.raises(exc.ValidationError):
         api.call(
             'SimpleController', 'read',
             filter=[
@@ -211,7 +212,7 @@ def test_create_wrong_type_name(api):
 
 @get_api
 def test_create_wrong_value_with_adapters(api):
-    with pytest.raises(exc.ValueValidationError):
+    with pytest.raises(AdapterException):
         api.call(
             'AdapterController', 'create', data={
                 'name': 'atata' * 5,
@@ -360,7 +361,7 @@ def test_create_with_wrong_data(api):
 
 @get_api
 def test_create_without_constraint_field(api):
-    with pytest.raises(exc.ValueValidationError):
+    with pytest.raises(exc.ValidationError):
         api.call(
             'SimpleController', 'create',
             data={}

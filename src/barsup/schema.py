@@ -139,9 +139,7 @@ class Model:
         for item, value in kwargs.items():
             if not hasattr(obj, item):
                 raise exc.NameValidationError(
-                    'Name "{0}" hot has in model "{1}"'.format(
-                        item, obj.__class__.__name__
-                    )
+                    item, obj
                 )
             setattr(obj, item, value)
 
@@ -149,7 +147,8 @@ class Model:
         try:
             self._session.flush()  # Для получения id объекта
         except IntegrityError as e:
-            raise exc.ValueValidationError(
+            # TODO: Перенести проверку на constraint-ов в NullValidationError
+            raise exc.ValidationError(
                 str(e.orig)
             )
         return obj
@@ -173,12 +172,8 @@ class Model:
             field = getattr(model, field_name)
         except AttributeError:
             raise exc.NameValidationError(
-                ('Model "{0}" not has field "{1}". '
-                 'Available fields ["{2}"]:').format(
-                    model.__name__,
-                    field_name,
-                    ', '.join(col.key for col in inspect(model).attrs)
-                )
+                field_name,
+                model
             )
 
         return field
