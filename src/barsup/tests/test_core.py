@@ -21,10 +21,33 @@ def test_wrappable():
     assert wt.m(1, 2) == 22
 
 
-def test_api():
-    """Tests the API"""
-
+def test_initware():
     mutable = []
+
+    fake_container = type('Fake', (object,), {
+        'itergroup': staticmethod(lambda grp: iter([]))
+    })
+
+    api = API(
+        container=fake_container,
+        router=lambda *args, **kwargs: None,
+        middleware=[],
+        initware=[
+            lambda *args: mutable.append(args)
+        ]
+    )
+
+    assert mutable, "Initware wasn't called!"
+    assert len(mutable) == 1, "Initware was called more times than one!"
+
+    cont_, api_ = mutable[0]
+    assert cont_ is fake_container and api_ is api, (
+        "Initware was called with the bad arguments!"
+    )
+
+
+def test_api_calls():
+    """Tests the API calls"""
 
     class FakeContainer:
         class Math:
@@ -50,32 +73,15 @@ def test_api():
                 controller, action = key.split('/')[1:3]
                 return controller, action, params
 
-        @staticmethod
-        def args_to_strs(nxt, *args, **kwargs):
-            args = map(str, args)
-            kwargs = {k: str(v) for (k, v) in kwargs.items()}
-            return nxt(*args, **kwargs)
-
-        @staticmethod
-        def res_to_str(nxt, *args, **kwargs):
-            return str(nxt(*args, **kwargs))
-
-        @staticmethod
-        def iware(container, api):
-            mutable.extend((container, api))
-
         @classmethod
         def get(cls, grp, name):
             return {
                 ('controller', 'math'): cls.Math,
                 ('controller', 'str'): cls.Str,
-                ('middleware', 'res_to_str'): cls.res_to_str,
-                ('middleware', 'args_to_strs'): cls.args_to_strs,
                 ('api_options', 'api_class'): API,
                 ('api_options', 'default'): {
-                    'middleware': [cls.res_to_str,
-                                   cls.args_to_strs],
-                    'initware': [cls.iware],
+                    'middleware': [],
+                    'initware': [],
                     'router': cls.Router
                 }
             }[(grp, name)]
@@ -93,11 +99,8 @@ def test_api():
             pass
 
     api = init({}, container_clz=FakeContainer, get_config=lambda x: x)
-    # iware к этому моменту должна была заполнить mutable
-    cont, api_inst = mutable
-    assert isinstance(cont, FakeContainer) and api_inst is api
 
-    assert api.call('math', 'add', a=1, b=2) == '12'
+    assert api.call('math', 'add', a=1, b=2) == 3
     assert api.call('str', 'upper', s='hello') == 'HELLO'
 
     assert list(sorted(api)) == [('math', 'add'), ('str', 'upper')]
