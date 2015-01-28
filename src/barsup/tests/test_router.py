@@ -21,13 +21,11 @@ def test_router():
              {'x': 'int', 'y': 'int', 'msg': 'str', 'raw': 'json'}),
         )
 
-    router = Router(
-        controllers=(
-            ('calc', CalcController),
-            ('par', Parametrized),
-        ),
-        bypass_params=set(('bypass',))
-    )
+    router = Router(bypass_params=('bypass',))
+    router.register((
+        ('calc', CalcController),
+        ('par', Parametrized),
+    ))
     r = router.route
 
     assert r('/calc/10/20/sum', {}) == ('calc', 'sum', {'x': '10', 'y': '20'})

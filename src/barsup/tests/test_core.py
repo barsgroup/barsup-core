@@ -3,6 +3,12 @@
 from barsup.core import _Wrappable, API, init, ModuleContainer
 
 
+class FakeRouter:
+    @staticmethod
+    def register(*args):
+        pass
+
+
 def test_wrappable():
     """Tests the _Wrappable class behaviour"""
 
@@ -30,7 +36,7 @@ def test_initware():
 
     api = API(
         container=fake_container,
-        router=lambda *args, **kwargs: None,
+        router=FakeRouter,
         middleware=[],
         initware=[
             lambda *args: mutable.append(args)
@@ -65,7 +71,9 @@ def test_api_calls():
                 return s.upper()
 
         class Router(object):
-            def __init__(self, controllers):
+
+            @staticmethod
+            def register(controllers):
                 pass
 
             @staticmethod

@@ -92,7 +92,8 @@ class API:
         self._controller_group = controller_group
         self._container = container
 
-        self._router = router(controllers=(
+        self._router = router
+        self._router.register((
             (name, clz) for (name, _, clz) in
             container.itergroup(controller_group)
         ))
@@ -149,7 +150,8 @@ def init(
             },
             'router': {
                 '__realization__': 'barsup.router.Router',
-                '__type__': 'static'
+                '__type__': 'singleton',
+                '$bypass_params': ['web_session_id', '_context']
             }
         },
         'module': {

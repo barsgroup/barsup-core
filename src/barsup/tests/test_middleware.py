@@ -1,7 +1,9 @@
 # coding: utf-8
 
-from barsup.core import API
 from yadic.container import Container
+
+from barsup.core import API
+from barsup.tests.test_core import FakeRouter
 
 
 def inc_a(next, controller, action, **params):
@@ -35,7 +37,7 @@ def add_to_context(**kwargs):
     return inner
 
 
-def ensure_for_context_the_presense_of(**kwargs):
+def ensure_presense_of(**kwargs):
     def inner(next, controller, action, *, _context, **params):
         assert all(
             k in _context and _context[k] == v
@@ -65,7 +67,7 @@ class FakeContainer(Container):
 def make_api(*middleware):
     return API(
         container=FakeContainer({}),
-        router=lambda *args, **kwargs: None,
+        router=FakeRouter,
         middleware=middleware,
         initware=[],
     )
@@ -90,6 +92,6 @@ def test_interruption_by_middleware():
 def test_middleware_context():
     api = make_api(
         add_to_context(a=1, b="B"),
-        ensure_for_context_the_presense_of(a=1, b="B")
+        ensure_presense_of(a=1, b="B")
     )
     api.call('Controller', 'real_action')

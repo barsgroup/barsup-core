@@ -23,7 +23,7 @@ class RoutingError(Exception):
 
 
 class Router:
-    def __init__(self, controllers, bypass_params=set(('web_session_id',))):
+    def __init__(self, bypass_params=None):
         """
         :param controllers: итератор контроллеров в виде контежей (name, class)
         :type controllers: object"""
@@ -31,6 +31,11 @@ class Router:
         self._param_decls = {}
         self._bypass = set(bypass_params or tuple())
 
+    def register(self, controllers):
+        """
+        Registers the list of pairs in form ('controller', 'acition')
+        and builds the subroute for each action.
+        """
         for controller, realization in controllers:
             mapper = self._mapper.submapper(
                 path_prefix='/' + controller.lower())
