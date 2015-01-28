@@ -34,33 +34,40 @@ def handler(config_file_name, catch_cookies):
         for cookie in catch_cookies:
             params[cookie] = request.cookies.get(cookie, None)
 
+        status = 200
         try:
             result = api.populate(
                 request.path, **params)
-        except (exceptions.BadRequest, RoutingError):  # 400
-            raise exc.HTTPBadRequest()
 
-        except exceptions.Unauthorized:  # 401
-            raise exc.HTTPUnauthorized()
+        except (exceptions.BadRequest, RoutingError) as e:
+            status, result = 400, e
 
-        except exceptions.Forbidden:  # 403
-            raise exc.HTTPForbidden()
+        except exceptions.Unauthorized as e:
+            status, result = 401, e
 
-        except exceptions.NotFound:  # 404
-            raise exc.HTTPNotFound()
+        except exceptions.Forbidden as e:
+            status, result = 403, e
+
+        except exceptions.NotFound as e:
+            status, result = 404, e
+
+        if status == 200:
+            body = json.dumps({'data': result,
+                               'success': True},
+                              default=serialize_to_json)
+        else:
+            body = json.dumps(getattr(result, 'values', str(result)))
 
         return Response(
             content_type='application/json',
-            body=json.dumps({'data': result,
-                             'success': True},
-                            default=serialize_to_json)
+            body=body,
+            status=status
         )
 
     return app
 
 
 def static_server(url_prefix, static_path):
-
     static_app = DirectoryApp(
         path.expandvars(static_path),
         hide_index_with_redirect=True

@@ -37,7 +37,7 @@ def _filter(column, operator_text, value):
     }
 
     if operator_text not in values.keys():
-        raise exc.NameValidationError(
+        raise exc.ValidationError(
             'Operator "{0}" not supported. Available operators: [{1}]'.format(
                 operator_text,
                 ', '.join(values.keys())
@@ -59,7 +59,7 @@ def _sorter(direction):
         'DESC': expression.desc
     }
     if direction not in values.keys():
-        raise exc.NameValidationError(
+        raise exc.ValidationError(
             ('Direction "{0}" not supported. '
              'Available directions: [{1}]').format(
                 direction,
@@ -253,23 +253,13 @@ class View:
             if field.expression.nullable:
                 return
             else:
-                raise exc.NullValidationError(
-                    'Field "{0}" can not be null'.format(
-                        field.key
-                    ))
+                raise exc.NullValidationError(field)
 
         if not isinstance(value, field.type.python_type):
-            raise exc.TypeValidationError(
-                'Field "{0}" must be {1} type, but has value "{2}"'.format(
-                    field.key, field.type.python_type, value
-                ))
+            raise exc.TypeValidationError(field, value)
 
         if hasattr(field.type, 'length') and len(value) > field.type.length:
-            raise exc.LengthValidationError(
-                ('Field "{0}" must be length "{1}", '
-                 'but has "{3}" for "{2}"').format(
-                    field.key, field.type.length, value, len(value)
-                ))
+            raise exc.LengthValidationError(field, value)
 
 
 class Service:

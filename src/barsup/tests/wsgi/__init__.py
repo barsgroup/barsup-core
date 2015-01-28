@@ -12,7 +12,7 @@ class MockAPI:
             '/wrong-controller': RoutingError(),
             '/controller/with_data': params,
             '/unauthorized': exc.Unauthorized(),
-            '/forbidden': exc.Forbidden(),
+            '/forbidden': exc.Forbidden(1, 'test', 'test'),
             '/not-found': exc.NotFound(),
             '/value-error': ValueError(),
             '/wrong-serialize': object(),

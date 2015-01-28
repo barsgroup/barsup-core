@@ -63,8 +63,9 @@ def test_wrong_controller():
         charset='utf-8',
         method='POST')
 
-    with pytest.raises(exc.HTTPBadRequest):
-        process(request)
+    response = process(request)
+    assert response.status_code == 400
+    assert response.content_type == 'application/json'
 
 
 def test_with_json_body():
@@ -111,24 +112,27 @@ def test_unauthorized():
     request = Request.blank(
         '/unauthorized',
     )
-    with pytest.raises(exc.HTTPUnauthorized):
-        process(request)
+    response = process(request)
+    assert response.status_code == 401
+    assert response.content_type == 'application/json'
 
 
 def test_forbidden():
     request = Request.blank(
         '/forbidden',
     )
-    with pytest.raises(exc.HTTPForbidden):
-        process(request)
+    response = process(request)
+    assert response.status_code == 403
+    assert response.content_type == 'application/json'
 
 
 def test_not_found():
     request = Request.blank(
         '/not-found',
     )
-    with pytest.raises(exc.HTTPNotFound):
-        process(request)
+    response = process(request)
+    assert response.status_code == 404
+    assert response.content_type == 'application/json'
 
 
 def test_value_error():
