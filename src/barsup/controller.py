@@ -125,13 +125,13 @@ class ModuleController:
 
     from barsup.router import CATCH_ALL_PARAMS
 
-    actions = (('{_path:.*}', 'call', CATCH_ALL_PARAMS),)
+    actions = (('{_subroute:.*}', 'call', CATCH_ALL_PARAMS),)
 
     def __init__(self, module):
         self._module = module
 
-    def call(self, *, _path, **kwargs):
-        return self._module.populate(_path, **kwargs)
+    def call(self, *, _subroute, **kwargs):
+        return self._module.populate(_subroute, **kwargs)
 
 
 __all__ = (DictController, Controller, ModuleController)

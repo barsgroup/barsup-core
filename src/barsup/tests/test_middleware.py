@@ -28,6 +28,23 @@ def interrupt_and_return(val):
     return inner
 
 
+def add_to_context(**kwargs):
+    def inner(next, controller, action, *, _context, **params):
+        _context.update(**kwargs)
+        return next(controller, action, _context=_context, **params)
+    return inner
+
+
+def ensure_for_context_the_presense_of(**kwargs):
+    def inner(next, controller, action, *, _context, **params):
+        assert all(
+            k in _context and _context[k] == v
+            for k, v in kwargs.items()
+        )
+        return next(controller, action, _context=_context, **params)
+    return inner
+
+
 class FakeContainer(Container):
 
     class Controller:
@@ -67,4 +84,12 @@ def test_interruption_by_middleware():
     api = make_api(
         interrupt_and_return(123)
     )
-    assert api.call('Container', 'real_action') == 123
+    assert api.call('Controller', 'real_action') == 123
+
+
+def test_middleware_context():
+    api = make_api(
+        add_to_context(a=1, b="B"),
+        ensure_for_context_the_presense_of(a=1, b="B")
+    )
+    api.call('Controller', 'real_action')

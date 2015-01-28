@@ -69,10 +69,25 @@ class API:
         :param controller_group: ключ-наименование группы контроллеров
         :type controller_group: str
         """
-        # завертывание в middleware
+        def make_empty_context(nxt, *args, **kwargs):
+            """Middleware, создающая для "потомков" пустой контекст
+            (если он ещё не создан)"""
+            kwargs.setdefault('_context', {})
+            return nxt(*args, **kwargs)
+
+        def remove_context(nxt, *args, **kwargs):
+            """Middleware, убирающая контекст из параметров,
+            если вызывается не ModuleController"""
+            if '_subroute' not in kwargs:
+                kwargs.pop('_context', None)
+            return nxt(*args, **kwargs)
+
+        # оборачиывание метода, вызывающего экшны, в middleware
         call = self.call = _Wrappable(self._call)
+        call.wrap_with(remove_context)
         for mw in middleware[::-1]:
             call.wrap_with(mw)
+            call.wrap_with(make_empty_context)
 
         self._controller_group = controller_group
         self._container = container
