@@ -5,7 +5,11 @@ from sqlalchemy.orm.properties import ColumnProperty
 
 
 class _LogicException(Exception):
-    pass
+    @property
+    def values(self):
+        return {
+            'msg': str(self)
+        }
 
 
 class BadRequest(_LogicException):
@@ -122,6 +126,27 @@ class LengthValidationError(ValueValidationError):
         )
 
 
+class AdapterException(ValidationError):
+    def __init__(self, value, from_names, sep):
+        self.value = value
+        self.from_names = from_names
+        self.sep = sep
+
+    @property
+    def values(self):
+        return {
+            'value': self.value,
+            'from_names': self.from_names,
+            'sep': self.sep,
+            'msg': str(self)
+        }
+
+    def __str__(self):
+        return 'Wrong matching value "{0}" to {1} with "{2}"'.format(
+            self.value, self.from_names, self.sep
+        )
+
+
 class Unauthorized(_LogicException):
     def __str__(self):
         return "User is not logged"
@@ -148,6 +173,5 @@ class Forbidden(_LogicException):
 
 
 class NotFound(_LogicException):
-
     def __str__(self):
         return "Record not found"

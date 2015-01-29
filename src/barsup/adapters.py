@@ -3,27 +3,6 @@
 import barsup.exceptions as exc
 
 
-class AdapterException(exc.ValidationError):
-    def __init__(self, value, from_names, sep):
-        self.value = value
-        self.from_names = from_names
-        self.sep = sep
-
-    @property
-    def values(self):
-        return {
-            'value': self.value,
-            'from_names': self.from_names,
-            'sep': self.sep,
-            'msg': str(self)
-        }
-
-    def __str__(self):
-        return 'Wrong matching value "{0}" to {1} with "{2}"'.format(
-            self.value, self.from_names, self.sep
-        )
-
-
 class Splitter:
     def __init__(self, to_name, from_names, sep=' '):
         self._to_name = to_name
@@ -35,7 +14,7 @@ class Splitter:
             value = params[self._to_name]
             values = value.split(self._sep)
             if len(self._from_names) != len(values):
-                raise AdapterException(value, self._from_names, self._sep)
+                raise exc.AdapterException(value, self._from_names, self._sep)
             result.update(dict(zip(self._from_names, values)))
         return result, params
 

@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import pytest
-from barsup.adapters import AdapterException
 
 import barsup.exceptions as exc
 from barsup.tests import create_api
@@ -212,7 +211,7 @@ def test_create_wrong_type_name(api):
 
 @get_api
 def test_create_wrong_value_with_adapters(api):
-    with pytest.raises(AdapterException):
+    with pytest.raises(exc.AdapterException):
         api.call(
             'AdapterController', 'create', data={
                 'name': 'atata' * 5,

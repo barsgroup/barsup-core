@@ -19,17 +19,20 @@ def log_errors_to_stderr(nxt, controller, action, **params):
     """
     Middleware, выводящая ошибки вызова API в STDERR
     """
-    try:
+    if '_subroute' in params:  # Конечный узел
         return nxt(controller, action, **params)
-    except Exception as exc:
-        stderr.write(_timestamped(
-            "{controller}:{action}({params}) -> Error: \"{exc}\"".format(
-                controller=controller,
-                action=action,
-                params=','.join('%s=%r' % p for p in params.items()),
-                exc=exc
-            )))
-        raise
+    else:
+        try:
+            return nxt(controller, action, **params)
+        except Exception as exc:
+            stderr.write(_timestamped(
+                "{controller}:{action}({params}) -> Error: \"{exc}\"".format(
+                    controller=controller,
+                    action=action,
+                    params=','.join('%s=%r' % p for p in params.items()),
+                    exc=exc
+                )))
+            raise
 
 
 def transact(session):
@@ -37,14 +40,21 @@ def transact(session):
     Транзакционная mw, оборачивает запрос в транзакцию
     """
 
-    def wrapper(nxt, controller, action, **params):
+    def _transact(f, *args, **kwargs):
         try:
-            result = nxt(controller, action, **params)
+            result = f(*args, **kwargs)
             session.commit()
         except Exception:
             session.rollback()
             raise
         else:
             return result
+
+    def wrapper(nxt, controller, action, **params):
+        if 'in_transaction' in params['_context']:  # Конечный узел
+            return nxt(controller, action, **params)
+        else:
+            params['_context']['in_transaction'] = True
+            return _transact(nxt, controller, action, **params)
 
     return wrapper

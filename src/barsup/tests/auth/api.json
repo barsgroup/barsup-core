@@ -119,8 +119,8 @@
         ],
         "middleware": [
           "log_errors_to_stderr",
-          "access_check",
-          "transact"
+          "transact",
+          "access_check"
         ]
       }
     },

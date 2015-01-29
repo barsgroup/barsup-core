@@ -323,7 +323,7 @@ class Service:
             info = getattr(e, 'orig', None)
 
             # Код ошибки 23503 в postgresql
-            # соотвествует имеющимся ссылкам на запись
+            # соответствует имеющимся ссылкам на запись
             # http://www.postgresql.org/docs/8.2/static/errcodes-appendix.html
             if info and getattr(info, 'pgcode', None) == '23503':
                 raise exc.BadRequest(
