@@ -207,14 +207,11 @@ class DBMapper:
     указанных при вызове конструктора
     """
 
-    def __init__(self, path=None):
-        if not path:
-            path = os.environ['BUP_SCHEMA']
-
+    def __init__(self, config):
+        path = os.path.expandvars(config)
         if not os.path.isfile(path):
-            raise ValueError('$BUP_SCHEMA is not file - "{0}"'.format(
-                path
-            ))
+            raise ValueError(
+                '$BUP_SCHEMA is not file - "{0}"'.format(path))
 
         self._metadata = MetaData()
         _BuildMapping.load(self._metadata, path)
