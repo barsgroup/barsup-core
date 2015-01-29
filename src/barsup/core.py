@@ -87,7 +87,7 @@ class API:
         call.wrap_with(remove_context)
         for mw in middleware[::-1]:
             call.wrap_with(mw)
-            call.wrap_with(make_empty_context)
+        call.wrap_with(make_empty_context)
 
         self._controller_group = controller_group
         self._container = container
