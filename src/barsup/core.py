@@ -186,4 +186,15 @@ def init(
     return api
 
 
-__all__ = (init, ModuleContainer)
+def iter_apis(api):
+    """Возвращает итератор пар (кортеж-путь_до_API, экземпляр API)
+    для дочерних модулей указанного API"""
+    yield tuple(), api
+    cont = api._container
+    for item in cont.itergroup('module'):
+        module = item[0]
+        for path, inst in iter_apis(cont.get('module', module)):
+            yield (module,) + path, inst
+
+
+__all__ = (init, API, ModuleContainer)
