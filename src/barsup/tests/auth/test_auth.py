@@ -14,7 +14,7 @@ def test_without_session(api):
     """
     Пустой сессионный ключ
     """
-    with pytest.raises(exc.BadRequest):
+    with pytest.raises(exc.Unauthorized):
         api.call("User", 'create', data={
             "login": "test",
             "email": "test@test.com",

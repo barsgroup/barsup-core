@@ -16,7 +16,7 @@ with open('REQUIREMENTS', 'r') as f:
 
 setup(
     name="barsup-core",
-    version="0.2.4",
+    version="0.2.5",
     license='MIT',
     description=read('DESCRIPTION'),
     author="Telepenin Nikolay, Aleksey Pirogov",

@@ -2,55 +2,49 @@
 import barsup.exceptions as exc
 
 
-def access_check(authentication, authorization=None, preserve_user=None):
+def authentication(auth, preserve_user=None):
     """
-    Middleware, проверяющая наличие session id среди параметров.
-    При этом web_session_id дальше не передается.
+    MW для аутентификации
 
-    :param authentication: controller аутентификации
-    :type authentication: str
-
-    :param authorization: controller авторизации
-    :type authorization: str
+    :param auth: контроллер аутентфикации
+    :param preserve_user: список контроллеров,
+    которые должны получать пользователя
+    :return: вызов следующей по списку MW
     """
+    def wrapper(nxt, *args, web_session_id=None, **params):
+        controller, action = args
+        if auth.__class__.__name__ == controller:
+            method = getattr(auth, action)
+            params.pop('_context')
+            return method(web_session_id=web_session_id, **params)
 
-    def wrapper(nxt, controller, action, web_session_id=None, **params):
-        if '_subroute' in params:
-            def _auth_check(*args, **kwargs):
-                return nxt(*args, **kwargs)
+        try:
+            uid = auth.is_logged_in(web_session_id=web_session_id)
+        except exc.NotFound:
+            raise exc.Unauthorized()
 
-            params['_context']['_auth_check'] = _auth_check
+        params['_context'].setdefault('uid', uid)
+        if controller in (preserve_user or []):
+            params['uid'] = uid
+        return nxt(*args, **params)
 
-        if not web_session_id and 'uid' not in params['_context']:
-            raise exc.BadRequest("web session must be defined")
+    return wrapper
 
-        if controller == authentication:
-            return nxt(controller, action,
-                       web_session_id=web_session_id, **params)
-        else:
-            # пользователь должен быть аутентифицирован
-            if 'uid' not in params['_context']:
-                try:
-                    uid = nxt(authentication, 'is_logged_in',
-                              web_session_id=web_session_id)
-                except exc.NotFound:
-                    raise exc.Unauthorized()
 
-                params['_context']['uid'] = uid
+def authorization(auth):
+    """
+    MW для авторизации
 
-            if params['_context']['uid'] and '_subroute' not in params:
-                uid = params['_context']['uid']
-                auth_check = params['_context'].get('_auth_check', nxt)
-                # пользователь должен иметь право на выполнение действия
-                if authorization and not auth_check(
-                    authorization, 'has_perm', uid=uid,
-                    operation=(controller, action)
-                ):
-                    raise exc.Forbidden(uid, controller, action)
+    :param auth: контроллер авторизации
+    :return: вызов следующей по списку MW
+    """
+    def wrapper(nxt, *args, **params):
+        uid = params['_context']['uid']
+        # _subroute - проверка прав только на конечных узлах
+        if (not params.get('_subroute') and
+                not auth.has_perm(uid=uid, operation=args)):
+            raise exc.Forbidden(uid, *args)
 
-                if controller in (preserve_user or []):
-                    params['uid'] = uid
-
-            return nxt(controller, action, **params)
+        return nxt(*args, **params)
 
     return wrapper

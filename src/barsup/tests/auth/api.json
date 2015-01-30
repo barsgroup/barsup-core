@@ -120,7 +120,8 @@
         "middleware": [
           "log_errors_to_stderr",
           "transact",
-          "access_check"
+          "authentication",
+          "authorization"
         ]
       }
     },
@@ -135,11 +136,19 @@
       "log_errors_to_stderr": {
         "__realization__": "barsup.middleware.log_errors_to_stderr"
       },
-      "access_check": {
+      "authorization": {
         "__type__": "singleton",
-        "__realization__": "barsup.auth.middleware.access_check",
-        "$authentication": "Authentication",
-        "$authorization": "Authorization"
+        "__realization__": "barsup.auth.middleware.authorization",
+        "auth:controller": "Authorization"
+      },
+      "authentication": {
+        "__type__": "singleton",
+        "__realization__": "barsup.auth.middleware.authentication",
+        "auth:controller": "Authentication",
+        "$preserve_user": [
+          "MsgUsers",
+          "Message"
+        ]
       },
       "transact": {
         "__type__": "singleton",
