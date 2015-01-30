@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
+"""Ключевые характеристики для сборки пакета."""
+
 import os
 
 from setuptools import setup, find_packages
 
 
 def read(fname):
+    """
+    Получение текстового представления файла.
+
+    :param fname:  Наименование файла
+    :return: Текстовое представление
+    """
     try:
         return open(os.path.join(os.path.dirname(__file__), fname)).read()
     except IOError:
