@@ -66,5 +66,4 @@ class AuthorizationService(Service):
         # subquery = service._qs.union(role_service._qs).exists()
         # res = self.session.query(literal(True)).filter(subquery)
         # return res.scalar()
-        print (role_service.exists())
         return perm_service.exists() or role_service.exists() or False

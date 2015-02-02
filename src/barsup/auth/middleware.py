@@ -15,8 +15,7 @@ def authentication(auth, preserve_user=None, white_list=None):
 
     def wrapper(nxt, controller, action, web_session_id=None, **params):
         if controller in (white_list or []):
-            return nxt(controller, action,
-                       web_session_id=web_session_id,
+            return nxt(controller, action, web_session_id=web_session_id,
                        **params)
 
         try:
