@@ -24,10 +24,6 @@
       "Authentication": {
         "service": "AuthenticationService",
         "__realization__": "barsup.auth.controller.Authentication"
-      },
-      "Authorization": {
-        "service": "AuthorizationService",
-        "__realization__": "barsup.auth.controller.Authorization"
       }
     },
     "session": {
@@ -139,15 +135,21 @@
       "authorization": {
         "__type__": "singleton",
         "__realization__": "barsup.auth.middleware.authorization",
-        "auth:controller": "Authorization"
+        "auth:service": "AuthorizationService",
+        "$white_list": [
+          "Authentication"
+        ]
       },
       "authentication": {
         "__type__": "singleton",
         "__realization__": "barsup.auth.middleware.authentication",
-        "auth:controller": "Authentication",
+        "auth:service": "AuthenticationService",
         "$preserve_user": [
           "MsgUsers",
           "Message"
+        ],
+        "$white_list": [
+          "Authentication"
         ]
       },
       "transact": {

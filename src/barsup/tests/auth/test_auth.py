@@ -56,28 +56,6 @@ def test_create_user(api):
 
 
 @get_api
-def test_correct_logged_in(api):
-    """
-    Проверка аутентификации с корректной сессией
-    """
-    user_id = api.call("Authentication", 'is_logged_in',
-                       web_session_id=ADMIN_SESSION)
-
-    assert user_id
-
-
-@get_api
-def test_bad_logged_in(api):
-    """
-    Проверка аутентификации с некорректной сессией
-    """
-
-    with pytest.raises(exc.NotFound):
-        api.call("Authentication", 'is_logged_in',
-                 web_session_id='session-id')
-
-
-@get_api
 def test_correct_login(api):
     """
     Аутентификация с корректным пользователем
@@ -129,22 +107,6 @@ def test_bad_login(api):
                  login='admin',
                  password='secret',
                  web_session_id='new-session-id')
-
-
-@get_api
-def test_correct_admin_perm(api):
-    """
-    Проверка корректных прав
-
-    В случае при подключенной middleware access_check
-    права на действие Authorization.has_perm будут проверяться дважды
-    на право выполнения запроса и собственно сам запрос
-    """
-    data = api.call('Authorization', 'has_perm',
-                    uid=1,
-                    operation=['User', 'read'],
-                    web_session_id=ADMIN_SESSION)
-    assert data is True
 
 
 @get_api

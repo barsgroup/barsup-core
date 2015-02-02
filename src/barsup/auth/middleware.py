@@ -2,21 +2,22 @@
 import barsup.exceptions as exc
 
 
-def authentication(auth, preserve_user=None):
+def authentication(auth, preserve_user=None, white_list=None):
     """
     MW для аутентификации
 
-    :param auth: контроллер аутентфикации
+    :param auth: сервис аутентфикации
     :param preserve_user: список контроллеров,
     которые должны получать пользователя
+    :param white_list: Список контроллеров без проверки
     :return: вызов следующей по списку MW
     """
-    def wrapper(nxt, *args, web_session_id=None, **params):
-        controller, action = args
-        if auth.__class__.__name__ == controller:
-            method = getattr(auth, action)
-            params.pop('_context')
-            return method(web_session_id=web_session_id, **params)
+
+    def wrapper(nxt, controller, action, web_session_id=None, **params):
+        if controller in (white_list or []):
+            return nxt(controller, action,
+                       web_session_id=web_session_id,
+                       **params)
 
         try:
             uid = auth.is_logged_in(web_session_id=web_session_id)
@@ -26,25 +27,30 @@ def authentication(auth, preserve_user=None):
         params['_context'].setdefault('uid', uid)
         if controller in (preserve_user or []):
             params['uid'] = uid
-        return nxt(*args, **params)
+        return nxt(controller, action, **params)
 
     return wrapper
 
 
-def authorization(auth):
+def authorization(auth, white_list=None):
     """
     MW для авторизации
 
-    :param auth: контроллер авторизации
+    :param auth: сервис авторизации
+    :param white_list: Список контроллеров без проверки
     :return: вызов следующей по списку MW
     """
-    def wrapper(nxt, *args, **params):
+
+    def wrapper(nxt, controller, action, **params):
+        if controller in (white_list or []):
+            return nxt(controller, action, **params)
+
         uid = params['_context']['uid']
         # _subroute - проверка прав только на конечных узлах
         if (not params.get('_subroute') and
-                not auth.has_perm(uid=uid, operation=args)):
-            raise exc.Forbidden(uid, *args)
+                not auth.has_perm(uid, controller, action)):
+            raise exc.Forbidden(uid, controller, action)
 
-        return nxt(*args, **params)
+        return nxt(controller, action, **params)
 
     return wrapper

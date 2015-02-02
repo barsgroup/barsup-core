@@ -4,7 +4,7 @@ import os
 import json
 
 import pytest
-from webob import Request, exc
+from webob import Request
 
 from barsup.wsgi import handler
 

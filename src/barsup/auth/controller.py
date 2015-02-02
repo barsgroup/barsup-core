@@ -31,20 +31,6 @@ class Authentication(Controller, metaclass=Injectable):
     ) -> r'/logout':
         pass
 
-    def is_logged_in(
-        self,
-        web_session_id: 'str'
-    ) -> r'/is-login':
-        return self.service.is_logged_in(web_session_id)
-
-
-class Authorization(Controller, metaclass=Injectable):
-    depends_on = ('service',)
-
-    def has_perm(self, uid, operation):
-        controller, action = operation
-        return self.service.has_perm(uid, controller, action)
-
 
 class PermissionController(Controller, metaclass=Injectable):
     def read(

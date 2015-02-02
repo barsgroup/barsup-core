@@ -1,4 +1,5 @@
 # coding: utf-8
+import hashlib
 
 from barsup.service import Service
 
@@ -36,6 +37,11 @@ class AuthenticationService(Service):
         obj = self.filter('web_session_id', 'eq', web_session_id).get()
         return obj.get('user_id')
 
+    def _to_md5_hash(self, value, salt='2Bq('):
+        # Хеширование значения
+        data = hashlib.md5((salt + value).encode())
+        return data.hexdigest()
+
 
 class AuthorizationService(Service):
     def __init__(self, user_role, **kwargs):
@@ -60,5 +66,5 @@ class AuthorizationService(Service):
         # subquery = service._qs.union(role_service._qs).exists()
         # res = self.session.query(literal(True)).filter(subquery)
         # return res.scalar()
-
+        print (role_service.exists())
         return perm_service.exists() or role_service.exists() or False
