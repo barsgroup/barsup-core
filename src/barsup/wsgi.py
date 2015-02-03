@@ -134,6 +134,6 @@ def make_application():
 
 
 __all__ = (
-    make_application, handler, catch_errors,
-    static_server, with_session
+    'make_application', 'handler', 'catch_errors',
+    'static_server', 'with_session'
 )

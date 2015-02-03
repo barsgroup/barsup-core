@@ -1,10 +1,12 @@
 # coding: utf-8
+"""Набор MW для аутентификации/авторизации."""
+
 import barsup.exceptions as exc
 
 
 def authentication(auth, preserve_user=None, white_list=None):
     """
-    MW для аутентификации
+    MW для аутентификации.
 
     :param auth: сервис аутентфикации
     :param preserve_user: список контроллеров,
@@ -12,7 +14,6 @@ def authentication(auth, preserve_user=None, white_list=None):
     :param white_list: Список контроллеров без проверки
     :return: вызов следующей по списку MW
     """
-
     def wrapper(nxt, controller, action, web_session_id=None, **params):
         if controller in (white_list or []):
             return nxt(controller, action, web_session_id=web_session_id,
@@ -33,13 +34,12 @@ def authentication(auth, preserve_user=None, white_list=None):
 
 def authorization(auth, white_list=None):
     """
-    MW для авторизации
+    MW для авторизации.
 
     :param auth: сервис авторизации
     :param white_list: Список контроллеров без проверки
     :return: вызов следующей по списку MW
     """
-
     def wrapper(nxt, controller, action, **params):
         if controller in (white_list or []):
             return nxt(controller, action, **params)

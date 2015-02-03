@@ -1,15 +1,34 @@
 # coding: utf-8
+"""Сервисы для аутентфикации и авторизации."""
+
 import hashlib
 
 from barsup.service import Service
 
 
 class AuthenticationService(Service):
+
+    """Сервис аутентификации."""
+
     def __init__(self, user_model, **kwargs):
+        """.
+
+        :param user_model: Ссылка на модель пользователей
+        :param dict kwargs: Доп. необходимые параметры
+        :return:
+        """
         super().__init__(**kwargs)
         self.user_model = user_model
 
     def login(self, login, password, web_session_id):
+        """
+        Процедура входа в систему.
+
+        :param str login: Логин
+        :param str password: Пароль
+        :param str web_session_id: Идентификатор сессии
+        :return bool: Удалось ли залогиниться
+        """
         obj = self(
             self.user_model
         ).filter(
@@ -31,24 +50,53 @@ class AuthenticationService(Service):
         return user_id is not None
 
     def logout(self, web_session_id):
+        """
+        Процедура выхода из системы.
+
+        :param str web_session_id: Идентификатор сессии
+        :return bool: Удалось ли разлогиниться
+        """
         pass
 
     def is_logged_in(self, web_session_id):
+        """
+        Процедура проверки, залогинен ли пользователь.
+
+        :param str web_session_id:  Идентификатор сессии
+        :return int: Идентификатор пользователя
+        """
         obj = self.filter('web_session_id', 'eq', web_session_id).get()
         return obj.get('user_id')
 
     def _to_md5_hash(self, value, salt='2Bq('):
-        # Хеширование значения
+        # Хеширование пароля
         data = hashlib.md5((salt + value).encode())
         return data.hexdigest()
 
 
 class AuthorizationService(Service):
+
+    """Сервис авторизации."""
+
     def __init__(self, user_role, **kwargs):
+        """.
+
+        :param user_role: Ссылка на модель пользователей
+        :param dict kwargs: Доп. необходимые параметры
+        :return:
+        """
         super().__init__(**kwargs)
         self.user_role = user_role
 
     def has_perm(self, uid, controller, action):
+        """
+        Проверка прав на действие.
+
+        :param int uid: Идентификатор пользователя
+        :param str controller: Контроллер
+        :param str action: Действие
+        :return bool: Есть ли право выполнения
+        """
         perm_service = self.filter(
             'user_id', 'eq', uid
         ).filter(

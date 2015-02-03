@@ -108,4 +108,4 @@ class Router:
         return controller_name, action_name, parsed_params
 
 
-__all__ = (Router,)
+__all__ = ('Router',)

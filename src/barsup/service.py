@@ -343,4 +343,4 @@ class Service:
         return self._adapter.from_record(as_dict)
 
 
-__all__ = (Service,)
+__all__ = ('Service',)

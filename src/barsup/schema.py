@@ -223,4 +223,4 @@ class DBMapper:
         return getattr(self._base.classes, attr)
 
 
-__all__ = (DBMapper, Model)
+__all__ = ('DBMapper', 'Model')

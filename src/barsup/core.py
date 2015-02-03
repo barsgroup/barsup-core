@@ -197,4 +197,4 @@ def iter_apis(api):
             yield (module,) + path, inst
 
 
-__all__ = (init, API, ModuleContainer)
+__all__ = ('init', 'API', 'ModuleContainer')

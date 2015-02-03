@@ -1,4 +1,6 @@
 # coding: utf-8
+"""Вспомогательные конструкции для тестов аутентификации и авторизации."""
+
 from barsup.tests import DBMapperMock
 
 ADMIN_SESSION = "administrator-session-id"
@@ -6,16 +8,18 @@ USER_SESSION = "user-sessin-id"
 
 
 class DBMapperAuth(DBMapperMock):
+
+    """Заглушка для маппера."""
+
     def create_data(self):
-        """
-        Создание преднастроенных данных для тестов
-        """
+        """ Создание преднастроенных данных для тестов."""
         self.create_admin()
         self.create_user()
 
     def create_admin(self):
         """
-        Создание пользователя Foo
+        Создание пользователя Foo.
+
         - создание пользователя "Foo"
         - создание сессии
         - создание роли "Может все"
@@ -44,7 +48,8 @@ class DBMapperAuth(DBMapperMock):
 
     def create_user(self):
         """
-        Создание пользователя Bar
+        Создание пользователя Bar.
+
         - создание пользователя "Bar"
         - создание сессии
         - создание роли "Может видеть пользователей"

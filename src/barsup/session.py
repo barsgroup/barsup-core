@@ -39,4 +39,4 @@ class PostgreSQLSession:
         return getattr(self.session, item)
 
 
-__all__ = (PostgreSQLSession, InMemory)
+__all__ = ('PostgreSQLSession', 'InMemory')

@@ -134,4 +134,4 @@ class ModuleController:
         return self._module.populate(_subroute, **kwargs)
 
 
-__all__ = (DictController, Controller, ModuleController)
+__all__ = ('DictController', 'Controller', 'ModuleController')

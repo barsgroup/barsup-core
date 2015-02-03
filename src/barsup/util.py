@@ -1,4 +1,5 @@
 # coding: utf-8
+"""Набор вспомогательных конструкций."""
 import os
 import json
 from types import GeneratorType
@@ -7,6 +8,13 @@ from yadic.util import merge
 
 
 def serialize_to_json(obj):
+    """
+    Функция серриализации объектов.
+
+    Передается в параметр default вызова json.dumps
+    :param obj: Объект, который необходимо серриализовать в json
+    :return:
+    """
     if isinstance(obj, (map, set, GeneratorType)):
         return tuple(obj)
     else:
@@ -15,8 +23,9 @@ def serialize_to_json(obj):
 
 def load_configs(fnames, parser=json.load):
     """
-    Загружает список конфигурационных файлов,
-    разделённых символом ";" и возвращает итоговую конфигурацию.
+    Загружает список конфигурационных файлов.
+
+    Файлы должны быть разделены символом ";" и возвращать итоговую конфигурацию
     Последняя получается слиянием конфигураций из файлов,
     через ообновление с заменой в порядке следования имен файлов.
     """
@@ -43,8 +52,9 @@ def load_configs(fnames, parser=json.load):
 
 def get_config_from_env(default_name='container.json'):
     """
-    Возвращает имя файла конфигурации, который
-    должен быть:
+    Возвращает имя файла конфигурации.
+
+    Путь должен быть:
     - указан в переменной окружения $BUP_CONFIG
     - называться @default_name и находиться в папке $BUP_PATH
     В противном случае возбуждается исключение.
