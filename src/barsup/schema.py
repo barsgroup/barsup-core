@@ -1,4 +1,5 @@
 # coding: utf-8
+"""Набор конструкция для работы с уровнем моделей."""
 import os
 
 import simplejson as json
@@ -67,8 +68,13 @@ class _BuildMapping:
 
 
 class Model:
+
+    """Реализация уровня модели."""
+
+    # Аналогично select *
     ASTERISK = "*"
 
+    # Возможные операции соединения
     JOIN_CONDITIONS = {
         '==': 'join',
         '=': 'outerjoin'
@@ -76,6 +82,14 @@ class Model:
 
     def __init__(self, db_mapper, session, name,
                  joins=None, select=ASTERISK):
+        """.
+
+        :param db_mapper: Ссылка на маппер
+        :param session: Ссылка на сессию
+        :param name: Название таблицы
+        :param joins: Список таблиц для соединения
+        :param select: Список полей для селекта или select *
+        """
         self._db_mapper = db_mapper
         self._name = name
         self._session = session
@@ -87,12 +101,15 @@ class Model:
         self._qs = self._create_joins(qs, joins or [])
 
     def _create_aliases(self, model_name=''):
+        # Создание алиасов, чтобы джойны не пересекались
         model = getattr(self._db_mapper, model_name, self.current)
         for column in inspect(model).attrs:
             if isinstance(column, ColumnProperty):
                 yield self._create_alias(column.key, model_name)
 
     def _create_alias(self, field, model_name=''):
+        # Создание алиаса для конкретного поля в модели,
+        # если модель не используется - предполагается текущая модель
         model = getattr(self._db_mapper, model_name, self.current)
 
         col = getattr(model, field)
@@ -107,6 +124,7 @@ class Model:
         return label
 
     def _create_select(self, session, select, models):
+        # Создание полей в объекте select
         select_statement = []
         if select == self.ASTERISK:
             # select * from ...
@@ -132,9 +150,11 @@ class Model:
         return session.query(*select_statement)
 
     def create_query(self):
+        """Работа с запросами."""
         return self._qs
 
     def create_object(self, **kwargs):
+        """Операция создания объекта."""
         obj = self.current()
         for item, value in kwargs.items():
             if not hasattr(obj, item):
@@ -154,6 +174,11 @@ class Model:
         return obj
 
     def get_field(self, field_name):
+        """
+        Получение объекта поля по его наименованию.
+
+        :param field_name: Наименование поля
+        """
         # Если есть джойны, тогда должны быть алиасы:
         # alias = self._labels.get(field_name, None)
         # if alias is not None:
@@ -179,6 +204,7 @@ class Model:
         return field
 
     def _create_joins(self, qs, joins):
+        # Создание join-ов
         for inner_field_name, condition, outher_field_name, outher in joins:
             # TODO: Реализовать вложенные джойны
             outer_model_name = outher[0]  #
@@ -195,19 +221,32 @@ class Model:
 
     @property
     def current(self):
+        """Возвращает текущую таблицу."""
         return getattr(self._db_mapper, self._name)
 
     def exists(self, qs):
+        """
+        Возвращает QS.
+
+        C присоединенной информацией о проверки наличия объекта
+        """
         return self._session.query(qs.exists())
 
 
 class DBMapper:
+
     """
-    Коллекция mappings для моделей из приложений,
-    указанных при вызове конструктора
+    Коллекция mappings для моделей из приложений.
+
+    Которые указываются при вызове конструктора
     """
 
     def __init__(self, config):
+        """.
+
+        :param config: Путь до конфигурации схемы
+        :return:
+        """
         path = os.path.expandvars(config)
         if not os.path.isfile(path):
             raise ValueError(
@@ -220,6 +259,12 @@ class DBMapper:
         self._base.prepare()
 
     def __getattr__(self, attr):
+        """
+        Прозрачная работа с данными таблиц.
+
+        :param str attr: Наименование таблицы
+        :return:
+        """
         return getattr(self._base.classes, attr)
 
 

@@ -1,4 +1,5 @@
 # coding: utf-8
+"""Конструкции для реализация уровня сервисов."""
 
 import operator
 from datetime import date
@@ -12,10 +13,7 @@ import barsup.exceptions as exc
 
 
 def _mapping_property(f):
-    """
-    Декоратор, возвращающий объект sqlalchemy по составному имени поля
-    """
-
+    """Декоратор, возвращающий объект sqlalchemy по составному имени поля. """
     def wrapper(self, property, *args, **kwargs):
         return f(self, self._model.get_field(property), *args, **kwargs)
 
@@ -201,7 +199,7 @@ class View:
 
     def from_record(self, params):
         """
-        Controller <- Model
+        Controller <- Model.
 
         Правило работы:
         Deserialization <- Include/Exclude <- Adapters
@@ -218,7 +216,7 @@ class View:
 
     def to_record(self, params):
         """
-        Controller -> Model
+        Controller -> Model.
 
         Правило работы:
         Include/Exclude -> Adapters -> Serialization -> Validation
@@ -226,7 +224,6 @@ class View:
         :param params:
         :return:
         """
-
         # Преобразования на уровне адаптеров
         result = {}
         for adapter in self.adapters:
@@ -263,26 +260,52 @@ class View:
 
 
 class Service:
+
+    """Реализация CRUD сервиса."""
+
     to_dict = staticmethod(lambda o: o._asdict())
 
     def __init__(self, model, adapters, include=None, exclude=None):
+        """.
+
+        :param model: Ссылка на модель
+        :param adapters: Список адаптеров
+        :param include: Список полей для обязательного включения
+        :param exclude: Список полей для исключения
+        :return:
+        """
         self._model = model
 
         adapters += (DefaultAdapter(model.current, include, exclude),)
         self._adapter = View(adapters, model.current)
 
     def __call__(self, model=None):
+        """
+        Возвращает прокси-объект.
+
+        Для делегирования операций изменения и поиска
+        :param model: Ссылка на модель
+        :return:
+        """
         return _Proxy(
             callback=lambda name: self.__getattribute__(name),
             model=model or self._model)
 
     def __getattr__(self, item):
+        """
+        Возвращает прокси-объект.
+
+        Для делегирования операций изменения и поиска
+        :param item:
+        :return:
+        """
         proxy = _Proxy(
             callback=lambda name: self.__getattribute__(name),
             model=self._model)
         return getattr(proxy, item)
 
     def _get(self, qs):
+        # Операция получение объекта по кверисету
         try:
             record = qs.one()
         except NoResultFound:
@@ -293,15 +316,18 @@ class Service:
         )
 
     def _read(self, qs):
+        # Операция получения списка объектов по кверисету
         return map(
             self._adapter.from_record,
             map(self.to_dict, qs.all())
         )
 
     def _exists(self, qs):
+        # Операция проверки наличия объекта по кверисету
         return self._model.exists(qs).scalar()
 
     def _update(self, qs, **kwargs):
+        # Операция изменения объекта
         if kwargs:
             params = {}
             for item, value in kwargs.items():
@@ -317,6 +343,7 @@ class Service:
             )
 
     def _delete(self, qs):
+        # Операция удаления объекта
         try:
             qs.with_entities(self._model.current).delete()
         except IntegrityError as e:
@@ -333,9 +360,16 @@ class Service:
 
     # For create & update
     def _deserialize(self, item, value):
+        # Преобразования dict -> model object
         return Serializer.to_record(self._model.get_field(item), value)
 
     def create(self, **kwargs):
+        """
+        Операция создания объекта.
+
+        :param kwargs:
+        :return:
+        """
         obj = self._model.create_object(
             **self._adapter.to_record(kwargs)
         )

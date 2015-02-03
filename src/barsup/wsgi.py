@@ -1,8 +1,9 @@
 # coding:utf-8
+"""Функционал для работы уровня WSGI."""
+
 import json
 import traceback
 from os import path
-from sys import stderr, exc_info
 from datetime import datetime
 from uuid import uuid4
 
@@ -11,15 +12,14 @@ from webob import Response, exc
 from webob.dec import wsgify
 from webob.static import DirectoryApp
 
+from sys import stderr, exc_info
 from barsup import core, exceptions
 from barsup.router import RoutingError
 from barsup.util import serialize_to_json
 
 
 def handler(config_file_name, catch_cookies):
-    """
-    Обработчик HTTP-запросов к приложению
-    """
+    """Обработчик HTTP-запросов к приложению."""
     api = core.init(config=config_file_name)
 
     @wsgify
@@ -68,6 +68,7 @@ def handler(config_file_name, catch_cookies):
 
 
 def static_server(url_prefix, static_path):
+    """MW для статики."""
     static_app = DirectoryApp(
         path.expandvars(static_path),
         hide_index_with_redirect=True
@@ -88,6 +89,7 @@ def static_server(url_prefix, static_path):
 
 @wsgify.middleware
 def catch_errors(request, app, debug=False):
+    """MW для конвертации неотловленных исключений."""
     try:
         return request.get_response(app)
 
@@ -106,6 +108,7 @@ def catch_errors(request, app, debug=False):
 
 @wsgify.middleware
 def with_session(request, app, cookie_name, generator):
+    """MW для контроля cookies."""
     if cookie_name not in request.cookies:
         request.cookies[cookie_name] = generator()
     value = request.cookies[cookie_name]
@@ -115,6 +118,11 @@ def with_session(request, app, cookie_name, generator):
 
 
 def make_application():
+    """
+    Возвращает преднастроенный wsgi app.
+
+    Можно использовать в конечных приложениях
+    """
     return with_session(
         static_server(
             url_prefix='/barsup',
@@ -133,7 +141,5 @@ def make_application():
     )
 
 
-__all__ = (
-    'make_application', 'handler', 'catch_errors',
-    'static_server', 'with_session'
-)
+__all__ = ('make_application', 'handler', 'catch_errors',
+           'static_server', 'with_session')

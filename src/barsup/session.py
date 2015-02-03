@@ -1,18 +1,35 @@
 # coding: utf-8
+""" Различные реализации уровня сессии.
+
+В том числе реализация по настройке подключения к БД
+"""
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import Session
 
 
 class InMemory:
+
+    """Подключение к SQLite в памяти."""
+
     def __init__(self):
+        """."""
         self.engine = create_engine('sqlite://', echo=True)
         self.session = Session(self.engine)
 
     def __getattr__(self, item):
+        """
+        Прозрачная работа с объектом Session.
+
+        :param item: атрибут для доступа
+        :return:
+        """
         return getattr(self.session, item)
 
 
 class PostgreSQLSession:
+
+    """Подключение к PostgreSQL."""
+
     def __init__(self,
                  login,
                  password,
@@ -21,6 +38,17 @@ class PostgreSQLSession:
                  host='localhost',
                  port=5432,
                  echo=True):
+        """.
+
+        :param login: Логин
+        :param password: Пароль
+        :param database: Название БД
+        :param engine: Тип подключения
+        :param host: Хост
+        :param port: Порт
+        :param echo: Логировать ли информацию
+        :return:
+        """
         connection_string = ('{engine}://'
                              '{login}:{password}'
                              '@{host}:{port}/'
@@ -36,6 +64,12 @@ class PostgreSQLSession:
         self.session = Session(engine)
 
     def __getattr__(self, item):
+        """
+        Прозрачная работа с объектом Session.
+
+        :param item: атрибут для доступа
+        :return:
+        """
         return getattr(self.session, item)
 
 

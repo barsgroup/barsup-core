@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Набор конструкций для роутинга на контроллеры и действия."""
 
 from itertools import chain
 
@@ -19,21 +20,30 @@ CATCH_ALL_PARAMS = object()
 
 
 class RoutingError(Exception):
+
+    """Выбрасывается на уровне роутинга."""
+
     pass
 
 
 class Router:
+
+    """Механизм маршрутизации по API-KEY (URL, id, etc.)."""
+
     def __init__(self, bypass_params=None):
-        """
+        """.
+
         :param controllers: итератор контроллеров в виде контежей (name, class)
-        :type controllers: object"""
+        :type controllers: object
+        """
         self._mapper = routes.Mapper()
         self._param_decls = {}
         self._bypass = set(bypass_params or tuple())
 
     def register(self, controllers):
         """
-        Registers the list of pairs in form ('controller', 'acition')
+        Register the list of pairs in form ('controller', 'acition').
+
         and builds the subroute for each action.
         """
         for controller, realization in controllers:
@@ -60,7 +70,8 @@ class Router:
 
     def route(self, key, params):
         """
-        Populates the url-like API-key as action of some controller
+        Populate the url-like API-key as action of some controller.
+
         :param key: API-key
         :type key: str
         :param params: action params
