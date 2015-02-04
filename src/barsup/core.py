@@ -76,9 +76,11 @@ class API:
     контроллерами.
     """
 
-    def __init__(self, *,
-                 container, middleware, initware, router,
-                 controller_group='controller'):
+    def __init__(
+        self, *,
+        container, middleware, initware, router,
+        controller_group='controller'
+    ):
         """.
 
         :param container: DI-контейнер
@@ -91,22 +93,21 @@ class API:
         :type controller_group: str
         """
         def initialize(nxt, *args, **kwargs):
-            """
-            Middleware, создающая для "потомков" пустой контекст.
+            """initialize.
 
+            Middleware, создающая для "потомков" пустой контекст
             (если он ещё не создан)
             """
             kwargs.setdefault('_context', {})
             return nxt(*args, **kwargs)
 
         def finalize(nxt, controller, action, *args, **kwargs):
-            """
+            """finalize.
+
             Middleware, убирающая контекст из параметров перед вызовом
             конечного экшна. Если вызываемый экшн - не конечный,
             то текущий экшн добавляется в список, хранящий
             маршрут роутинга
-
-            Если вызывается не ModuleController
             """
             if '_subroute' not in kwargs:
                 kwargs.pop('_context', None)
