@@ -6,7 +6,8 @@ install:
 - easy_install -U pip routes
 - pip install -r REQUIREMENTS.test
 script:
-- py.test --pep8 --pep257 --cov ./src --cov-config=.coveragerc
+- pep257 ./
+- py.test --pep8 --cov ./src --cov-config=.coveragerc
 after_success:
 - coveralls
 notifications:

@@ -2,7 +2,7 @@ pytest>=2.6.4
 pytest-cov
 coveralls
 pytest-pep8
-pytest-pep257
+pep257
 
 sqlalchemy
 Routes

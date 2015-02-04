@@ -38,8 +38,7 @@ class PostgreSQLSession:
                  host='localhost',
                  port=5432,
                  echo=True):
-        """.
-
+        """
         :param login: Логин
         :param password: Пароль
         :param database: Название БД
