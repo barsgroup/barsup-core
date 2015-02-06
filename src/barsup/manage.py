@@ -29,7 +29,7 @@ class ManagementCLI(AutoCompleteCLI):
 
     def _call(self, args):
         command = args[0]
-        self.cont.get(self.COmMAND_GROUP, command)(args)
+        self.cont.get(self.COMMAND_GROUP, command)(args)
 
 
 if __name__ == '__main__':
