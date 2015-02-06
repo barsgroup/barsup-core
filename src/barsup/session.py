@@ -1,8 +1,9 @@
 # coding: utf-8
-""" Различные реализации уровня сессии.
+"""Различные реализации уровня сессии.
 
 В том числе реализация по настройке подключения к БД
 """
+
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import Session
 
@@ -17,8 +18,7 @@ class InMemory:
         self.session = Session(self.engine)
 
     def __getattr__(self, item):
-        """
-        Прозрачная работа с объектом Session.
+        """Прозрачная работа с объектом Session.
 
         :param item: атрибут для доступа
         :return:
@@ -30,15 +30,18 @@ class PostgreSQLSession:
 
     """Подключение к PostgreSQL."""
 
-    def __init__(self,
-                 login,
-                 password,
-                 database,
-                 engine='postgresql',
-                 host='localhost',
-                 port=5432,
-                 echo=True):
-        """
+    def __init__(
+        self,
+        login,
+        password,
+        database,
+        engine='postgresql',
+        host='localhost',
+        port=5432,
+        echo=True
+    ):
+        """Конструирует сессию для PostgreSQL.
+
         :param login: Логин
         :param password: Пароль
         :param database: Название БД
@@ -46,12 +49,13 @@ class PostgreSQLSession:
         :param host: Хост
         :param port: Порт
         :param echo: Логировать ли информацию
-        :return:
         """
-        connection_string = ('{engine}://'
-                             '{login}:{password}'
-                             '@{host}:{port}/'
-                             '{database}').format(
+        connection_string = (
+            '{engine}://'
+            '{login}:{password}'
+            '@{host}:{port}/'
+            '{database}'
+        ).format(
             login=login,
             password=password,
             database=database,
@@ -63,8 +67,7 @@ class PostgreSQLSession:
         self.session = Session(engine)
 
     def __getattr__(self, item):
-        """
-        Прозрачная работа с объектом Session.
+        """Прозрачная работа с объектом Session.
 
         :param item: атрибут для доступа
         :return:
