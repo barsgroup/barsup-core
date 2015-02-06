@@ -16,13 +16,14 @@ class ManagementCLI(AutoCompleteCLI):
 
     @property
     def hierarchy(self):
-        """Возвращает список management commands"""
+        """Возвращает список management commands."""
         return {
             k[0]: {} for k in
             self.cont.itergroup(self.COMMAND_GROUP)
         }
 
     def __init__(self, config_file=None):
+        """Конструирует ManagementCLI."""
         api = init(config_file or get_config_from_env())
         self.cont = api._container
 
