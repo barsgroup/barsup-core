@@ -1,6 +1,7 @@
 # coding:utf-8
 """Autocomplete CLI for controllers/actions."""
 
+import sys
 import json
 
 from barsup.accli import AutoCompleteCLI
@@ -31,4 +32,4 @@ class APICLI(AutoCompleteCLI):
 
 
 if __name__ == '__main__':
-    APICLI().run()
+    sys.exit(APICLI().run(sys.argv[1:]))
