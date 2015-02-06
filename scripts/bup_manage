@@ -1,0 +1,4 @@
+#!/bin/sh
+
+env python -m barsup.manage $*
+
