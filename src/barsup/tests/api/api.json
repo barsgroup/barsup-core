@@ -54,7 +54,7 @@
     },
     "adapters": {
       "AdapterSplitter": {
-        "__realization__": "barsup.adapters.Splitter",
+        "__realization__": "barsup.adapter.Splitter",
         "$to_name": "full_name",
         "$from_names": [
           "lname",

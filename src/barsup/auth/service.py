@@ -1,7 +1,6 @@
 # coding: utf-8
 """Сервисы для аутентфикации и авторизации."""
-
-import hashlib
+from barsup.auth.util import to_md5_hash
 
 from barsup.service import Service
 
@@ -10,7 +9,12 @@ class AuthenticationService(Service):
 
     """Сервис аутентификации."""
 
-    def __init__(self, user_model, **kwargs):
+    METHODS = {
+        None: lambda x: x,
+        'md5': to_md5_hash
+    }
+
+    def __init__(self, user_model, hash=None, **kwargs):
         """.
 
         :param user_model: Ссылка на модель пользователей
@@ -18,6 +22,7 @@ class AuthenticationService(Service):
         :return:
         """
         super().__init__(**kwargs)
+        self.method = self.METHODS[hash]
         self.user_model = user_model
 
     def login(self, login, password, web_session_id):
@@ -34,7 +39,7 @@ class AuthenticationService(Service):
         ).filter(
             'login', 'eq', login
         ).filter(
-            'password', 'eq', password
+            'password', 'eq', self.method(password)
         ).get()
 
         user_id = obj.get('id')
@@ -67,11 +72,6 @@ class AuthenticationService(Service):
         """
         obj = self.filter('web_session_id', 'eq', web_session_id).get()
         return obj.get('user_id')
-
-    def _to_md5_hash(self, value, salt='2Bq('):
-        # Хеширование пароля
-        data = hashlib.md5((salt + value).encode())
-        return data.hexdigest()
 
 
 class AuthorizationService(Service):

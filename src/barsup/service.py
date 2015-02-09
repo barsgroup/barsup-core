@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import expression, operators
 
-from barsup.adapters import DefaultAdapter
+from barsup.adapter import DefaultAdapter
 import barsup.exceptions as exc
 
 
