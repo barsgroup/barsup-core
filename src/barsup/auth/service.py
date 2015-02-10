@@ -6,7 +6,6 @@ from barsup.service import Service
 
 
 class AuthenticationService(Service):
-
     """Сервис аутентификации."""
 
     METHODS = {
@@ -75,7 +74,6 @@ class AuthenticationService(Service):
 
 
 class AuthorizationService(Service):
-
     """Сервис авторизации."""
 
     def __init__(self, user_role, **kwargs):

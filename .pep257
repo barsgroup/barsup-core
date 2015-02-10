@@ -1,4 +1,4 @@
 [pep257]
 verbose = true
-ignore = D400,D205
+ignore = D400,D205,D203
 explain = true

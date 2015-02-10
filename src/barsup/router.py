@@ -15,19 +15,16 @@ PARAM_PARSERS = {
     'dict': dict
 }
 
-
 CATCH_ALL_PARAMS = object()
 
 
 class RoutingError(Exception):
-
     """Выбрасывается на уровне роутинга."""
 
     pass
 
 
 class Router:
-
     """Механизм маршрутизации по API-KEY (URL, id, etc.)."""
 
     def __init__(self, bypass_params=None):
@@ -101,7 +98,7 @@ class Router:
                     if name in dest:
                         # параметры из url могут быть и не задекларированы,
                         # тогда они передаются "как есть"
-                        parser = lambda x: x
+                        def parser(x): x
                     else:
                         # тогда как прочие должны декларироваться
                         raise RoutingError(
