@@ -28,10 +28,10 @@ def create_user_role(session, user, role, user_role):
             password = getpass('Введите пароль: ')
 
         user_id = user.create(**{
-            'name': user_name,
+            'name': user_name or login,
             'email': email,
             'login': login,
-            'password': password
+            'password': password or ''
         })['id']
         messages = ['Пользователь с id="{0}" создан.'.format(user_id)]
         if role_name:
