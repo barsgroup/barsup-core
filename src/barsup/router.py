@@ -98,7 +98,8 @@ class Router:
                     if name in dest:
                         # параметры из url могут быть и не задекларированы,
                         # тогда они передаются "как есть"
-                        def parser(x): x
+                        def parser(x):
+                            return x
                     else:
                         # тогда как прочие должны декларироваться
                         raise RoutingError(
