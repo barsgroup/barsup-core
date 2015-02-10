@@ -6,3 +6,4 @@ alembic
 simplejson
 yadic
 webob
+plac

@@ -13,32 +13,19 @@ def create_user_role(session, user, role, user_role):
     :param user_role: Сервис для связки ролей и пользователей
     :return:
     """
-    def wrapper(user_name=None, email=None, login=None,
-                password=None, role_name=None, is_super=None,
-                **kwargs):
-
+    def wrapper(
+        login: "Login",
+        password: ("Password", "option", "p"),
+        user_name: ("User full name", "option", "n"),
+        email: ("Email", "option", "m"),
+        role_name: ("Role", "option", "r"),
+        is_super: ("Create the superuser", "flag", "S")=False,
+        ask_password: ("Ask password interactively", "flag", "P")=False,
+    ):
         session.bind.echo = False
 
-        if user_name is None:
-            user_name = input(
-                'Введите username: '
-            )
-        if email is None:
-            email = input(
-                'Введите e-mail: '
-            )
-        if login is None:
-            login = input(
-                'Введите логин: '
-            )
-        if password is None:
-            password = password or getpass(
-                'Введите пароль: '
-            )
-        if role_name is None:
-            role_name = role_name or input(
-                'Введите название роли (default=""): '
-            ) or ""
+        if password is None and ask_password:
+            password = getpass('Введите пароль: ')
 
         user_id = user.create(**{
             'name': user_name,

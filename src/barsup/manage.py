@@ -3,6 +3,8 @@
 
 import sys
 
+import plac
+
 from barsup.accli import AutoCompleteCLI
 from barsup.core import init
 from barsup.util import get_config_from_env
@@ -29,7 +31,8 @@ class ManagementCLI(AutoCompleteCLI):
 
     def _call(self, args):
         command = args[0]
-        self.cont.get(self.COMMAND_GROUP, command)(*args[1:])
+        cmd = self.cont.get(self.COMMAND_GROUP, command)
+        plac.call(cmd, args[1:])
 
 
 if __name__ == '__main__':
