@@ -4,11 +4,11 @@
 AVAILABLE_ACTIONS = []
 
 
-def list_actions(cont, api):
+def list_actions(cont, fend):
     """initware, получающее список экшнов для подсистемы проверки прав. """
-    from barsup.core import iter_apis
+    from barsup.core import iter_frontends
 
-    for path, sub_api in iter_apis(api):
+    for path, sub_fend in iter_frontends(fend):
         path = '/'.join(path + ('%s',))
-        for ctl, action in sub_api:
+        for ctl, action in sub_fend.api:
             AVAILABLE_ACTIONS.append((path % ctl, action))

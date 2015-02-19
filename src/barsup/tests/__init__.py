@@ -52,7 +52,7 @@ def create_api(*path):
     def inner(f):
         def wrap(*args, **kwargs):
             test_path = os.path.join(os.path.dirname(__file__), *path)
-            api = init(config=test_path)
-            return f(api, *args, **kwargs)
+            fend = init(config=test_path)
+            return f(fend.api, *args, **kwargs)
         return wrap
     return inner

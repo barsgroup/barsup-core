@@ -109,7 +109,10 @@
       }
     },
     "api_options": {
-      "default": {
+      "api": {
+        "__realization__": "barsup.core.API",
+        "__type__": "singleton",
+        "container:__internal__": "__this__",
         "initware": [
           "list_actions"
         ],

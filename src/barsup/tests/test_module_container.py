@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from barsup.core import init, ModuleContainer, iter_apis
+from barsup.core import init, ModuleContainer, iter_frontends
 from barsup.controller import Controller
 
 
@@ -76,18 +76,18 @@ def test_module_container():
     api = make_api()
 
     sub_api = api._container.get('module', 'm')
-    assert sub_api.populate('/math/add', x=10, y=32) == 42
-    assert sub_api.populate('/math/mul', x=10, y=32) == 320
+    assert sub_api.populate('GET', '/math/add', x=10, y=32) == 42
+    assert sub_api.populate('GET', '/math/mul', x=10, y=32) == 320
 
-    api.populate('/module/math/add', x=10, y=32) == 42
+    api.populate('GET', '/module/math/add', x=10, y=32) == 42
 
 
 def test_iter_api():
     api = make_api()
     actions = [
         '/'.join(path + (ctl, action))
-        for (path, api_) in sorted(iter_apis(api))
-        for (ctl, action) in api_
+        for (path, fend) in sorted(iter_frontends(api))
+        for (ctl, action) in fend.api
     ]
     assert actions == [
         'module/call',

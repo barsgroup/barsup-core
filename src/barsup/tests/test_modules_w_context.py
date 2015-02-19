@@ -87,4 +87,4 @@ def test_context_bypass():
         container_clz=Container,
     )
 
-    assert api.populate('/inner/cont/run') is None
+    assert api.populate('GET', '/inner/cont/run') is None

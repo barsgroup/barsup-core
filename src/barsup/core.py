@@ -2,12 +2,18 @@
 """Конструкции для работы с API."""
 
 from functools import partial
+from collections import namedtuple
 import re
 
 from yadic.container import Container as _Container
 from yadic.util import deep_merge as _deep_merge
 
 from barsup.util import load_configs
+
+
+CATCH_ALL_PARAMS = object()
+
+Redirection = namedtuple('Redirection', 'module path params')
 
 
 class _Wrappable:
@@ -68,7 +74,6 @@ class ModuleContainer(_Container):
 
 
 class API:
-
     """
     Обёртка над слоем контроллеров.
 
@@ -76,19 +81,17 @@ class API:
     контроллерами.
     """
 
-    def __init__(
-        self, *,
-        container, middleware, initware, router,
-        controller_group='controller'
-    ):
-        """.
+    CONTROLLER_GROUP = 'controller'
+
+    def __init__(self, *, container, middleware):
+        """Инициализирует API.
 
         :param container: DI-контейнер
         :type container: object
         :param middleware: iterable, задающее посл-ть middleware
         :type middleware: list
-        :param router: class роутера
-        :type container: type
+        :param initware: iterable, задающее посл-ть initware
+        :type initware: list
         :param controller_group: ключ-наименование группы контроллеров
         :type controller_group: str
         """
@@ -117,32 +120,21 @@ class API:
             return nxt(controller, action, *args, **kwargs)
 
         # оборачиывание метода, вызывающего экшны, в middleware
-        call = self.call = _Wrappable(self._call)
+        call = self.call = _Wrappable(self.call)
         call.wrap_with(finalize)
         for mw in middleware[::-1]:
             call.wrap_with(mw)
         call.wrap_with(initialize)
 
-        self._controller_group = controller_group
         self._container = container
 
-        self._router = router
-        self._router.register((
-            (name, clz) for (name, _, clz) in
-            container.itergroup(controller_group)
-        ))
-
-        # вызов возможных инициализаторов
-        for iw in initware:
-            iw(container, self)
-
-    def _call(self, controller, action, **kwargs):
+    def call(self, controller, action, **kwargs):
         """
         Вызывает API-функцию с указанными параметрами.
 
         Функция ищется по паре "контроллер" + "экшн"
         """
-        ctl = self._container.get(self._controller_group, controller)
+        ctl = self._container.get(self.CONTROLLER_GROUP, controller)
         try:
             action = getattr(ctl, action)
         except AttributeError:
@@ -154,19 +146,47 @@ class API:
     def __iter__(self):
         """Возвращает итератор пар вида (controller, action)."""
         for (controller, _, realization) in self._container.itergroup(
-            self._controller_group
+            self.CONTROLLER_GROUP
         ):
             for action_decl in getattr(realization, 'actions', ()):
                 yield (controller, action_decl[1])
 
-    def populate(self, key, **kwargs):
-        """
-        Вызывает API-функцию по ключу.
 
-        параметры передаются в вызываемую функцию
+class Frontend:
+    """
+    Frontend, используемый для взаимодействия с системой
+    """
+
+    def __init__(self, *, container, api, router, initware, bypass_params):
+        self.api = api
+        self._container = container
+        self._router = router
+        router.register(
+            (name, realization)
+            for name, _, realization in
+            container.itergroup(api.CONTROLLER_GROUP)
+        )
+        self._bypass_params = bypass_params
+
+        # вызов возможных инициализаторов
+        for iw in initware:
+            iw(container, self)
+
+    def populate(self, method, path, **params):
+        """Обрабатывает вызов экшна.
+
+        :param method: 'GET'/'POST'/...
+        :type method: str
+        :param path: routing path
+        :type path: str
         """
-        ctl, action, params = self._router.route(key, kwargs)
-        return self.call(ctl, action, **params)
+        controller, action, url_params = self._router.route(method, path)
+        params.update(url_params)
+        result = self.api.call(controller, action, **params)
+        if isinstance(result, Redirection):
+            result.module.populate(method, result.path, **result.params)
+        else:
+            return result
 
 
 def init(
@@ -176,28 +196,36 @@ def init(
     get_config=load_configs,
     get_defaults=lambda: {
         'controller': {},
-        'api_options': {
+        'frontend': {
             'default': {
-                '__realization__': 'builtins.dict',
-                'middleware': [],
-                'initware': [],
-                'router:api_options': 'router',
-            },
-            'api_class': {
-                '__realization__': 'barsup.core.API',
-                '__type__': 'static'
-            },
-            'router': {
-                '__realization__': 'barsup.router.Router',
+                '__realization__': 'barsup.core.Frontend',
                 '__type__': 'singleton',
+                'container:__internal__': '__this__',
+                'api': 'default',
+                'router': 'default',
+                'initware': [],
                 '$bypass_params': ['web_session_id', '_context']
+            },
+        },
+        'api': {
+            'default': {
+                '__realization__': 'barsup.core.API',
+                '__type__': 'singleton',
+                'container:__internal__': '__this__',
+                'middleware': []
+            },
+        },
+        'router': {
+            'default': {
+                '__realization__': 'barsup.router.Router',
+                '__type__': 'singleton'
             }
         },
         'module': {
             '__default__': {
                 '__realization__': 'barsup.core.init',
                 '__type__': 'singleton',
-                'parent:__internal__': '__this__',
+                'parent:__internal__': '__this__'
             }
         }
     },
@@ -213,7 +241,7 @@ def init(
     :type container_clz: object
     :param get_defaults: callable, возвращающий умолчательную конфигурацию
     :type get_defaults: object
-    :return type: API
+    :return type: Frontend
     """
     cont = container_clz(
         config=_deep_merge(
@@ -222,23 +250,20 @@ def init(
             fn=lambda x, y, m, p: y),
         parent=parent
     )
-    api = cont.get('api_options', 'api_class')(
-        container=cont,
-        **cont.get('api_options', 'default'))
-    return api
+    return cont.get('frontend', 'default')
 
 
-def iter_apis(api):
+def iter_frontends(f):
     """
-    Возвращает итератор пар, для дочерних модулей указанного API.
+    Возвращает итератор пар, для дочерних модулей указанного Frontend.
 
-    Формат итератора: (кортеж-путь_до_API, экземпляр API)
+    Формат итератора: (кортеж-путь_до_Frontend, экземпляр Frontend)
     """
-    yield tuple(), api
-    cont = api._container
+    yield tuple(), f
+    cont = f._container
     for item in cont.itergroup('module'):
         module = item[0]
-        for path, inst in iter_apis(cont.get('module', module)):
+        for path, inst in iter_frontends(cont.get('module', module)):
             yield (module,) + path, inst
 
 

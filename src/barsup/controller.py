@@ -183,15 +183,15 @@ class ModuleController:
 
     """Контроллер, делигирующий вызов внутрь стороннего модуля."""
 
-    from barsup.router import CATCH_ALL_PARAMS
+    from barsup.core import CATCH_ALL_PARAMS, Redirection
 
     actions = (('{_subroute:.*}', 'call', CATCH_ALL_PARAMS),)
 
     def __init__(self, module):
-        """.
+        """Инициализирует контроллер модуля.
 
-        :param module: Наименование модуля
-        :return:
+        :param module: Frontend модуля
+        :type module: barsup.core.Frontend
         """
         self._module = module
 
@@ -203,7 +203,7 @@ class ModuleController:
         :param kwargs:
         :return:
         """
-        return self._module.populate(_subroute, **kwargs)
+        return self.Redirection(self._module, _subroute, kwargs)
 
 
 __all__ = ('DictController', 'Controller', 'ModuleController')
