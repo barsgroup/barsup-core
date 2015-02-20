@@ -58,7 +58,7 @@ class DictController(Controller, metaclass=Injectable):
         filter: 'json'=None,
         group: 'str'=None,
         sort: 'json'=None
-    ) -> r'/read':
+    ) -> ("GET", r"/read"):
         """
         Действие для получения списка объектов.
 
@@ -83,7 +83,7 @@ class DictController(Controller, metaclass=Injectable):
         self,
         id_: "int",
         filter: "json"=None
-    ) -> r"/read/{id_:\d+}":
+    ) -> ("GET", r"/read/{id_:\d+}"):
         """
         Действие на получение одного объекта.
 
@@ -96,7 +96,7 @@ class DictController(Controller, metaclass=Injectable):
     def bulk_update(
         self,
         records: "list"
-    ) -> r"/update":
+    ) -> ("POST", r"/update"):
         """
         Действие изменения списка объектов.
 
@@ -110,7 +110,7 @@ class DictController(Controller, metaclass=Injectable):
         self,
         id_: "int",
         data: "dict"
-    ) -> r"/update/{id_:\d+}":
+    ) -> ("POST", r"/update/{id_:\d+}"):
         """
         Действие изменения одного объекта.
 
@@ -137,7 +137,7 @@ class DictController(Controller, metaclass=Injectable):
     def destroy(
         self,
         id_: "int"
-    ) -> "/destroy/{id_:\d+}":
+    ) -> ("POST", "/destroy/{id_:\d+}"):
         """
         Действие удаление одного объекта.
 
@@ -150,7 +150,7 @@ class DictController(Controller, metaclass=Injectable):
     def create(
         self,
         data: "dict"
-    ) -> r"/create":
+    ) -> ("POST", r"/create"):
         """
         Действие создания одного объекта.
 
@@ -162,7 +162,7 @@ class DictController(Controller, metaclass=Injectable):
     def bulk_create(
         self,
         records: "list"
-    ) -> r"/bulk-create":
+    ) -> ("POST", r"/bulk-create"):
         """
         Действие создания списка объектов.
 

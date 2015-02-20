@@ -7,7 +7,7 @@ class CLIController(Controller):
 
     """Заглушка тестового контроллера для CLI."""
 
-    def read(self, params) -> '/read':
+    def read(self, params) -> ('GET', r'/read'):
         """
         Возвращает полученные параметры.
 
@@ -16,7 +16,7 @@ class CLIController(Controller):
         """
         return params
 
-    def write(self, params) -> '/write':
+    def write(self, params) -> ('GET', r'/write'):
         """
         Возвращает полученные параметры.
 
