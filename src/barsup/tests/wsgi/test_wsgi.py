@@ -74,8 +74,9 @@ def test_with_json_body():
         content_type='application/json',
         charset='utf-8',
         method='POST',
-        body=json.dumps({"filter": [1, 2, 3], "sorter": "desc"}).encode(
-            'utf-8'))
+        body=json.dumps(
+            {"filter": [1, 2, 3], "sorter": "desc"}
+        ).encode('utf-8'))
 
     response = process(request)
     assert response.status_code == 200

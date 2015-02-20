@@ -90,8 +90,6 @@ class API:
         :type container: object
         :param middleware: iterable, задающее посл-ть middleware
         :type middleware: list
-        :param initware: iterable, задающее посл-ть initware
-        :type initware: list
         :param controller_group: ключ-наименование группы контроллеров
         :type controller_group: str
         """
@@ -149,7 +147,7 @@ class API:
             self.CONTROLLER_GROUP
         ):
             for action_decl in getattr(realization, 'actions', ()):
-                yield (controller, action_decl[1])
+                yield (controller, action_decl[2])
 
 
 class Frontend:
@@ -157,16 +155,29 @@ class Frontend:
     Frontend, используемый для взаимодействия с системой
     """
 
-    def __init__(self, *, container, api, router, initware, bypass_params):
+    def __init__(self, *, container, api, router, initware, params=None):
+        """Инициализирует Frontend.
+
+        :param api: API
+        :type api: API
+        :param router: Router
+        :type router: barsup.router.Router
+        :param initware: iterable, задающее посл-ть initware
+        :type initware: list
+        """
         self.api = api
         self._container = container
         self._router = router
-        router.register(
-            (name, realization)
-            for name, _, realization in
-            container.itergroup(api.CONTROLLER_GROUP)
-        )
-        self._bypass_params = bypass_params
+        self._params = params or {}
+
+        # регистрация контроллеров и сбор информации о параметрах экшнов
+        self._declarations = {}
+        for controller, _, realization in container.itergroup(
+            api.CONTROLLER_GROUP
+        ):
+            for decl in getattr(realization, 'actions', []):
+                method, route, action, args = (tuple(decl) + ({},))[:4]
+                router.register(method, route, controller, action)
 
         # вызов возможных инициализаторов
         for iw in initware:
@@ -189,12 +200,10 @@ class Frontend:
             return result
 
 
-def init(
-    config,
-    *,
-    container_clz=ModuleContainer,
-    get_config=load_configs,
-    get_defaults=lambda: {
+def get_defaults():
+    """Возвращает конфигурацию по умолчанию"""
+
+    return {
         'controller': {},
         'frontend': {
             'default': {
@@ -203,8 +212,8 @@ def init(
                 'container:__internal__': '__this__',
                 'api': 'default',
                 'router': 'default',
-                'initware': [],
-                '$bypass_params': ['web_session_id', '_context']
+                'initware': []
+                # '$bypass_params': ['web_session_id', '_context']
             },
         },
         'api': {
@@ -228,7 +237,15 @@ def init(
                 'parent:__internal__': '__this__'
             }
         }
-    },
+    }
+
+
+def init(
+    config,
+    *,
+    container_clz=ModuleContainer,
+    get_config=load_configs,
+    get_defaults=get_defaults,
     parent=None
 ):
     """

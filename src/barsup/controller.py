@@ -25,7 +25,8 @@ class Controller:
                         attr, '__annotations__', None
                     ):
                         decl = attr.__annotations__.copy()
-                        yield decl.pop('return'), attr.__name__, decl
+                        method, route = decl.pop('return')
+                        yield method, route, attr.__name__, decl
 
     actions = _ActionsSet()
 
@@ -185,7 +186,7 @@ class ModuleController:
 
     from barsup.core import CATCH_ALL_PARAMS, Redirection
 
-    actions = (('{_subroute:.*}', 'call', CATCH_ALL_PARAMS),)
+    actions = (('*', '{_subroute:.*}', 'call', CATCH_ALL_PARAMS),)
 
     def __init__(self, module):
         """Инициализирует контроллер модуля.

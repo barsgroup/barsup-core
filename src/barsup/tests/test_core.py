@@ -39,7 +39,6 @@ def test_initware():
         api=core.API(container=fake_container, middleware=[]),
         router=FakeRouter,
         initware=[lambda *args: mutable.append(args)],
-        bypass_params=[]
     )
 
     assert mutable, "Initware wasn't called!"
@@ -56,14 +55,14 @@ def test_api_calls():
 
     class FakeContainer:
         class Math:
-            actions = (('/add', 'add', {}),)
+            actions = (('GET', '/add', 'add', {}),)
 
             @staticmethod
             def add(a, b):
                 return a + b
 
         class Str:
-            actions = (('/upper', 'upper', {}),)
+            actions = (('GET', '/upper', 'upper', {}),)
 
             @staticmethod
             def upper(s):
@@ -101,7 +100,7 @@ def test_complex_example():
 
     class Controller(object):
 
-        actions = (('/{x:.+}/add', 'add', {}),)
+        actions = (('GET', '/{x:.+}/add', 'add', {}),)
 
         def __init__(self, y):
             self._y = y

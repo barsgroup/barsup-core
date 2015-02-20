@@ -18,7 +18,7 @@ class Container(ModuleContainer):
             f: 'str',
             x: 'int',
             y: 'int'
-        ) -> r'/{f:.*}':
+        ) -> ('GET', r'/{f:.*}'):
             return self.lib.get(f)(x, y)
 
     def _get_entity(self, name):

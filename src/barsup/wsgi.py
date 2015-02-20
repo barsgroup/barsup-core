@@ -1,18 +1,19 @@
 # coding:utf-8
 """Функционал для работы уровня WSGI."""
 
-import json
-import traceback
-from os import path
 from datetime import datetime
+import json
+from os import path
+from sys import stderr, exc_info
+import traceback
 from uuid import uuid4
 
 from simplejson.scanner import JSONDecodeError
+
 from webob import Response, exc
 from webob.dec import wsgify
 from webob.static import DirectoryApp
 
-from sys import stderr, exc_info
 from barsup import core, exceptions
 from barsup.router import RoutingError
 from barsup.util import serialize_to_json
@@ -32,12 +33,17 @@ def handler(config_file_name, catch_cookies):
             params.update(request.params)
 
         for cookie in catch_cookies:
-            params[cookie] = request.cookies.get(cookie, None)
+            # cookies не декларируются, как параметры
+            # поэтому инена дополняются префиксом "_"
+            params["_" + cookie] = request.cookies.get(cookie, None)
 
         status = 200
         try:
             result = api.populate(
-                request.path, **params)
+                request.method,
+                request.path,
+                **params
+            )
 
         except (exceptions.BadRequest, RoutingError) as e:
             status, result = 400, e

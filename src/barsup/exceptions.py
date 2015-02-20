@@ -29,7 +29,8 @@ class ValidationError(BadRequest):
 
 class NameValidationError(ValidationError):
 
-    """Генерируется при направильном указании поля в модели."""
+    """Возбуждается в том случае, когда имя поля модели
+    указано неправильно."""
 
     def __init__(self, field_name, model):
         """.

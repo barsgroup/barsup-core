@@ -11,7 +11,7 @@ class Container(ModuleContainer):
 
     class Controller:
 
-        actions = (('/run', 'run', {}),)
+        actions = (('GET', '/run', 'run', {}),)
 
         @staticmethod
         def run():

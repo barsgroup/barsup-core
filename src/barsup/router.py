@@ -20,29 +20,41 @@ class Router:
         :type controllers: object
         """
         self._mapper = routes.Mapper()
+        self._submappers = {}
 
-    def register(self, controllers):
-        """Регистрирует контроллеры.
+    def register(self, method, route, controller, action):
+        """Регистрирует
 
-        :param controllers: список пак вида ('ctl_name', ctl_realization)
-        :type controllers: list
+        :param method: 'GET'/'POST',...
+        :type method: str
+        :param route: route
+        :type route: str
+        :param controller: Контроллер
+        :type controller: str
+        :param action: Экшн
+        :type action: str
         """
-        for controller, realization in controllers:
+        mapper = self._submappers.get(controller)
+        if not mapper:
             mapper = self._mapper.submapper(
-                path_prefix='/' + controller.lower())
-            for action_decl in getattr(realization, 'actions'):
-                route, action, _ = (action_decl + (None,))[:3]
-                mapper.connect(route, controller=controller, action=action)
+                path_prefix='/' + controller.lower()
+            )
+        mapper.connect(
+            route, controller=controller, action=action,
+            conditions={} if method == '*' else {
+                'method': [method] if isinstance(method, str) else method
+            }
+        )
 
     def route(self, method, path):
         """Возвращает контроллер, экшн и параметры по url(path).
 
-        :param method: 'GET'/'POST'/...
-        :type key: str
+        :param method: 'GET" или ('GET', 'POST'...)
+        :type key: object
         :param path: routing path
         :type path: str
         """
-        dest = self._mapper.match(path)
+        dest = self._mapper.match(path, environ={'REQUEST_METHOD': method})
         if not dest:
             raise RoutingError('Wrong path: "%s"!' % path)
 
