@@ -3,7 +3,6 @@
 from yadic.container import Container
 
 from barsup.core import API
-from barsup.tests.test_core import FakeRouter
 
 
 def inc_a(next, controller, action, **params):
@@ -67,9 +66,7 @@ class FakeContainer(Container):
 def make_api(*middleware):
     return API(
         container=FakeContainer({}),
-        router=FakeRouter,
-        middleware=middleware,
-        initware=[],
+        middleware=middleware
     )
 
 

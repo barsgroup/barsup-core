@@ -195,7 +195,7 @@ class Frontend:
         params.update(url_params)
         result = self.api.call(controller, action, **params)
         if isinstance(result, Redirection):
-            result.module.populate(method, result.path, **result.params)
+            return result.module.populate(method, result.path, **result.params)
         else:
             return result
 

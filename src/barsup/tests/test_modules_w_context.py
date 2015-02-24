@@ -15,7 +15,7 @@ class Container(ModuleContainer):
 
         @staticmethod
         def run():
-            pass
+            return True
 
     def _get_entity(self, name):
         if name == 'Controller':
@@ -87,4 +87,4 @@ def test_context_bypass():
         container_clz=Container,
     )
 
-    assert api.populate('GET', '/inner/cont/run') is None
+    assert api.populate('GET', '/inner/cont/run')

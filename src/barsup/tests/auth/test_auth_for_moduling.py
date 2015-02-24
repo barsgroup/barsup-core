@@ -39,7 +39,7 @@ class EchoController(Controller):
     """Контроллер-заглушка."""
 
     @staticmethod
-    def action(message: "str") -> r"/action":
+    def action(message: "str") -> ("GET", r"/action"):
         """Возвращает полученное сообщение обратно."""
         return message
 
@@ -71,7 +71,7 @@ def test_module_authorization():
     """
     auth = FakeAuth()
 
-    api = init(
+    fend = init(
         config={
             'controller': {
                 'm1': {
@@ -79,7 +79,7 @@ def test_module_authorization():
                     'module': 'm1'
                 }
             },
-            'api_options': {
+            'api': {
                 'default': {
                     'middleware': [
                         # pop_uid обеспечивает для authorization
@@ -122,7 +122,7 @@ def test_module_authorization():
                                             '__realization__': 'CONT'
                                         }
                                     },
-                                    'api_options': {
+                                    'api': {
                                         'default': {
                                             'middleware': [
                                                 '../../authorization'
@@ -146,7 +146,9 @@ def test_module_authorization():
     )
 
     def call_for(uid, message):
-        return api.populate('/m1/m2/cont/action', uid=uid, message=message)
+        return fend.populate(
+            'GET', '/m1/m2/cont/action', uid=uid, message=message
+        )
 
     assert call_for(FakeAuth.GOOD_USER, "Hi!") == "Hi!"
 

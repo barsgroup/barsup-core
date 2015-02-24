@@ -25,7 +25,13 @@ class Controller:
                         attr, '__annotations__', None
                     ):
                         decl = attr.__annotations__.copy()
-                        method, route = decl.pop('return')
+                        try:
+                            method, route = decl.pop('return')
+                        except (ValueError, TypeError):
+                            raise RuntimeError((
+                                "Wrong action declaration in "
+                                "the controller \"%r\""
+                            ) % owner)
                         yield method, route, attr.__name__, decl
 
     actions = _ActionsSet()
