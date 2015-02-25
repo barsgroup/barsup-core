@@ -108,20 +108,19 @@
         ]
       }
     },
-    "api_options": {
-      "api": {
-        "__realization__": "barsup.core.API",
-        "__type__": "singleton",
-        "container:__internal__": "__this__",
-        "initware": [
-          "list_actions"
-        ],
+    "api": {
+      "default": {
         "middleware": [
           "log_errors_to_stderr",
           "transact",
           "authentication",
           "authorization"
         ]
+      }
+    },
+    "frontend": {
+      "default": {
+        "initware": ["list_actions"]
       }
     },
     "initware": {

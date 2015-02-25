@@ -16,21 +16,20 @@ def authentication(auth, preserve_user=None, white_list=None):
     """
     bypass = set(white_list or []).__contains__
 
-    def wrapper(nxt, controller, action, web_session_id=None, **params):
+    def wrapper(nxt, controller, action, _web_session_id=None, **params):
         if bypass(controller):
             return nxt(
-                controller, action, web_session_id=web_session_id,
+                controller, action, _web_session_id=_web_session_id,
                 **params
             )
-
         try:
-            uid = auth.is_logged_in(web_session_id=web_session_id)
+            uid = auth.is_logged_in(web_session_id=_web_session_id)
         except exc.NotFound:
             raise exc.Unauthorized()
 
         params['_context'].setdefault('uid', uid)
         if controller in (preserve_user or []):
-            params['uid'] = uid
+            params['_uid'] = uid
         return nxt(controller, action, **params)
 
     return wrapper

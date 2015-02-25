@@ -129,7 +129,7 @@ class DictController(Controller, metaclass=Injectable):
     def bulk_destroy(
         self,
         identifiers: "list"
-    ) -> r"/destroy/":
+    ) -> ("POST", r"/destroy/"):
         """
         Действие для удаления списка объектов.
 

@@ -17,8 +17,8 @@ class Authentication(Controller, metaclass=Injectable):
         self,
         login: 'str',
         password: 'str',
-        web_session_id: 'str'
-    ) -> r'/login':
+        _web_session_id
+    ) -> ("POST", r'/login'):
         """
         Действие входа пользователя.
 
@@ -28,13 +28,13 @@ class Authentication(Controller, metaclass=Injectable):
         :return:
         """
         return self.service.login(
-            login, password, web_session_id
+            login, password, _web_session_id
         )
 
     def logout(
         self,
-        web_session_id: 'str'
-    ) -> r'/logout':
+        _web_session_id
+    ) -> ("GET", r'/logout'):
         """
         Действие выхода из системы.
 
@@ -57,7 +57,7 @@ class PermissionController(Controller, metaclass=Injectable):
         filter: 'json'=None,
         group: 'str'=None,
         sort: 'json'=None
-    ) -> r"/read":
+    ) -> ("GET", r"/read"):
         """
         Возвращает список всех контроллеров в системе.
 
@@ -84,7 +84,7 @@ class PermissionAction(Controller, metaclass=Injectable):
         query: 'str'=None,
         group: 'str'=None,
         sort: 'json'=None
-    ) -> r"/read":
+    ) -> ("GET", r"/read"):
         """
         Возвращает список действий одного контроллера.
 

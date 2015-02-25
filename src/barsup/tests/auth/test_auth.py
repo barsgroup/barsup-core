@@ -15,11 +15,12 @@ def test_without_session(api):
     Пустой сессионный ключ
     """
     with pytest.raises(exc.Unauthorized):
-        api.call("User", 'create', data={
-            "login": "test",
-            "email": "test@test.com",
-            "password": "test"
-        })
+        api.call(
+            "User", 'create', data={
+                "login": "test",
+                "email": "test@test.com",
+                "password": "test"
+            })
 
 
 @get_api
@@ -28,11 +29,14 @@ def test_bad_session(api):
     Неправильная сессия
     """
     with pytest.raises(exc.Unauthorized):
-        api.call("User", 'create', data={
-            "login": "test",
-            "email": "test@test.com",
-            "password": "test"
-        }, web_session_id="user-session-id")
+        api.call(
+            "User", 'create', data={
+                "login": "test",
+                "email": "test@test.com",
+                "password": "test"
+            },
+            _web_session_id="user-session-id"
+        )
 
 
 @get_api
@@ -41,12 +45,15 @@ def test_create_user(api):
     Создание пользователя под администратором с правильной сессией
     """
 
-    data = api.call("User", 'create', data={
-        "name": "Администратор",
-        "login": "test",
-        "email": "test@test.com",
-        "password": "test"
-    }, web_session_id=ADMIN_SESSION)
+    data = api.call(
+        "User", 'create', data={
+            "name": "Администратор",
+            "login": "test",
+            "email": "test@test.com",
+            "password": "test"
+        },
+        _web_session_id=ADMIN_SESSION
+    )
 
     assert isinstance(data, dict)
     assert data['name'] == "Администратор"
@@ -61,26 +68,30 @@ def test_correct_login(api):
     Аутентификация с корректным пользователем
     """
     new_session_id = 'session-id'
-    result = api.call("Authentication", 'login',
-                      login='administrator',
-                      password='secret',
-                      web_session_id=new_session_id)
+    result = api.call(
+        "Authentication", "login",
+        login='administrator',
+        password='secret',
+        _web_session_id=new_session_id
+    )
 
     assert result is True
 
     # Теперь с этой сессией можно производить запросы
-    data = api.call("Role",
-                    'read',
-                    web_session_id=new_session_id)
+    data = api.call(
+        "Role", "read",
+        _web_session_id=new_session_id
+    )
 
     data = list(data)
     assert len(data) > 0  # Какой-то список ролей
 
     # А со старой нельзя
     with pytest.raises(exc.Unauthorized):
-        api.call("Role",
-                 'read',
-                 web_session_id=ADMIN_SESSION)
+        api.call(
+            "Role", "read",
+            _web_session_id=ADMIN_SESSION
+        )
 
 
 @get_api
@@ -90,10 +101,12 @@ def test_bad_password(api):
     """
 
     with pytest.raises(exc.NotFound):
-        api.call("Authentication", 'login',
-                 login='administrator',
-                 password='wrong-password',
-                 web_session_id='new-session-id')
+        api.call(
+            "Authentication", "login",
+            login='administrator',
+            password='wrong-password',
+            _web_session_id='new-session-id'
+        )
 
 
 @get_api
@@ -103,10 +116,12 @@ def test_bad_login(api):
     """
 
     with pytest.raises(exc.NotFound):
-        api.call("Authentication", 'login',
-                 login='admin',
-                 password='secret',
-                 web_session_id='new-session-id')
+        api.call(
+            "Authentication", "login",
+            login='admin',
+            password='secret',
+            _web_session_id='new-session-id'
+        )
 
 
 @get_api
@@ -115,7 +130,7 @@ def test_incorrect_perm(api):
     Исключение при некорректных правах
     """
     with pytest.raises(exc.Forbidden):
-        api.call('User', 'get', web_session_id=USER_SESSION)
+        api.call('User', 'get', _web_session_id=USER_SESSION)
 
 
 @get_api
@@ -124,7 +139,7 @@ def test_correct_user_perm(api):
     Проверка корректных прав
 
     """
-    data = api.call('User', 'read', web_session_id=USER_SESSION)
+    data = api.call('User', 'read', _web_session_id=USER_SESSION)
     data = list(data)
     assert len(data) > 0  # Не нулевой список пользователей
 
@@ -134,8 +149,10 @@ def test_permissions_controller(api):
     """
     Получение списка контроллеров
     """
-    data = api.call('PermissionController', 'read',
-                    web_session_id=ADMIN_SESSION)
+    data = api.call(
+        'PermissionController', 'read',
+        _web_session_id=ADMIN_SESSION
+    )
     data = list(item['controller'] for item in data)
     assert 'Authentication' in data
     assert 'User' in data
@@ -152,11 +169,15 @@ def test_permissions_actions(api):
     :param api:
     :return:
     """
-    data = api.call('PermissionAction', 'read',
-                    filter=[{'property': '_',
-                             'operator': '_',
-                             'value': 'UserRole'}],
-                    web_session_id=ADMIN_SESSION)
+    data = api.call(
+        'PermissionAction', 'read',
+        filter=[{
+            'property': '_',
+            'operator': '_',
+            'value': 'UserRole'
+        }],
+        _web_session_id=ADMIN_SESSION
+    )
     data = list(item['action'] for item in data)
     assert 'get' in data
     assert 'read' in data
