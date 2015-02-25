@@ -82,13 +82,13 @@ class LocalContainer(ModuleContainer):
 
 @pytest.fixture
 def get_api():
-    api = init({'controller': {
+    fend = init({'controller': {
         'cont': {
             '__realization__': 'local.Controller',
             '$service': Service()
         }
     }, }, container_clz=LocalContainer, get_config=lambda x: x)
-    return api
+    return fend.api
 
 
 def test_read():

@@ -5,15 +5,23 @@ from barsup.router import RoutingError
 import barsup.exceptions as exc
 
 
-class MockAPI:
+class MockFrontend:
 
-    """Заглушка для API."""
+    """Заглушка для Frontend."""
+
+    EXCEPTIONS = {
+        '/wrong-controller': RoutingError(),
+        '/unauthorized': exc.Unauthorized(),
+        '/forbidden': exc.Forbidden(1, 'test', 'test'),
+        '/not-found': exc.NotFound(),
+        '/value-error': ValueError(),
+    }
 
     def __init__(self, *args, **kwargs):
         """Игнорирует входящие параметры."""
         pass
 
-    def populate(self, key, **params):
+    def populate(self, method, key, **params):
         """
         Возвращает набор предустановленных значений по ключам URL.
 
@@ -21,17 +29,11 @@ class MockAPI:
         :param params:
         :return:
         """
-        result = {
-            '/wrong-controller': RoutingError(),
-            '/controller/with_data': params,
-            '/unauthorized': exc.Unauthorized(),
-            '/forbidden': exc.Forbidden(1, 'test', 'test'),
-            '/not-found': exc.NotFound(),
-            '/value-error': ValueError(),
-            '/wrong-serialize': object(),
-        }[key]
+        result = self.EXCEPTIONS.get(key)
 
         if isinstance(result, Exception):
             raise result
-        else:
-            return result
+        elif key == '/controller/with_data':
+            return params
+        elif key == '/wrong-serialize':
+            return object()

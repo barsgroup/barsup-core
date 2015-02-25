@@ -1,14 +1,7 @@
 {
-  "api_options": {
+  "frontend": {
     "default": {
-      "__realization__": "builtins.dict"
-    },
-    "api_class": {
-      "__realization__": "barsup.tests.wsgi.MockAPI",
-      "__type__": "static"
-    },
-    "router": {
-      "__realization__": "builtins.dict"
+      "__realization__": "barsup.tests.wsgi.MockFrontend"
     }
   }
 }

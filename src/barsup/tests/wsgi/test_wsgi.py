@@ -17,7 +17,7 @@ def process(request):
     )
     return handler(
         config_file_name='$BUP_CONFIG',
-        catch_cookies=('something-cookies',),
+        catch_cookies=('some-cookies',),
     )(request)
 
 
@@ -157,13 +157,13 @@ def test_cookies():
         '/controller/with_data',
         charset='utf-8',
         method='GET',
-        cookies={'something-cookies': 'coockie-1'}
+        cookies={'some-cookies': 'coockie-1'}
     )
 
     response = process(request)
     assert response.status_code == 200
     data = response.json['data']
-    assert data['something-cookies'] == 'coockie-1'
+    assert data['_some-cookies'] == 'coockie-1'
 
 
 def test_wrong_cookies():
@@ -177,6 +177,6 @@ def test_wrong_cookies():
     response = process(request)
     assert response.status_code == 200
     data = response.json['data']
-    assert data['something-cookies'] is None
+    assert data['_some-cookies'] is None
     assert 'a' not in data
     assert 'b' not in data
