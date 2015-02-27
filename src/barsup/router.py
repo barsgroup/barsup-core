@@ -23,7 +23,7 @@ class Router:
         self._submappers = {}
 
     def register(self, method, route, controller, action):
-        """Регистрирует
+        """Регистрирует экшн и возвращает path для его вызова
 
         :param method: 'GET'/'POST',...
         :type method: str
@@ -33,18 +33,19 @@ class Router:
         :type controller: str
         :param action: Экшн
         :type action: str
+        :type return: str
         """
+        prefix = '/' + controller.lower()
         mapper = self._submappers.get(controller)
         if not mapper:
-            mapper = self._mapper.submapper(
-                path_prefix='/' + controller.lower()
-            )
+            mapper = self._mapper.submapper(path_prefix=prefix)
         mapper.connect(
             route, controller=controller, action=action,
             conditions={} if method == '*' else {
                 'method': [method] if isinstance(method, str) else method
             }
         )
+        return prefix + route
 
     def route(self, method, path):
         """Возвращает контроллер, экшн и параметры по url(path).

@@ -171,13 +171,16 @@ class Frontend:
         self._params = params or {}
 
         # регистрация контроллеров и сбор информации о параметрах экшнов
-        self._declarations = {}
+        self.meta = {}
         for controller, _, realization in container.itergroup(
             api.CONTROLLER_GROUP
         ):
             for decl in getattr(realization, 'actions', []):
-                method, route, action, args = (tuple(decl) + ({},))[:4]
-                router.register(method, route, controller, action)
+                method, route, action, params, options = (
+                    tuple(decl) + ({}, {}))[:5]
+                path = router.register(method, route, controller, action)
+                self.meta.setdefault(controller, {})[action] = (
+                    path, method, params, options)
 
         # вызов возможных инициализаторов
         for iw in initware:

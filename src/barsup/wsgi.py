@@ -19,9 +19,11 @@ from barsup.router import RoutingError
 from barsup.util import serialize_to_json
 
 
-def handler(config_file_name, catch_cookies):
+def handler(config_file_name, catch_cookies=None):
     """Обработчик HTTP-запросов к приложению."""
-    api = core.init(config=config_file_name)
+
+    fend = core.init(config=config_file_name)
+    catch_cookies = catch_cookies or []
 
     @wsgify
     def app(request):
@@ -39,7 +41,7 @@ def handler(config_file_name, catch_cookies):
 
         status = 200
         try:
-            result = api.populate(
+            result = fend.populate(
                 request.method,
                 request.path,
                 **params
