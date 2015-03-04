@@ -6,29 +6,59 @@ from barsup.controller import Controller
 
 class Container(ModuleContainer):
 
-    class LibController(Controller):
+    class MathController(Controller):
 
         def __init__(self, lib):
             super().__init__()
             self.lib = lib
 
-        def call(
-            self,
-            *,
-            f: 'str',
-            x: 'int',
-            y: 'int'
-        ) -> ('GET', r'/{f:.*}'):
+        def call(self, *, f, x, y):
             return self.lib.get(f)(x, y)
 
     def _get_entity(self, name):
-        if name == 'LIB_CONT':
-            return self.LibController
+        if name == 'MathController':
+            return self.MathController
         else:
             return super()._get_entity(name)
 
+root_spec = {
+    'paths': {
+        '/module{subroute:.*}': {
+            'get': {
+                'operationId': 'module.call',
+                'parameters': [
+                    {
+                        'name': 'subroute',
+                        'type': 'string',
+                        'in': 'path'
+                    }
+                ]
+            }
+        }
+    }
+}
+
+module_spec = {
+    'paths': {
+        '/math/{f}': {
+            'get': {
+                'operationId': 'MathController.call',
+                'parameters': [
+                    {'name': 'f', 'in': 'path', 'type': 'string'},
+                    {'name': 'x', 'in': 'query', 'type': 'integer'},
+                    {'name': 'y', 'in': 'query', 'type': 'integer'},
+                ]
+            }
+        }
+    }
+}
 
 config = {
+    'frontend': {
+        'default': {
+            '$spec': root_spec
+        }
+    },
     'controller': {
         'module': {
             '__realization__': 'barsup.controller.ModuleController',
@@ -38,9 +68,14 @@ config = {
     'module': {
         'm': {
             '$config': {
+                'frontend': {
+                    'default': {
+                        '$spec': module_spec
+                    }
+                },
                 'controller': {
-                    'math': {
-                        '__realization__': 'LIB_CONT',
+                    'MathController': {
+                        '__realization__': 'MathController',
                         'lib': '../libs/math'
                     }
                 }
@@ -50,6 +85,11 @@ config = {
         },
         'libs': {
             '$config': {
+                'frontend': {
+                    'default': {
+                        '$spec': {}
+                    }
+                },
                 'lib': {
                     '__default__': {
                         '__type__': 'singleton',
@@ -91,5 +131,5 @@ def test_iter_api():
     ]
     assert actions == [
         'module/call',
-        'm/math/call',
+        'm/MathController/call',
     ]

@@ -11,8 +11,6 @@ class Container(ModuleContainer):
 
     class Controller:
 
-        actions = (('GET', '/run', 'run', {}),)
-
         @staticmethod
         def run():
             return True
@@ -38,7 +36,12 @@ def test_context_bypass():
                     'module': 'inner'
                 }
             },
-            'api_options': {
+            'frontend': {
+                'default': {
+                    '$spec': {}
+                }
+            },
+            'api': {
                 'default': {
                     'middleware': [
                         'add_to_context'

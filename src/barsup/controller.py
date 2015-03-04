@@ -5,36 +5,8 @@ from yadic.container import Injectable
 
 
 class Controller:
-
     """Базовая реализация."""
-
-    class _ActionsSet:
-
-        """
-        Итератор actions.
-
-        Предоставляюет для каждого действия декларацию его параметров
-        """
-
-        def __get__(self, instance, owner):
-            assert instance is None, "\"actions\" is a class-descriptor!"
-            for attr_name in dir(owner):
-                if not attr_name.startswith('_'):
-                    attr = getattr(owner, attr_name)
-                    if callable(attr) and getattr(
-                        attr, '__annotations__', None
-                    ):
-                        decl = attr.__annotations__.copy()
-                        try:
-                            method, route = decl.pop('return')
-                        except (ValueError, TypeError):
-                            raise RuntimeError((
-                                "Wrong action declaration in "
-                                "the controller \"%r\""
-                            ) % owner)
-                        yield method, route, attr.__name__, decl
-
-    actions = _ActionsSet()
+    pass
 
 
 class DictController(Controller, metaclass=Injectable):
@@ -190,10 +162,6 @@ class ModuleController:
 
     """Контроллер, делигирующий вызов внутрь стороннего модуля."""
 
-    from barsup.core import CATCH_ALL_PARAMS, Redirection
-
-    actions = (('*', '{_subroute:.*}', 'call', CATCH_ALL_PARAMS),)
-
     def __init__(self, module):
         """Инициализирует контроллер модуля.
 
@@ -202,7 +170,7 @@ class ModuleController:
         """
         self._module = module
 
-    def call(self, *, _subroute, **kwargs):
+    def call(self, *, subroute):
         """
         Действие делегирования внутрь API стороннего модуля.
 
@@ -210,7 +178,8 @@ class ModuleController:
         :param kwargs:
         :return:
         """
-        return self.Redirection(self._module, _subroute, kwargs)
+        from barsup.core import Redirection
+        return Redirection(self._module, subroute)
 
 
 __all__ = ('DictController', 'Controller', 'ModuleController')

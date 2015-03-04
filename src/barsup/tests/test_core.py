@@ -35,6 +35,7 @@ def test_initware():
     })
 
     fend = core.Frontend(
+        spec={},
         container=fake_container,
         api=core.API(container=fake_container, middleware=[]),
         router=FakeRouter,
@@ -100,12 +101,10 @@ def test_complex_example():
 
     class Controller(object):
 
-        actions = (('GET', '/{x:.+}/add', 'add', {}),)
-
         def __init__(self, y):
             self._y = y
 
-        def add(self, x):
+        def add(self, *, x):
             return x + self._y
 
     class LocalContainer(core.ModuleContainer):
@@ -113,18 +112,41 @@ def test_complex_example():
         def _get_entity(self, name):
             try:
                 return {
-                    'local.Controller': Controller
+                    'Controller': Controller
                 }[name]
             except KeyError:
                 return super(LocalContainer, self)._get_entity(name)
 
+    # swagger spec
+    api_spec = {
+        'paths': {
+            '/cont/{x}/add': {
+                'get': {
+                    'operationId': 'Controller.add',
+                    'parameters': [
+                        {
+                            'name': 'x',
+                            'in': 'path',
+                            'type': 'integer'
+                        }
+                    ]
+                }
+            }
+        }
+    }
+
     real_api = core.init({
+        'frontend': {
+            'default': {
+                '$spec': api_spec
+            },
+        },
         'controller': {
-            'cont': {
-                '__realization__': 'local.Controller',
-                '$y': 'bar'
+            'Controller': {
+                '__realization__': 'Controller',
+                '$y': 100
             }
         },
     }, container_clz=LocalContainer, get_config=lambda x: x)
 
-    assert real_api.populate('GET', '/cont/foo/add') == 'foobar'
+    assert real_api.populate('GET', '/cont/42/add') == 142

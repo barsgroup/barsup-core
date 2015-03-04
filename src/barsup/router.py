@@ -4,14 +4,20 @@
 import routes
 
 
-class RoutingError(Exception):
-    """Выбрасывается на уровне роутинга."""
+__all__ = ('Router', 'RoutingError')
 
+
+class RoutingError(Exception):
+    """
+    Выбрасывается на уровне роутинга.
+    """
     pass
 
 
 class Router:
-    """Механизм маршрутизации по API-KEY (URL, id, etc.)."""
+    """
+    Механизм маршрутизации по API-KEY (URL, id, etc.).
+    """
 
     def __init__(self):
         """Инициализирует роутер.
@@ -20,7 +26,6 @@ class Router:
         :type controllers: object
         """
         self._mapper = routes.Mapper()
-        self._submappers = {}
 
     def register(self, method, route, controller, action):
         """Регистрирует экшн и возвращает path для его вызова
@@ -33,19 +38,13 @@ class Router:
         :type controller: str
         :param action: Экшн
         :type action: str
-        :type return: str
         """
-        prefix = '/' + controller.lower()
-        mapper = self._submappers.get(controller)
-        if not mapper:
-            mapper = self._mapper.submapper(path_prefix=prefix)
-        mapper.connect(
+        self._mapper.connect(
             route, controller=controller, action=action,
             conditions={} if method == '*' else {
                 'method': [method] if isinstance(method, str) else method
             }
         )
-        return prefix + route
 
     def route(self, method, path):
         """Возвращает контроллер, экшн и параметры по url(path).
@@ -61,6 +60,3 @@ class Router:
 
         controller_name, action_name = map(dest.pop, ('controller', 'action'))
         return controller_name, action_name, dest
-
-
-__all__ = ('Router',)

@@ -9,9 +9,9 @@ def test_router():
     """Tests the Router"""
 
     router = Router()
-    router.register('GET', '/{x:\d+}/{y:\d+}/sum', 'calc', 'sum')
-    router.register(('GET', 'POST'), '/{n:\d+}/double', 'calc', 'double')
-    router.register('*', '/echo', 'misc', 'echo')
+    router.register('GET', '/calc/{x}/{y}/sum', 'calc', 'sum')
+    router.register(('GET', 'POST'), '/calc/{n}/double', 'calc', 'double')
+    router.register('*', '/misc/echo', 'misc', 'echo')
     r = router.route
 
     assert r('GET', '/calc/10/20/sum') == (

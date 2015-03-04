@@ -8,12 +8,13 @@ import re
 from yadic.container import Container as _Container
 from yadic.util import deep_merge as _deep_merge
 
-from barsup.util import load_configs
+from barsup.util import load_configs as _load_configs
+from barsup import validators as _validators
 
 
 CATCH_ALL_PARAMS = object()
 
-Redirection = namedtuple('Redirection', 'module path params')
+Redirection = namedtuple('Redirection', 'module path')
 
 
 class _Wrappable:
@@ -146,8 +147,9 @@ class API:
         for (controller, _, realization) in self._container.itergroup(
             self.CONTROLLER_GROUP
         ):
-            for action_decl in getattr(realization, 'actions', ()):
-                yield (controller, action_decl[2])
+            for attr, val in realization.__dict__.items():
+                if not attr.startswith('_') and callable(val):
+                    yield (controller, attr)
 
 
 class Frontend:
@@ -155,9 +157,13 @@ class Frontend:
     Frontend, используемый для взаимодействия с системой
     """
 
-    def __init__(self, *, container, api, router, initware, params=None):
+    def __init__(self, *, spec, container, api, router, initware):
         """Инициализирует Frontend.
 
+        :param spec: словарь со swagger specifiation
+        :type spec: dict
+        :param container: DI Container
+        :type container: ModuleContainer
         :param api: API
         :type api: API
         :param router: Router
@@ -168,19 +174,28 @@ class Frontend:
         self.api = api
         self._container = container
         self._router = router
-        self._params = params or {}
 
-        # регистрация контроллеров и сбор информации о параметрах экшнов
-        self.meta = {}
-        for controller, _, realization in container.itergroup(
-            api.CONTROLLER_GROUP
-        ):
-            for decl in getattr(realization, 'actions', []):
-                method, route, action, params, options = (
-                    tuple(decl) + ({}, {}))[:5]
-                path = router.register(method, route, controller, action)
-                self.meta.setdefault(controller, {})[action] = (
-                    path, method, params, options)
+        self._action_specs = {}
+        for route, methods in spec.get('paths', {}).items():
+            for method, mspec in methods.items():
+                try:
+                    controller, action = mspec['operationId'].split('.')
+                except (KeyError, ValueError):
+                    raise RuntimeError(
+                        'Wrong <operationId> format! (%r at %r:%r)'
+                        % (mspec.get('operationId'), route, method)
+                    )
+                else:
+                    self._router.register(
+                        method.upper(),
+                        route,
+                        controller,
+                        action
+                    )
+                    self._action_specs[(controller, action)] = (
+                        mspec.get('parameters', []),
+                        mspec.get('responses', []),
+                    )
 
         # вызов возможных инициализаторов
         for iw in initware:
@@ -194,13 +209,45 @@ class Frontend:
         :param path: routing path
         :type path: str
         """
-        controller, action, url_params = self._router.route(method, path)
-        params.update(url_params)
-        result = self.api.call(controller, action, **params)
+        controller, action, path_params = self._router.route(method, path)
+        # описание обязано быть, ибо по нему строился роутинг,
+        # поэтому не ловится KeyError
+        (param_spec, resp_spec) = self._action_specs[(controller, action)]
+        out_params = {}
+        query_params = params.copy()
+        for param in param_spec:
+            try:
+                validate = _validators.VALIDATORS[param['type']](**param)
+            except KeyError:
+                raise _validators.ValidationError(
+                    'Unknown parameter type: %r' % param.get('type')
+                )
+            else:
+                # TODO: дореализовать обработку параметров
+                # в теле запроса и проч
+                assert param['in'] in {'path', 'query'}
+                # валидатор перемещает параметр из одного из
+                # входных словарей в выходной словарь параметров
+                validate(
+                    in_dict=(
+                        path_params if param['in'] == 'path'
+                        else query_params
+                    ),
+                    out_dict=out_params
+                )
+        try:
+            result = self.api.call(controller, action, **out_params)
+        except Exception as e:
+            # TODO: сделать проверку на допустимость исключения
+            # (наличие соответствующего статус-кода в responses)
+            raise
         if isinstance(result, Redirection):
-            return result.module.populate(method, result.path, **result.params)
-        else:
-            return result
+            result = result.module.populate(
+                method,
+                result.path,
+                **query_params
+            )
+        return result
 
 
 def get_defaults():
@@ -216,7 +263,6 @@ def get_defaults():
                 'api': 'default',
                 'router': 'default',
                 'initware': []
-                # '$bypass_params': ['web_session_id', '_context']
             },
         },
         'api': {
@@ -247,7 +293,7 @@ def init(
     config,
     *,
     container_clz=ModuleContainer,
-    get_config=load_configs,
+    get_config=_load_configs,
     get_defaults=get_defaults,
     parent=None
 ):
