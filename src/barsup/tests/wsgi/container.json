@@ -1,7 +1,8 @@
 {
   "frontend": {
     "default": {
-      "__realization__": "barsup.tests.wsgi.MockFrontend"
+      "__realization__": "barsup.tests.wsgi.MockFrontend",
+      "$spec": {}
     }
   }
 }

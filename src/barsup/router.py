@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Набор конструкций для роутинга на контроллеры и действия."""
 
+import re
+
 import routes
 
 
@@ -18,6 +20,8 @@ class Router:
     """
     Механизм маршрутизации по API-KEY (URL, id, etc.).
     """
+
+    PATH_VAR_RE = re.compile(r'\{(.*?)\}')
 
     def __init__(self):
         """Инициализирует роутер.
@@ -39,6 +43,7 @@ class Router:
         :param action: Экшн
         :type action: str
         """
+        route = self.PATH_VAR_RE.sub(r'{\1:.*}', route)
         self._mapper.connect(
             route, controller=controller, action=action,
             conditions={} if method == '*' else {

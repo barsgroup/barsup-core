@@ -38,7 +38,19 @@ def test_context_bypass():
             },
             'frontend': {
                 'default': {
-                    '$spec': {}
+                    '$spec': {
+                        'paths': {
+                            '/inner{subroute}': {
+                                'get': {
+                                    'operationId': 'inner.call',
+                                    'parameters': [
+                                        {'name': 'subroute', 'type': 'string',
+                                         'in': 'path'}
+                                    ]
+                                }
+                            }
+                        }
+                    }
                 }
             },
             'api': {
@@ -65,7 +77,20 @@ def test_context_bypass():
                                 '__type__': 'static'
                             }
                         },
-                        'api_options': {
+                        'frontend': {
+                            'default': {
+                                '$spec': {
+                                    'paths': {
+                                        '/cont/run': {
+                                            'get': {
+                                                'operationId': 'cont.run'
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        'api': {
                             'default': {
                                 'middleware': [
                                     'ensure_presense_of'

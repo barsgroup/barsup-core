@@ -56,14 +56,12 @@ def test_api_calls():
 
     class FakeContainer:
         class Math:
-            actions = (('GET', '/add', 'add', {}),)
 
             @staticmethod
             def add(a, b):
                 return a + b
 
         class Str:
-            actions = (('GET', '/upper', 'upper', {}),)
 
             @staticmethod
             def upper(s):

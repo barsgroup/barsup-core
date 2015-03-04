@@ -115,10 +115,9 @@
         ]
       }
     },
-    "api_options": {
+    "frontend": {
       "default": {
-        "middleware": [
-        ]
+        "$spec": {}
       }
     },
     "runtime": {

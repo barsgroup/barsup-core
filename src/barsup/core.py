@@ -4,6 +4,7 @@
 from functools import partial
 from collections import namedtuple
 import re
+import inspect
 
 from yadic.container import Container as _Container
 from yadic.util import deep_merge as _deep_merge
@@ -14,7 +15,7 @@ from barsup import validators as _validators
 
 CATCH_ALL_PARAMS = object()
 
-Redirection = namedtuple('Redirection', 'module path')
+Redirection = namedtuple('Redirection', 'module path context')
 
 
 class _Wrappable:
@@ -111,7 +112,7 @@ class API:
             то текущий экшн добавляется в список, хранящий
             маршрут роутинга
             """
-            if '_subroute' not in kwargs:
+            if 'subroute' not in kwargs:
                 kwargs.pop('_context', None)
             else:
                 kwargs['_context'].setdefault('path', []).append(
@@ -148,7 +149,9 @@ class API:
             self.CONTROLLER_GROUP
         ):
             for attr, val in realization.__dict__.items():
-                if not attr.startswith('_') and callable(val):
+                if not attr.startswith('_') and (
+                    callable(val) or inspect.ismethoddescriptor(val)
+                ):
                     yield (controller, attr)
 
 
@@ -235,6 +238,9 @@ class Frontend:
                     ),
                     out_dict=out_params
                 )
+        # сохранение контекста
+        if '_context' in query_params:
+            out_params['_context'] = query_params['_context']
         try:
             result = self.api.call(controller, action, **out_params)
         except Exception as e:
@@ -245,6 +251,7 @@ class Frontend:
             result = result.module.populate(
                 method,
                 result.path,
+                _context=result.context,
                 **query_params
             )
         return result

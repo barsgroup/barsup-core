@@ -1,7 +1,12 @@
 {
+    "frontend": {
+        "default": {
+            "$spec": {}
+        }
+    },
     "controller": {
-      "SimpleController": {
-        "__realization__": "barsup.tests.cli.CLIController"
-      }
+        "SimpleController": {
+            "__realization__": "barsup.tests.cli.CLIController"
+        }
     }
 }

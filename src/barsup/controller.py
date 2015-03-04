@@ -170,7 +170,7 @@ class ModuleController:
         """
         self._module = module
 
-    def call(self, *, subroute):
+    def call(self, *, subroute, _context):
         """
         Действие делегирования внутрь API стороннего модуля.
 
@@ -179,7 +179,7 @@ class ModuleController:
         :return:
         """
         from barsup.core import Redirection
-        return Redirection(self._module, subroute)
+        return Redirection(self._module, subroute, _context)
 
 
 __all__ = ('DictController', 'Controller', 'ModuleController')

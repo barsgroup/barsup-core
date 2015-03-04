@@ -20,7 +20,7 @@ def generate_series(f):
     return wrap
 
 
-get_api = create_api('api', 'api.json')
+get_api = create_api('api', 'container.json')
 
 
 @get_api
