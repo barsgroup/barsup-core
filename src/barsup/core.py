@@ -156,9 +156,7 @@ class API:
 
 
 class Frontend:
-    """
-    Frontend, используемый для взаимодействия с системой
-    """
+    """Frontend, используемый для взаимодействия с системой"""
 
     def __init__(self, *, spec, container, api, router, initware):
         """Инициализирует Frontend.
@@ -259,7 +257,6 @@ class Frontend:
 
 def get_defaults():
     """Возвращает конфигурацию по умолчанию"""
-
     return {
         'controller': {},
         'frontend': {

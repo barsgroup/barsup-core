@@ -29,8 +29,7 @@ class ValidationError(BadRequest):
 
 class NameValidationError(ValidationError):
 
-    """Возбуждается в том случае, когда имя поля модели
-    указано неправильно."""
+    """Возбуждается, когда имя поля модели указано неправильно"""
 
     def __init__(self, field_name, model):
         """.

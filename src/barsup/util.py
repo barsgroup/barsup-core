@@ -40,8 +40,7 @@ def load_configs(fnames, parser=json.load):
                 lambda v1, v2, m, path: (
                     merge(v1, v2, m, path)
                     if (
-                        isinstance(v1, dict) and isinstance(v2, dict)
-                        and
+                        isinstance(v1, dict) and isinstance(v2, dict) and
                         len(path) <= 2
                     ) else
                     v2

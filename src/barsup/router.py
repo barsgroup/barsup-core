@@ -10,16 +10,15 @@ __all__ = ('Router', 'RoutingError')
 
 
 class RoutingError(Exception):
-    """
-    Выбрасывается на уровне роутинга.
-    """
+
+    """ Выбрасывается на уровне роутинга."""
+
     pass
 
 
 class Router:
-    """
-    Механизм маршрутизации по API-KEY (URL, id, etc.).
-    """
+
+    """ Механизм маршрутизации по API-KEY (URL, id, etc.)."""
 
     PATH_VAR_RE = re.compile(r'\{(.*?)\}')
 

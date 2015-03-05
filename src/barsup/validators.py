@@ -1,5 +1,5 @@
 # coding: utf-8
-
+"""Валидаторы"""
 import json
 
 
@@ -7,10 +7,15 @@ __all__ = ('VALIDATORS', 'ValidationError')
 
 
 class ValidationError(ValueError):
+
+    """Возникает в случае невозможности приведения к типу"""
+
     pass
 
 
 class Validator:
+
+    """В том числе приведение к типу"""
 
     def __init__(self, *, name, required=False, **kwargs):
         self.name = name

@@ -21,7 +21,6 @@ from barsup.util import serialize_to_json
 
 def handler(config_file_name, catch_cookies=None):
     """Обработчик HTTP-запросов к приложению."""
-
     fend = core.init(config=config_file_name)
     catch_cookies = catch_cookies or []
 

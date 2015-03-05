@@ -6,11 +6,11 @@ from yadic.container import Injectable
 
 class Controller:
     """Базовая реализация."""
+
     pass
 
 
 class DictController(Controller, metaclass=Injectable):
-
     """
     Представляет уровень CRUD-контроллера.
 
@@ -159,7 +159,6 @@ class DictController(Controller, metaclass=Injectable):
 
 
 class ModuleController:
-
     """Контроллер, делигирующий вызов внутрь стороннего модуля."""
 
     def __init__(self, module):
@@ -179,6 +178,7 @@ class ModuleController:
         :return:
         """
         from barsup.core import Redirection
+
         return Redirection(self._module, subroute, _context)
 
 
