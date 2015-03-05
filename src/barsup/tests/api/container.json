@@ -1,129 +1,135 @@
 {
-    "controller": {
-      "__default__": {
-        "__realization__": "barsup.controller.DictController"
-      },
-      "SimpleController": {
-        "service": "SimpleService"
-      },
-      "AdapterController": {
-        "service": "AdapterService"
-      },
-      "Master": {
-        "service": "MasterService"
-      },
-      "Detail": {
-        "service": "DetailService"
-      },
-      "Types": {
-        "service": "TypesService"
-      }
+  "controller": {
+    "__default__": {
+      "__realization__": "barsup.controller.DictController"
     },
-    "service": {
-      "__default__": {
-        "__realization__": "barsup.service.Service",
-        "adapters": []
-      },
-      "MasterService": {
-        "model": "master"
-      },
-      "DetailService": {
-        "model": "detail"
-      },
-      "SimpleService": {
-        "model": "simple_model"
-      },
-      "TypesService": {
-        "model": "types"
-      },
-      "AdapterService": {
-        "adapters": [
-          "AdapterSplitter"
-        ],
-        "$include": [
-          "id",
-          "full_name",
-          "name"
-        ],
-        "$exclude": [
-          "oname",
-          "lname"
-        ],
-        "model": "simple_model"
-      }
+    "SimpleController": {
+      "service": "SimpleService"
     },
-    "adapters": {
-      "AdapterSplitter": {
-        "__realization__": "barsup.adapter.Splitter",
-        "$to_name": "full_name",
-        "$from_names": [
-          "lname",
-          "oname"
-        ],
-        "$sep": ", "
-      }
+    "AdapterController": {
+      "service": "AdapterService"
     },
-    "model": {
-      "__default__": {
-        "__realization__": "barsup.schema.Model",
-        "db_mapper": "default",
-        "session": "default"
-      },
-      "simple_model": {
-        "$name": "simple_table"
-      },
-      "detail": {
-        "$name": "detail",
-        "$joins": [
-          [
-            "master_id",
-            "==",
-            "id",
-            [
-              "master",
-              []
-            ]
-          ]
-        ],
-        "$select": [
-          "id",
-          "master_id",
-          "name"
-        ]
-      },
-      "master": {
-        "$name": "master"
-      },
-      "types": {
-        "$name": "types"
-      }
+    "Master": {
+      "service": "MasterService"
     },
-    "session": {
-      "default": {
-        "__type__": "singleton",
-        "__realization__": "barsup.session.InMemory"
-      }
+    "Detail": {
+      "service": "DetailService"
     },
-    "db_mapper": {
-      "default": {
-        "__realization__": "barsup.tests.DBMapperMock",
-        "__type__": "singleton",
-        "session": "default",
-        "$path": [
-          "api",
-          "schema.json"
-        ]
-      }
-    },
-    "frontend": {
-      "default": {
-        "$spec": {}
-      }
-    },
-    "runtime": {
-      "__default__": {"__type__": "static"},
-      "actions": {
-        "__realization__": "barsup.runtime.ACTIONS"
-      }
+    "Types": {
+      "service": "TypesService"
     }
+  },
+  "service": {
+    "__default__": {
+      "__realization__": "barsup.service.Service",
+      "adapters": []
+    },
+    "MasterService": {
+      "model": "master"
+    },
+    "DetailService": {
+      "model": "detail"
+    },
+    "SimpleService": {
+      "model": "simple_model"
+    },
+    "TypesService": {
+      "model": "types"
+    },
+    "AdapterService": {
+      "adapters": [
+        "AdapterSplitter"
+      ],
+      "$include": [
+        "id",
+        "full_name",
+        "name"
+      ],
+      "$exclude": [
+        "oname",
+        "lname"
+      ],
+      "model": "simple_model"
+    }
+  },
+  "adapters": {
+    "AdapterSplitter": {
+      "__realization__": "barsup.adapter.Splitter",
+      "$to_name": "full_name",
+      "$from_names": [
+        "lname",
+        "oname"
+      ],
+      "$sep": ", "
+    }
+  },
+  "model": {
+    "__default__": {
+      "__realization__": "barsup.schema.Model",
+      "db_mapper": "default",
+      "session": "default"
+    },
+    "simple_model": {
+      "$name": "simple_table"
+    },
+    "detail": {
+      "$name": "detail",
+      "$joins": [
+        [
+          "master_id",
+          "==",
+          "id",
+          [
+            "master",
+            []
+          ]
+        ]
+      ],
+      "$select": [
+        "id",
+        "master_id",
+        "name"
+      ]
+    },
+    "master": {
+      "$name": "master"
+    },
+    "types": {
+      "$name": "types"
+    }
+  },
+  "session": {
+    "default": {
+      "__type__": "singleton",
+      "__realization__": "barsup.session.InMemory"
+    }
+  },
+  "db_mapper": {
+    "default": {
+      "__realization__": "barsup.tests.DBMapperMock",
+      "__type__": "singleton",
+      "session": "default",
+      "$path": [
+        "api",
+        "schema.json"
+      ]
+    }
+  },
+  "frontend": {
+    "default": {
+      "$spec": {}
+    }
+  },
+  "runtime": {
+    "__default__": {"__type__": "static"},
+    "actions": {
+      "__realization__": "barsup.runtime.ACTIONS"
+    }
+  },
+  "spec": {
+    "default": {
+      "__realization__": "barsup.util.load_configs",
+      "$fnames": "swagger.json"
+    }
+  }
 }

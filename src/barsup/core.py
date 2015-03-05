@@ -240,7 +240,7 @@ class Frontend:
                 )
         # сохранение контекста
         if '_context' in query_params:
-            out_params['_context'] = query_params['_context']
+            out_params['_context'] = query_params.pop('_context')
         try:
             result = self.api.call(controller, action, **out_params)
         except Exception as e:

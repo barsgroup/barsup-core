@@ -23,7 +23,7 @@ class Container(ModuleContainer):
 
 root_spec = {
     'paths': {
-        '/module{subroute:.*}': {
+        '/module{subroute}': {
             'get': {
                 'operationId': 'module.call',
                 'parameters': [

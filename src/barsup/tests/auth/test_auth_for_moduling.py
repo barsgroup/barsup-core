@@ -24,7 +24,7 @@ class FakeAuth:
         """Возвращает наличие/отсутствие прав на выполнение
         некоего действия у указанного пользователя."""
         if uid == self.BAD_USER:
-            return False
+            raise Forbidden(uid, controller, _)
         self.controllers.add(controller)
         return True
 
@@ -79,6 +79,33 @@ def test_module_authorization():
                     'module': 'm1'
                 }
             },
+
+            "frontend": {
+                "default": {
+                    "$spec": {
+                        "paths": {
+                            '/m1{subroute}': {
+                                'get': {
+                                    'operationId': 'm1.call',
+                                    'parameters': [
+                                        {
+                                            'name': 'subroute',
+                                            'type': 'string',
+                                            'in': 'path'
+                                        },
+                                        {
+                                            'name': 'uid',
+                                            'type': 'integer',
+                                            'in': 'query'
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+
             'api': {
                 'default': {
                     'middleware': [
@@ -109,7 +136,28 @@ def test_module_authorization():
                                 'module': 'm2'
                             }
                         },
-                        'api_options': {
+
+                        "frontend": {
+                            "default": {
+                                "$spec": {
+                                    "paths": {
+                                        '/m2{subroute}': {
+                                            'get': {
+                                                'operationId': 'm2.call',
+                                                'parameters': [
+                                                    {
+                                                        'name': 'subroute',
+                                                        'type': 'string',
+                                                        'in': 'path'
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        'api': {
                             'default': {
                                 'middleware': ['../authorization']
                             }
@@ -122,6 +170,30 @@ def test_module_authorization():
                                             '__realization__': 'CONT'
                                         }
                                     },
+
+                                    "frontend": {
+                                        "default": {"$spec": {"paths": {
+                                            '/cont/action': {'get': {
+                                                'operationId': 'cont.action',
+                                                'parameters': [
+                                                    {
+                                                        'name': 'message',
+                                                        'type': 'string',
+                                                        'in': 'query'
+                                                    },
+                                                    {
+                                                        'name': 'uid',
+                                                        'type': 'integer',
+                                                        'in': 'query'
+                                                    }
+                                                ]
+                                            }
+                                            }
+                                        }
+                                        }
+                                        }
+                                    },
+
                                     'api': {
                                         'default': {
                                             'middleware': [

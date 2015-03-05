@@ -87,6 +87,11 @@ def get_api():
             '__realization__': 'local.Controller',
             '$service': Service()
         }
+    }, 'frontend': {
+        'default': {
+            '$spec': {
+            }
+        }
     }, }, container_clz=LocalContainer, get_config=lambda x: x)
     return fend.api
 

@@ -51,7 +51,7 @@ def authorization(auth, white_list=None):
 
         uid = params['_context']['uid']
         # _subroute - проверка прав только на конечных узлах
-        if '_subroute' not in params:
+        if 'subroute' not in params:
             qualified_controller = '/'.join(
                 [i[0] for i in params['_context'].get('path', [])] +
                 [controller]
