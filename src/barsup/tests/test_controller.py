@@ -103,12 +103,12 @@ def test_read():
 
 
 def test_get():
-    get_result = get_api().call('cont', 'get', id_=5)
+    get_result = get_api().call('cont', 'get', id=5)
     assert isinstance(get_result, dict)
 
 
 def test_update():
-    update_result = get_api().call('cont', 'update', id_=10, data={})
+    update_result = get_api().call('cont', 'update', id=10, data={})
     assert isinstance(update_result, dict)
 
 
@@ -118,6 +118,6 @@ def test_create():
 
 
 def test_destroy():
-    destroy_result = get_api().call('cont', 'destroy', id_=15)
+    destroy_result = get_api().call('cont', 'destroy', id=15)
     assert isinstance(destroy_result, int)
     assert destroy_result == 15

@@ -2,37 +2,32 @@
 """Валидаторы"""
 import json
 
+from barsup import exceptions as exc
 
-__all__ = ('VALIDATORS', 'ValidationError')
 
-
-class ValidationError(ValueError):
-
-    """Возникает в случае невозможности приведения к типу"""
-
-    pass
+__all__ = ('VALIDATORS',)
 
 
 class Validator:
-
     """В том числе приведение к типу"""
 
-    def __init__(self, *, name, required=False, **kwargs):
+    def __init__(self, *, name, required=False, format=None, **kwargs):
         self.name = name
         self.required = required
+        self.format = format
 
     def __call__(self, in_dict, out_dict):
         try:
             raw_value = in_dict.pop(self.name)
         except KeyError:
             if self.required:
-                raise ValidationError(
+                raise exc.ValidationError(
                     'Parameter "%s" is required!' % self.name)
         else:
             try:
                 value = self.validate(raw_value)
             except (KeyError, ValueError, TypeError) as e:
-                raise ValidationError(
+                raise exc.ValidationError(
                     'Value of parameter "%s" is incorrect!' % self.name
                 ) from e
             else:
@@ -60,8 +55,23 @@ class ObjectValidator(Validator):
     validate = staticmethod(json.loads)
 
 
+class AsIsValidator(Validator):
+    # объект ранее преобразовывается в json
+    validate = staticmethod(lambda x: x)
+
+
 VALIDATORS = {
-    'integer': IntegerValidator,
-    'string': StringValidator,
-    'float': FloatValidator,
+    'integer': {
+        'default': IntegerValidator
+    },
+    'string': {
+        'default': StringValidator,
+        'as-is': AsIsValidator,
+        'json': ObjectValidator,
+        'date': None,
+        'date-time': None
+    },
+    'float': {
+        'default': FloatValidator
+    },
 }

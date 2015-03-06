@@ -57,19 +57,15 @@ class DictController(Controller, metaclass=Injectable):
             start, limit
         ).read()
 
-    def get(
-        self,
-        id_: "int",
-        filter: "json"=None
-    ) -> ("GET", r"/read/{id_:\d+}"):
+    def get(self, id, filter=None):
         """
         Действие на получение одного объекта.
 
-        :param id_: Идентификатор объекта
+        :param id: Идентификатор объекта
         :param filter: Фильтр
         :return: Объект в виде словаря
         """
-        return self.service.filter_by_id(id_).filters(filter or []).get()
+        return self.service.filter_by_id(id).filters(filter or []).get()
 
     def bulk_update(
         self,
@@ -86,17 +82,17 @@ class DictController(Controller, metaclass=Injectable):
 
     def update(
         self,
-        id_: "int",
+        id: "int",
         data: "dict"
     ) -> ("POST", r"/update/{id_:\d+}"):
         """
         Действие изменения одного объекта.
 
-        :param id_: Идентификатор объекта
+        :param id: Идентификатор объекта
         :param data: Поля со значения для изменения
         :return: Измененный объект
         """
-        return self._update(id_, data)
+        return self._update(id, data)
 
     def bulk_destroy(
         self,
@@ -112,18 +108,15 @@ class DictController(Controller, metaclass=Injectable):
             self._destroy(id_)
         return identifiers
 
-    def destroy(
-        self,
-        id_: "int"
-    ) -> ("POST", "/destroy/{id_:\d+}"):
+    def destroy(self, id):
         """
         Действие удаление одного объекта.
 
         :param id_: Идентификатор объекта
         :return: Идентификатор удаленного объекта
         """
-        self._destroy(id_)
-        return id_
+        self._destroy(id)
+        return id
 
     def create(
         self,

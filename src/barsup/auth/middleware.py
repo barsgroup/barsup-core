@@ -4,7 +4,7 @@
 import barsup.exceptions as exc
 
 
-def authentication(auth, preserve_user=None, white_list=None):
+def authentication(auth, white_list=None):
     """
     MW для аутентификации.
 
@@ -28,14 +28,12 @@ def authentication(auth, preserve_user=None, white_list=None):
             raise exc.Unauthorized()
 
         params['_context'].setdefault('uid', uid)
-        if controller in (preserve_user or []):
-            params['_uid'] = uid
         return nxt(controller, action, **params)
 
     return wrapper
 
 
-def authorization(auth, white_list=None):
+def authorization(auth, preserve_user=None, white_list=None):
     """
     MW для авторизации.
 
@@ -52,6 +50,9 @@ def authorization(auth, white_list=None):
         uid = params['_context']['uid']
         # _subroute - проверка прав только на конечных узлах
         if 'subroute' not in params:
+            if controller in (preserve_user or []):
+                params['_uid'] = uid
+
             qualified_controller = '/'.join(
                 [i[0] for i in params['_context'].get('path', [])] +
                 [controller]

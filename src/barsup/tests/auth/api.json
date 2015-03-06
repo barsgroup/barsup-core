@@ -182,16 +182,17 @@
       "auth:service": "AuthorizationService",
       "$white_list": [
         "Authentication"
+      ],
+      "$preserve_user": [
+        "MsgUsers",
+        "Message"
       ]
     },
     "authentication": {
       "__type__": "singleton",
       "__realization__": "barsup.auth.middleware.authentication",
       "auth:service": "AuthenticationService",
-      "$preserve_user": [
-        "MsgUsers",
-        "Message"
-      ],
+
       "$white_list": [
         "Authentication"
       ]

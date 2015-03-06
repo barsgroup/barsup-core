@@ -56,7 +56,7 @@ def test_create(api):
 
     data = api.call(
         'SimpleController', 'get',
-        id_=1)
+        id=1)
 
     assert data['name'] == '42'
     assert data['id'] == 1
@@ -73,7 +73,7 @@ def test_update(api):
 
     data = api.call(
         'SimpleController', 'update',
-        id_=1, data={
+        id=1, data={
             'name': 'updated record'
         })
 
@@ -82,7 +82,7 @@ def test_update(api):
 
     data = api.call(
         'SimpleController', 'get',
-        id_=1)
+        id=1)
 
     assert data['name'] == 'updated record'
     assert data['id'] == 1
@@ -98,7 +98,7 @@ def test_delete(api):
     )
 
     data = api.call(
-        'SimpleController', 'destroy', id_=1)
+        'SimpleController', 'destroy', id=1)
 
     assert data == 1
 
@@ -172,7 +172,7 @@ def test_wrong_filter_operator(api):
 def test_not_found_record(api):
     with pytest.raises(exc.NotFound):
         api.call(
-            'SimpleController', 'get', id_=1
+            'SimpleController', 'get', id=1
         )
 
 
@@ -230,7 +230,7 @@ def test_create_with_adapters(api):
     )
 
     data = api.call(
-        'AdapterController', 'get', id_=1
+        'AdapterController', 'get', id=1
     )
 
     assert isinstance(data, dict)
@@ -309,12 +309,12 @@ def test_delete_with_fk(api):
     # Должно было упасть с BadRequest, так как на master есть ссылки
     # Вместо этого sqlite делает каскадное удаление
     api.call(
-        "Master", "destroy", id_=1
+        "Master", "destroy", id=1
     )
 
     with pytest.raises(exc.NotFound):
         api.call(
-            "Master", "get", id_=1
+            "Master", "get", id=1
         )
 
     data = api.call(

@@ -8,9 +8,9 @@ import inspect
 
 from yadic.container import Container as _Container
 from yadic.util import deep_merge as _deep_merge
-
 from barsup.util import load_configs as _load_configs
 from barsup import validators as _validators
+from barsup import exceptions as exc
 
 
 CATCH_ALL_PARAMS = object()
@@ -19,7 +19,6 @@ Redirection = namedtuple('Redirection', 'module path context')
 
 
 class _Wrappable:
-
     """Оборачиватель метода/функции в слои middleware."""
 
     def __init__(self, fn):
@@ -42,7 +41,6 @@ class _Wrappable:
 
 
 class ModuleContainer(_Container):
-
     """Реализация контейнера для использования на уровне модулей."""
 
     _PATH_RE = re.compile(r'(?:(.*)/)?([^/]+)')
@@ -150,7 +148,7 @@ class API:
         ):
             for attr, val in realization.__dict__.items():
                 if not attr.startswith('_') and (
-                    callable(val) or inspect.ismethoddescriptor(val)
+                        callable(val) or inspect.ismethoddescriptor(val)
                 ):
                     yield (controller, attr)
 
@@ -158,7 +156,8 @@ class API:
 class Frontend:
     """Frontend, используемый для взаимодействия с системой"""
 
-    def __init__(self, *, spec, container, api, router, initware):
+    def __init__(self, *, spec, container, api, router, initware,
+                 bypass_params=None):
         """Инициализирует Frontend.
 
         :param spec: словарь со swagger specifiation
@@ -175,6 +174,7 @@ class Frontend:
         self.api = api
         self._container = container
         self._router = router
+        self._bypass_params = bypass_params or []
 
         self._action_specs = {}
         for route, methods in spec.get('paths', {}).items():
@@ -218,9 +218,13 @@ class Frontend:
         query_params = params.copy()
         for param in param_spec:
             try:
-                validate = _validators.VALIDATORS[param['type']](**param)
+                validator = _validators.VALIDATORS[param['type']]
+                validator = validator.get(
+                    param.get('format'), validator['default'])
+
+                validate = validator(**param)
             except KeyError:
-                raise _validators.ValidationError(
+                raise exc.ValidationError(
                     'Unknown parameter type: %r' % param.get('type')
                 )
             else:
@@ -239,6 +243,12 @@ class Frontend:
         # сохранение контекста
         if '_context' in query_params:
             out_params['_context'] = query_params.pop('_context')
+
+        # Копирование значений из bypass_params
+        for param in self._bypass_params:
+            assert not out_params.get(param)
+            out_params[param] = query_params.get(param)
+
         try:
             result = self.api.call(controller, action, **out_params)
         except Exception as e:
