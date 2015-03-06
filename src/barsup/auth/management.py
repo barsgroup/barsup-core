@@ -35,14 +35,17 @@ def create_user_role(session, user, role, user_role):
         })['id']
         messages = ['Пользователь с id="{0}" создан.'.format(user_id)]
         if role_name:
-            while is_super not in ['yes', 'no']:
-                is_super = input(
-                    'Права суперпользователя? ([yes/no], default="yes"): '
-                ) or 'yes'
+            if not is_super:
+                while is_super not in ['yes', 'no']:
+                    is_super = input(
+                        'Права суперпользователя? ([yes/no], default="yes"): '
+                    ) or 'yes'
+
+                is_super = is_super == 'yes'
 
             role_id = role.create(**{
                 'name': role_name,
-                'is_super': is_super == 'yes'
+                'is_super': is_super
             })['id']
 
             user_role.create(user_id=user_id, role_id=role_id)
