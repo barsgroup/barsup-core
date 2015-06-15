@@ -1,0 +1,12 @@
+{
+    "frontend": {
+        "default": {
+            "$spec": {}
+        }
+    },
+    "controller": {
+        "SimpleController": {
+            "__realization__": "pynch.tests.cli.CLIController"
+        }
+    }
+}

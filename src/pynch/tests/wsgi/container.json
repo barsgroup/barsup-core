@@ -1,0 +1,8 @@
+{
+  "frontend": {
+    "default": {
+      "__realization__": "pynch.tests.wsgi.MockFrontend",
+      "$spec": {}
+    }
+  }
+}

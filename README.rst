@@ -6,22 +6,6 @@
     :target: https://coveralls.io/r/barsgroup/barsup-core?branch=master
     :alt: Coverage
 
-.. image:: https://pypip.in/version/barsup-core/badge.svg?style=flat&text=version&0
-    :target: https://pypi.python.org/pypi/barsup-core/
-    :alt: Latest Version
-
-.. image:: https://pypip.in/py_versions/barsup-core/badge.svg?style=flat
-    :target: https://pypi.python.org/pypi/yadic/
-    :alt: Supported Python versions
-
-.. image:: https://pypip.in/status/barsup-core/badge.svg?style=flat
-    :target: https://pypi.python.org/pypi/yadic/
-    :alt: Development Status
-
-.. image:: https://pypip.in/license/barsup-core/badge.svg?style=flat
-    :target: https://pypi.python.org/pypi/yadic/
-    :alt: License
-
 WTF
 ---
 

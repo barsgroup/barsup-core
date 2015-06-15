@@ -23,13 +23,13 @@ with open('REQUIREMENTS', 'r') as f:
     requires.extend(f.readlines())
 
 setup(
-    name="barsup-core",
+    name="pynch-core",
     version="0.2.9",
     license='MIT',
     description=read('DESCRIPTION'),
-    author="Telepenin Nikolay, Aleksey Pirogov",
-    author_email="telepenin@bars-open.ru,pirogov@bars-open.ru",
-    url="https://bitbucket.org/barsgroup/barsup-core",
+    author="Telepenin Nikolay",
+    author_email="telepenin@bars-open.ru",
+    url="",
     classifiers=[
         'Intended Audience :: Developers',
         'Environment :: Web Environment',
