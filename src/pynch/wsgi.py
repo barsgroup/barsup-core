@@ -14,9 +14,9 @@ from webob import Response, exc
 from webob.dec import wsgify
 from webob.static import DirectoryApp
 
-from barsup import core, exceptions
-from barsup.router import RoutingError
-from barsup.util import serialize_to_json
+from pynch import core, exceptions
+from pynch.router import RoutingError
+from pynch.util import serialize_to_json
 
 
 def handler(config_file_name, catch_cookies=None):
@@ -132,7 +132,7 @@ def make_application():
     """
     return with_session(
         static_server(
-            url_prefix='/barsup',
+            url_prefix='/pynch',
             static_path=path.join('$PYNCH_PATH', 'static')
         )(
             catch_errors(

@@ -6,7 +6,7 @@
 типы и обратно. Работает на уровне сервисов (services).
 """
 
-import barsup.exceptions as exc
+import pynch.exceptions as exc
 
 
 class Splitter:
