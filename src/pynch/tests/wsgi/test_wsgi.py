@@ -11,12 +11,12 @@ from pynch.wsgi import handler
 
 @pytest.fixture
 def process(request):
-    os.environ['BUP_CONFIG'] = os.path.join(
+    os.environ['PYNCH_CONFIG'] = os.path.join(
         os.path.dirname(__file__),
         'container.json'
     )
     return handler(
-        config_file_name='$BUP_CONFIG',
+        config_file_name='$PYNCH_CONFIG',
         catch_cookies=('some-cookies',),
     )(request)
 

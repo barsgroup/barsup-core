@@ -133,11 +133,11 @@ def make_application():
     return with_session(
         static_server(
             url_prefix='/barsup',
-            static_path=path.join('$BUP_PATH', 'static')
+            static_path=path.join('$PYNCH_PATH', 'static')
         )(
             catch_errors(
                 handler(
-                    config_file_name='$BUP_CONFIG',
+                    config_file_name='$PYNCH_CONFIG',
                     catch_cookies=('web_session_id',),
                 ),
                 debug=True

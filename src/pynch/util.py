@@ -54,14 +54,14 @@ def get_config_from_env(default_name='container.json'):
     Возвращает имя файла конфигурации.
 
     Путь должен быть:
-    - указан в переменной окружения $BUP_CONFIG
-    - называться @default_name и находиться в папке $BUP_PATH
+    - указан в переменной окружения $PYNCH_CONFIG
+    - называться @default_name и находиться в папке $PYNCH_PATH
     В противном случае возбуждается исключение.
     """
-    fname = os.environ.get('BUP_CONFIG', None)
-    folder = os.environ.get('BUP_PATH', None)
+    fname = os.environ.get('PYNCH_CONFIG', None)
+    folder = os.environ.get('PYNCH_PATH', None)
     config = fname or folder and os.path.join(folder, default_name)
     if config is None:
-        raise RuntimeError('BUP_PATH either BUP_CONFIG must be configured!')
+        raise RuntimeError('PYNCH_PATH either PYNCH_CONFIG must be configured!')
     else:
         return os.path.expandvars(config)
