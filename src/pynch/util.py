@@ -62,6 +62,7 @@ def get_config_from_env(default_name='container.json'):
     folder = os.environ.get('PYNCH_PATH', None)
     config = fname or folder and os.path.join(folder, default_name)
     if config is None:
-        raise RuntimeError('PYNCH_PATH either PYNCH_CONFIG must be configured!')
+        raise RuntimeError(
+            'PYNCH_PATH either PYNCH_CONFIG must be configured!')
     else:
         return os.path.expandvars(config)
